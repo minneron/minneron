@@ -1,0 +1,213 @@
+#+title: minneron
+
+* SECTION type model for document buffers
+:PROPERTIES:
+:TS: <2013-01-03 04:13PM>
+:ID: v971ih00azf0
+:END:
+** buffers
+:PROPERTIES:
+:TS: <2013-01-03 03:29PM>
+:ID: jek9h1d19zf0
+:END:
+*** TYPE buffer
+:PROPERTIES:
+:TS: <2013-01-04 02:51AM>
+:ID: o6e3l1u0azf0
+:END:
+
+The buffer is a siple, linear list of tokens, where tokens are either strings, or invisible markers pointing to document nodes.
+
+#+name: type:buffer
+#+begin_src pascal
+  type buffer = class( specialize ll.list <token> )
+  end;
+#+end_src
+
+*** TYPE Token
+:PROPERTIES:
+:TS: <2013-01-04 02:09AM>
+:ID: 2mxaf3s0azf0
+:END:
+
+#+name: @type:token
+#+begin_src pascal
+  type token = li.node;
+#+end_src
+
+*** TYPE StringToken
+:PROPERTIES:
+:TS: <2013-01-04 02:08AM>
+:ID: kaujt1s0azf0
+:END:
+
+#+name: @type:token
+#+begin_src pascal
+  type stringtoken = li.strnode;
+#+end_src
+
+*** TYPE TagToken
+:PROPERTIES:
+:TS: <2013-01-03 03:29PM>
+:ID: d28jz1d19zf0
+:END:
+
+#+name: @type:token
+#+begin_src pascal
+  type tagtoken = li.objnode;
+#+end_src
+
+Tag tokens are non-textual, and may hold any kind of data.
+
+Unlike the generic list cursors which are pointers to link objects in the linked list, markers are data objects that are actually part of the buffer. This is so programs that traverse the list are able to inspect it.
+
+** spans
+:PROPERTIES:
+:TS: <2013-01-03 03:57PM>
+:ID: f4x29ce19zf0
+:END:
+
+Span is a generic type, suitable for use with nested elements but also for arbitrary regions like selected text.
+
+#+name: @types
+#+begin_src pascal
+  type
+    generic span<t> = class
+    public
+      type tag = class( tagtoken )
+        is_start, is_end : boolean;
+        span             : specialize span<t>;
+      end;
+      start_tag, end_tag : tag;
+      obj : t;
+    end;
+#+end_src
+
+** blocks
+:PROPERTIES:
+:TS: <2013-01-03 03:53PM>
+:ID: s5pjy4e19zf0
+:END:
+
+Blocks are spans that act like xml elements, in that they are nestable but non-overlapping, and that each node in the tree contains references to its siblings, children, and a single parent node.
+
+Aside from these fields, blocks can be of any type, and may or may not conform to any particular schema.
+
+Most likely they would be implemented as =type generic block<t>=.
+
+These can be used to indicate parsed structures such as lines of text, tokens (for syntax highlighting), etc.
+
+** other embedded objects
+:PROPERTIES:
+:TS: <2013-01-03 04:06PM>
+:ID: nrrkq600azf0
+:END:
+
+Arbitrary objects can be embedded in the text. These may contain "clones" of text elsewhere in the document (or in another document, or calculated on the fly).
+
+They are expected to display themselves, just like textual nodes.
+
+
+* SECTION displaying documents
+:PROPERTIES:
+:TS: <2013-01-03 04:13PM>
+:ID: qbighi00azf0
+:END:
+** straightforward linear flow display
+:PROPERTIES:
+:TS: <2013-01-04 04:30AM>
+:ID: yb55yly0azf0
+:END:
+
+** the scene graph                                                   :later:
+:PROPERTIES:
+:TS: <2013-01-03 04:16PM>
+:ID: iza8lm00azf0
+:END:
+
+The block objects serve a secondary purpose, in that they can recursively display themselves (just like widgets in gamesketchlib or whatever).
+
+However, document structure and display structure needn't coincide: nodes might be hidden, or show up at arbitrary coordinates, etc.
+
+So it's likely that each node would have a corresponding display object, which understood coordinates, geometry, etc.
+
+In particular, two clones of the same node would have different geometries and coordinates.
+
+Note also that display nodes may not be textual: raster images, vector shapes, and dialog widgets are all perfectly valid options.
+
+
+* event dispatcher
+Wait for an event, then do something about it.
+
+#+name: procs
+#+begin_src pascal
+  function readkey( var ch : character ) : char;
+  begin
+    ch := crt.readkey;
+    result := ch
+  end;
+#+end_src
+
+#+name: vars
+#+begin_src pascal
+  var ch : char;
+#+end_src
+
+#+name: listen
+#+begin_src pascal
+  case readkey( ch ) of
+    #27, ^C : done := true;
+    ^N      : next_line;
+    ^P      : prev_line;
+    ^A      : line_start;
+    ^E      : line_end;
+    #0      : case crt.readkey of
+                #72 : prev_line;  // up
+                #80 : next_line;  // down
+                #71 : line_start; // home
+                #79 : line_end;   // end
+                #73 : pageup;
+                #81 : pagedown;
+              end;
+    else self_insert( ch )
+  end;
+#+end_src
+
+* code layout
+:PROPERTIES:
+:TS: <2013-01-04 04:30AM>
+:ID: amp15ny0azf0
+:END:
+** FILE buf.pas
+:PROPERTIES:
+:TS: <2013-01-04 04:31AM>
+:ID: u6chgny0azf0
+:END:
+
+#+begin_src pascal :tangle ".gen/buf.pas" :padline yes :noweb tangle
+  {$i xpc.inc}
+  unit buf;
+  interface uses xpc, ll, li;
+    <<@type:token>>
+    <<type:buffer>>
+  implementation
+  end.
+#+end_src
+
+** «main»
+#+begin_src pascal :tangle ".gen/mn.pas" :padline yes :noweb tangle
+  program mn;
+  uses crt, buf;
+    <<types>>
+    <<vars>>
+    <<procs>>
+    var quit : boolean = false;
+  begin
+    <<initialize>>
+    repeat
+      <<listen>>
+      <<update>>
+      <<render>>
+    until quit
+  end.
+#+end_src
