@@ -1,6 +1,6 @@
 # directory paths, relative to this directory:
 XPL       = ./lib/xpl/code
-GEN	  = ./gen
+GEN	  = ./.gen
 PPU	  = $(GEN)
 EXE	  = $(GEN)
 FCL = ~/ver/fpc/packages
@@ -18,7 +18,11 @@ targets:
 	@echo 'available targets:'
 	@echo '--------------------------'
 	@echo 'make test  -> run all tests'
+	@echo 'make run   -> run minneron'
 	@echo
+
+run:
+	$(FPC) -Mobjfpc -Fu./.gen mn.pas  && ./mn mn.pas
 
 build : init obtangle
 
