@@ -199,29 +199,12 @@ uses ll, li, fs, stri, num, cw, crt;
   end;
 
 
-  //  not used
-  FUNCTION Cipher (St, Passwd: String): String;
-    VAR SPtr, PPtr: Integer;
-  BEGIN
-    IF Length(Passwd) > 0 THEN BEGIN
-      PPtr := 1;
-      FOR SPtr := 1 TO Length(St) DO BEGIN
-	St[SPtr] := CHR(Ord(St[SPtr]) XOR Ord(Passwd[PPtr]) XOR $80);
-	INC(PPtr);
-	IF PPtr > Length(Passwd) THEN
-	  PPtr := 1;
-      END;
-    END;
-    Cipher := St;
-  END;
-
-
   var ed : listeditor;
 begin
   crt.clrscr;
   ed := listeditor.create;
   if paramcount = 0 then
-    writeln( 'usage : cedit <filename>' )
+    writeln( 'usage : mn <filename>' )
   else if ed.load( paramstr( 1 )) then
   begin
     ed.run;
