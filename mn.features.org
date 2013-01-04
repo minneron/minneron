@@ -1,7 +1,7 @@
 #+title: minneron features
 
 * TODO [0/25] general purpose traditional text editor
-** TODO [2/4] #ED001 get ln.pas hooked up to cedit.
+** TODO [4/5] #ED001 get ln.pas hooked up to cedit.
 :PROPERTIES:
 :TS: <2013-01-03 01:38PM>
 :ID: e526zw719zf0
@@ -93,11 +93,17 @@ Still have one bug, but it's in ~cw.pas~, not ~cedit~, so I'm going to mark this
 :END:
 [0104.2013 04:55AM] done in type tagtoken = li.objtoken
 
-*** TODO [0/0] convert cedit to use tokens
+*** DONE [0/0] convert cedit to use the buffer type
 :PROPERTIES:
 :TS: <2013-01-04 04:56AM>
 :ID: f7a9vtz0azf0
 :END:
+
+I suppose in this case, we want to use elements/blocks.
+
+Looks like it's already using stringnodes, but that's pretty much the same as li.strnode, so i might as well use a list of li.nodes. But I'll go ahead and use the buffer type I created in mn.trail.
+
+Another thing I did was make the editor class (previously =listeditor=) be a container for a buffer, rather than a subclass.
 
 *** TODO [0/0] read lines of text as the initial chunks
 :PROPERTIES:

@@ -6,36 +6,28 @@ Initial version forked from cedit.pas
 ---------------------------------------------------------------}
 {$i xpc.inc}
 program mn;
-uses ll, li, fs, stri, num, cw, crt;
-
-  type
-
-    //  the idea is to allow nesting here, eventually
-    stringobj  = class ( li.node )
-      content : string;
-      constructor fromstring( st : string );
-    end;
+uses ll, li, fs, stri, num, cw, crt, buf;
 
-    listeditor = class( specialize list<stringobj> )
+  type
+    editor = class
+      buf : buf.buffer;
       x, y, h, w : integer;
-      topline, position : listeditor.cursor;
+      topline, position : buf.buffer.cursor;
       constructor create;
       function load( path : string ) : boolean;
       procedure show;
+      procedure run;
+
+      { cursor movement commands }
       procedure arrowup;
       procedure arrowdown;
       procedure home;
       procedure _end;
       procedure pageup;
       procedure pagedown;
-      procedure run;
     end;
 
-  constructor stringobj.fromstring( st : string );
-  begin self.content := st;
-  end;
-
-  constructor listeditor.create;
+  constructor editor.create;
   begin
     inherited;
     x := 1;
@@ -43,11 +35,11 @@ uses ll, li, fs, stri, num, cw, crt;
     w := crt.windMaxX;
     h := crt.windMaxY;
     //pause( 'windmaxy = ' + n2s( h ));
-    topline := self.make_cursor;
-    position := self.make_cursor;
+    topline := self.buf.make_cursor;
+    position := self.buf.make_cursor;
   end;
 
-  function listeditor.load( path : string ) : boolean;
+  function editor.load( path : string ) : boolean;
     var txt : text; line : string;
   begin
     result := fs.exists( path );
@@ -57,22 +49,22 @@ uses ll, li, fs, stri, num, cw, crt;
       reset( txt );
       while not eof( txt ) do begin
 	readln( txt, line );
-	self.append( stringobj.fromstring( line ));
+	self.buf.append( stringtoken.create( line ));
       end;
       close( txt );
     end;
   end;
 
-  procedure listeditor.show;
+  procedure editor.show;
     var
       ypos : cardinal;
-      cur  : cursor;
+      cur  : buffer.cursor;
 
     procedure show_curpos;
     begin
       cwritexy( 1, 1,
                 '|B[|C' + flushrt( n2s( self.position.index ), 6, '.' ) +
-		'|w/|c' + flushrt( n2s( self.count ), 6, '.' ) +
+                '|w/|c' + flushrt( n2s( self.buf.count ), 6, '.' ) +
 		'|B]' +
                 '|%' );
     end;
@@ -91,9 +83,9 @@ uses ll, li, fs, stri, num, cw, crt;
       cwrite( '|w' );
     end;
 
-    procedure show_text;
+    procedure show_line( line : string );
     begin
-      cwrite( stri.trunc( cur.value.content, cw.scr.w - cw.cur.x ));
+      cwrite( stri.trunc( line, cw.scr.w - cw.cur.x ));
       cwrite( '|%' ); // clreol
     end;
 
@@ -101,12 +93,15 @@ uses ll, li, fs, stri, num, cw, crt;
     // clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
     show_curpos;
     ypos := 2;
-    cur := self.make_cursor;
+    cur := self.buf.make_cursor;
     cur.move_to( self.topline );
     repeat
       show_nums;
       show_highlight;
-      show_text;
+
+      if cur.value.inheritsfrom( li.strnode ) then
+        show_line( li.strnode( cur.value ).str );
+
       inc( ypos )
     until ( ypos = self.h ) or ( not cur.move_next );
     while ypos < self.h do begin
@@ -116,14 +111,14 @@ uses ll, li, fs, stri, num, cw, crt;
   end;
 
 
-  procedure listeditor.home;
+  procedure editor.home;
   begin
-    if self.first = nil then exit;
+    if self.buf.first = nil then exit;
     self.position.to_top;
     self.topline.to_top;
   end;
-
-  procedure listeditor._end;
+
+  procedure editor._end;
     var i : byte;
   begin
     self.position.to_end;
@@ -132,19 +127,18 @@ uses ll, li, fs, stri, num, cw, crt;
       self.topline.move_prev;
   end;
 
-
-  procedure listeditor.pageup;
+  procedure editor.pageup;
     var c : byte;
   begin for c := 1 to h do arrowup;
   end;
 
-  procedure listeditor.pagedown;
+  procedure editor.pagedown;
     var c : byte;
   begin for c := 1 to h do arrowdown;
   end;
 
 
-  procedure listeditor.run;
+  procedure editor.run;
     var done : boolean = false; ch : char;
   begin
     self.home;
@@ -170,7 +164,7 @@ uses ll, li, fs, stri, num, cw, crt;
     until done;
   end;
 
-  procedure listeditor.arrowup;
+  procedure editor.arrowup;
   begin
     if self.position.move_prev then
     begin
@@ -184,14 +178,14 @@ uses ll, li, fs, stri, num, cw, crt;
   end;
 
 
-  procedure listeditor.arrowdown;
+  procedure editor.arrowdown;
     var screenline : word;
   begin
     if self.position.move_next then
       begin
         assert( self.topline.index <= self.position.index );
         screenline := self.position.index - self.topline.index;
-        if ( screenline > self.h - 5 ) and ( self.topline.index < self.count ) then
+	if ( screenline > self.h - 5 ) and ( self.topline.index < self.buf.count ) then
            self.topline.move_next
           //  scrollup1(1,80,y1,y2,nil);
           //  scrollup1(1,80,14,25,nil);
@@ -199,10 +193,10 @@ uses ll, li, fs, stri, num, cw, crt;
   end;
 
 
-  var ed : listeditor;
+  var ed : editor;
 begin
   crt.clrscr;
-  ed := listeditor.create;
+  ed := editor.create;
   if paramcount = 0 then
     writeln( 'usage : mn <filename>' )
   else if ed.load( paramstr( 1 )) then
