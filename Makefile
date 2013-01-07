@@ -9,7 +9,7 @@ FCL = ~/ver/fpc/packages
 ROOT      = ../
 
 # compiler paths
-FPC       = fpc -gl -B -Fu$(XPL) -Fi$(XPL) -Fu./lib -FE$(GEN) -Fu$(GEN)
+FPC       = fpc -gl -B -Fu$(GEN) -Fu$(XPL) -Fi$(XPL) -Fu./lib -FE$(GEN)
 FCL-PAS = $(FCL)/fcl-passrc
 
 #------------------------------------------------------
@@ -26,15 +26,22 @@ run:
 	mv $(GEN)/mn .
 	./mn mn.pas
 
+test: lib/xpl
+	cd ./lib/xpl; make test
+
 build : init obtangle
 
-init :
+init : lib/xpl
 	@mkdir -p $(GEN)
 	@rm -f $(GEN)/library $(GEN)/retroImage
+
+# you don't want to run 'git submodule update' every time you run
+# the tests, because git will shove any changes you've made off
+# to a side branch.
+lib/xpl:
 	@git submodule init
 	@git submodule update
-	@ln -s $(RETROPATH)/library $(GEN)/library
-	@ln -n $(RETROPATH)/retroImage $(GEN)/retroImage
+
 
 
 obtangle:
