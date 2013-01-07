@@ -9,7 +9,7 @@ FCL = ~/ver/fpc/packages
 ROOT      = ../
 
 # compiler paths
-FPC       = fpc -gl -B -Fu$(XPL) -Fi$(XPL) -FE$(GEN)
+FPC       = fpc -gl -B -Fu$(XPL) -Fi$(XPL) -Fu./lib -FE$(GEN) -Fu$(GEN)
 FCL-PAS = $(FCL)/fcl-passrc
 
 #------------------------------------------------------
@@ -22,7 +22,9 @@ targets:
 	@echo
 
 run:
-	$(FPC) -Mobjfpc -Fu./.gen mn.pas  && ./mn mn.pas
+	$(FPC) -Mobjfpc mn.pas
+	mv $(GEN)/mn .
+	./mn mn.pas
 
 build : init obtangle
 
