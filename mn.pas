@@ -6,13 +6,14 @@ Initial version forked from cedit.pas
 ---------------------------------------------------------------}
 {$i xpc.inc}
 program mn;
-uses ll, li, fs, stri, num, cw, crt, buf;
-
+uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
+
   type
     editor = class
       buf : buf.buffer;
       x, y, h, w : integer;
       topline, position : buf.buffer.cursor;
+      led : ui.zinput;  // led = Line EDitor
       constructor create;
       function load( path : string ) : boolean;
       procedure show;
@@ -34,7 +35,7 @@ uses ll, li, fs, stri, num, cw, crt, buf;
     y := 1;
     w := crt.windMaxX;
     h := crt.windMaxY;
-    //pause( 'windmaxy = ' + n2s( h ));
+    self.buf := buffer.create;
     topline := self.buf.make_cursor;
     position := self.buf.make_cursor;
   end;
@@ -69,18 +70,25 @@ uses ll, li, fs, stri, num, cw, crt, buf;
                 '|%' );
     end;
 
-    procedure show_highlight;
-    begin
-      if cur.index = position.index
-        then cwrite( '|!b' )
-        else cwrite( '|!k' )
-    end;
-
     procedure show_nums;
     begin
       cwritexy( 1, ypos, '|Y|!m' );
       write( flushrt( n2s( cur.index ), 3, ' ' ));
-      cwrite( '|w' );
+      cwrite( '|!k|w' );
+    end;
+
+    procedure show_edit( line : string );
+    begin
+      { This simply positions the input widget. }
+      with self.led do begin
+	x := crt.wherex;
+	y := crt.wherey;
+	tcol := $0E; // bright yellow
+	dlen := crt.windmaxx - crt.wherex;
+      end;
+      // debug: clear to eol w/blue bg to show where control should be
+      // cwrite( '|!b|%' );
+      led.show;
     end;
 
     procedure show_line( line : string );
@@ -89,6 +97,8 @@ uses ll, li, fs, stri, num, cw, crt, buf;
       cwrite( '|%' ); // clreol
     end;
 
+  var line : string = '';
+  
   begin
     // clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
     show_curpos;
@@ -96,12 +106,13 @@ uses ll, li, fs, stri, num, cw, crt, buf;
     cur := self.buf.make_cursor;
     cur.move_to( self.topline );
     repeat
-      show_nums;
-      show_highlight;
-
       if cur.value.inheritsfrom( li.strnode ) then
-        show_line( li.strnode( cur.value ).str );
-
+      begin
+	show_nums;
+	line := li.strnode( cur.value ).str;
+	if cur.index = position.index then show_edit( line )
+	else show_line( line );
+      end;
       inc( ypos )
     until ( ypos = self.h ) or ( not cur.move_next );
     while ypos < self.h do begin
@@ -114,8 +125,12 @@ uses ll, li, fs, stri, num, cw, crt, buf;
   procedure editor.home;
   begin
     if self.buf.first = nil then exit;
-    self.position.to_top;
-    self.topline.to_top;
+    position.to_top;
+    topline.to_top;
+    if position.value.inheritsfrom( li.strnode ) then
+      led.work := li.strnode( position.value ).str
+    else
+      led.work := '<<marker>>';
   end;
 
   procedure editor._end;
@@ -141,31 +156,32 @@ uses ll, li, fs, stri, num, cw, crt, buf;
   procedure editor.run;
     var done : boolean = false; ch : char;
   begin
+    self.led := ui.zinput.create;
     self.home;
     repeat
-      show;
-      ch := crt.readkey;
-      case ch of
-	#27, ^C	: done := true;
+      show; led.show;
+      case kbd.readkey(ch) of
+	^C, #27 : done := true;
 	^N	: arrowdown;
 	^P	: arrowup;
-	^A	: home;
-	^E	: _end;
-	#0	: case crt.readkey of
+	^M, #13	: ;
+	#0	: case kbd.readkey(ch) of
 		    #72	: arrowup; // when you press the UP arrow!
 		    #80	: arrowdown; // when you press the DOWN arrow!
 		    #71	: home;
 		    #79	: _end;
 		    #73	: pageup;
 		    #81	: pagedown;
+		    else led.handlestripped( ch ); led.show;
 		  end;
-	else;
+	else led.handle( ch ); led.show;
       end
     until done;
   end;
 
   procedure editor.arrowup;
   begin
+    li.strnode(self.position.value).str := led.value;
     if self.position.move_prev then
     begin
       if self.position.index - self.topline.index < 5 then
@@ -175,12 +191,14 @@ uses ll, li, fs, stri, num, cw, crt, buf;
       //  scrolldown1(1,80,14,25,nil);
     end
     else self.position.move_next;
+    led.work := li.strnode(self.position.value).str;
   end;
 
 
   procedure editor.arrowdown;
     var screenline : word;
   begin
+    li.strnode(self.position.value).str := led.value;
     if self.position.move_next then
       begin
         assert( self.topline.index <= self.position.index );
@@ -189,7 +207,8 @@ uses ll, li, fs, stri, num, cw, crt, buf;
            self.topline.move_next
           //  scrollup1(1,80,y1,y2,nil);
           //  scrollup1(1,80,14,25,nil);
-      end
+      end;
+    led.work := li.strnode(self.position.value).str;
   end;
 
 
