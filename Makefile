@@ -26,8 +26,11 @@ run:
 	mv $(GEN)/mn .
 	./mn mn.pas
 
-test: lib/xpl
-	cd ./lib/xpl; make test
+test: lib/xpl clean
+	cd ./lib/xpl; make test GEN=../../$(GEN)
+
+clean:
+	delp $(GEN)
 
 build : init obtangle
 
