@@ -1,7 +1,7 @@
 #+title: minneron features
 
-* TODO [0/25] general purpose traditional text editor
-** TODO [4/5] #ED001 get ln.pas hooked up to cedit.
+* TODO [1/14] general purpose traditional text editor
+** DONE [6/6] #ED001 get ln.pas hooked up to cedit.
 :PROPERTIES:
 :TS: <2013-01-03 01:38PM>
 :ID: e526zw719zf0
@@ -105,17 +105,44 @@ Looks like it's already using stringnodes, but that's pretty much the same as li
 
 Another thing I did was make the editor class (previously =listeditor=) be a container for a buffer, rather than a subclass.
 
-*** TODO [0/0] read lines of text as the initial chunks
+*** DONE [0/0] read lines of text as the initial chunks
 :PROPERTIES:
 :TS: <2013-01-01 10:46PM>
 :ID: kozjs1117zf0
 :END:
 
-** TODO [0/0] #ED002 break / join lines in editor
+This was already done in cedit too. :)
+
+
+*** DONE [0/0] show the line editor on the highlighted line
+:PROPERTIES:
+:TS: <2013-01-04 07:15AM>
+:ID: th42v961azf0
+:END:
+
+** TODO [0/2] #ED002 break / join lines in editor
 :PROPERTIES:
 :TS: <2013-01-03 01:40PM>
 :ID: 3kd48z719zf0
 :END:
+*** TODO break
+:PROPERTIES:
+:TS: <2013-01-07 01:46PM>
+:ID: fccivi70fzf0
+:END:
+
+Breaking lines simply means that when the enter key is pressed:
+
+  - everything to the right of the cursor is moved to a new string-node
+  - the new string node is inserted inline in the buffer
+
+*** TODO join
+:PROPERTIES:
+:TS: <2013-01-07 01:45PM>
+:ID: eyzbcg70fzf0
+:END:
+
+
 ** TODO [0/0] #ED003 save the updated file to disk
 :PROPERTIES:
 :TS: <2013-01-03 01:40PM>
@@ -177,6 +204,13 @@ Another thing I did was make the editor class (previously =listeditor=) be a con
 :ID: wqf1y8819zf0
 :END:
 
+
+
+* [0/0] -- unfiled ---
+:PROPERTIES:
+:TS: <2013-01-07 01:45PM>
+:ID: abbhsg70fzf0
+:END:
 ** TODO [0/0] build the block-based display engine (console based)
 :PROPERTIES:
 :TS: <2013-01-01 10:35PM>
@@ -202,134 +236,133 @@ Rather than deal with the bytestream protocol, just load the files directly into
 :ID:       n7z7sjq0exf0
 :END:
 
-
-* TODO [0/2] harvest other editors ( once I have core editor working in pascal )
+** TODO [0/2] harvest other editors ( once I have core editor working in pascal )
 :PROPERTIES:
 :TS:       <2012-11-13 11:42AM>
 :ID:       kt1h6kq0exf0
 :END:
-** TODO [0/0] harvest diakonos
+*** TODO [0/0] harvest diakonos
 :PROPERTIES:
 :TS:       <2012-11-13 11:40AM>
 :ID:       5g1jugq0exf0
 :END:
-** TODO [0/0] harvest codemirror
+*** TODO [0/0] harvest codemirror
 :PROPERTIES:
 :TS:       <2012-11-13 11:42AM>
 :ID:       ccr0wkq0exf0
 :END:
 
 
-* TODO [0/0] [#A] parse org files - see file:~/r/@code/@py/o2x.py
+** TODO [0/0] [#A] parse org files - see file:~/r/@code/@py/o2x.py
 :PROPERTIES:
 :TS:       <2012-11-10 11:18AM>
 :ID:       d0c5kpr0axf0
 :END:
 
-* TODO [0/0] load/save minno
+** TODO [0/0] load/save minno
 :PROPERTIES:
 :TS:       <2012-11-10 11:46AM>
 :ID:       det2o1t0axf0
 :END:
-* TODO [0/0] graph database ( port amoeba to pascal )
+** TODO [0/0] graph database ( port amoeba to pascal )
 :PROPERTIES:
 :TS:       <2012-11-13 11:26AM>
 :ID:       bnyckup0exf0
 :END:
-* TODO [0/2] multi-colum / table based editor
+** TODO [0/2] multi-colum / table based editor
 :PROPERTIES:
 :TS:       <2012-11-10 11:27AM>
 :ID:       0knej5s0axf0
 :END:
-** TODO [0/0] merge in file:~/r/work/griddemo.pas
+*** TODO [0/0] merge in file:~/r/work/griddemo.pas
 :PROPERTIES:
 :TS:       <2012-11-13 10:48AM>
 :ID:       re6c12o0exf0
 :END:
-** TODO [0/0] simple table-based editor
+*** TODO [0/0] simple table-based editor
 :PROPERTIES:
 :TS:       <2012-11-10 02:30PM>
 :ID:       uhv4ml01axf0
 :END:
 load arrays of nodes
-** TODO [0/0] cw's end of line handling breaks ( on linux, anyway ).
+*** TODO [0/0] cw's end of line handling breaks ( on linux, anyway ).
 :PROPERTIES:
 :TS:       <2012-11-13 03:29AM>
 :ID:       mmherr30exf0
 :END:
 This could be compounded by the fact that I'm also trying to use kvm.
 
-* TODO [0/1] database forms
+** TODO [0/1] database forms
 :PROPERTIES:
 :TS:       <2012-11-13 11:48AM>
 :ID:       eso31uq0exf0
 :END:
-** TODO [0/0] I think ymenu has a basic form. I could mix with html/django form model
+*** TODO [0/0] I think ymenu has a basic form. I could mix with html/django form model
 :PROPERTIES:
 :TS:       <2012-11-13 11:48AM>
 :ID:       xov0muq0exf0
 :END:
-* TODO [0/2] trailblazer / tangentcode editor ( graph db programming )
+** TODO [0/2] trailblazer / tangentcode editor ( graph db programming )
 :PROPERTIES:
 :TS:       <2012-11-13 11:37AM>
 :ID:       cxqhvbq0exf0
 :END:
-** TODO [0/2] get all my pascal code into a database
+*** TODO [0/2] get all my pascal code into a database
 :PROPERTIES:
 :TS:       <2012-11-10 12:42PM>
 :ID:       k1b2zlv0axf0
 :END:
 maybe use the code tools?
 
-*** TODO convert old pascal source files to unicode
+**** TODO convert old pascal source files to unicode
 :PROPERTIES:
 :TS:       <2012-11-10 02:21PM>
 :ID:       gs594801axf0
 :END:
 
 
-*** TODO parse pascal/oberon/turbo                                 :parser:
+**** TODO parse pascal/oberon/turbo                               :parser:
 :PROPERTIES:
 :TS:       <2012-11-10 01:50PM>
 :ID:       yv64pry0axf0
 :END:
-** TODO [0/0] implement org-babel-tangle
+*** TODO [0/0] implement org-babel-tangle
 :PROPERTIES:
 :TS:       <2012-11-13 11:06AM>
 :ID:       ls96dwo0exf0
 :END:
-* TODO [0/2] task oriented, tiling window enviroment ( minneron )
+** TODO [0/2] task oriented, tiling window enviroment ( minneron )
 :PROPERTIES:
 :TS:       <2012-11-13 11:30AM>
 :ID:       v735uzp0exf0
 :END:
-** TODO [0/0] get tmux to work sort of like autohotkey                :tmux:
+*** TODO [0/0] get tmux to work sort of like autohotkey              :tmux:
 :PROPERTIES:
 :TS:       <2012-11-10 11:18AM>
 :ID:       mpj2aqr0axf0
 :END:
-** graphical tmux-like thing for windows ( but with browsers, etc )
+*** graphical tmux-like thing for windows ( but with browsers, etc )
 :PROPERTIES:
 :TS:       <2012-11-10 11:18AM>
 :ID:       23q5upr0axf0
 :END:
 Could use windows API, or mozilla.
-** i want to unify the emacs and tmux keybindngs                      :tmux:
+*** i want to unify the emacs and tmux keybindngs                    :tmux:
 :PROPERTIES:
 :TS:       <2012-11-10 11:18AM>
 :ID:       5yfj6qr0axf0
 :END:
 especially for switching / resizing windows
 C-x | to do vertical split, maybe?
-** WANT browser keybidings for scroll, etc                         :browser:
+*** WANT browser keybidings for scroll, etc                       :browser:
 :PROPERTIES:
 :TS:       <2012-11-10 11:20AM>
 :ID:       kjx0ctr0axf0
 :END:
 i wish i could use my normal keybindings for paging, etc in the browser
-*** TODO try conkeror
+**** TODO try conkeror
 :PROPERTIES:
 :TS:       <2012-11-10 11:21AM>
 :ID:       4dmjvur0axf0
 :END:
-** TODO console web browsers
+*** TODO console web browsers
