@@ -29,6 +29,7 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
 
      protected { line manipulation commands }
       procedure newline;
+      procedure delete;
     end;
 
   constructor editor.create;
@@ -164,11 +165,12 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
     repeat
       show; led.show;
       case kbd.readkey(ch) of
-	^C, #27 : done := true;
+	^C, #27	: done := true;
 	^N	: arrowdown;
 	^P	: arrowup;
 	^M	: newline;
-	#0	: case kbd.readkey(ch) of
+	^D	: delete;
+	#0      : case kbd.readkey(ch) of
 		    #72	: arrowup; // when you press the UP arrow!
 		    #80	: arrowdown; // when you press the DOWN arrow!
 		    #71	: home;
@@ -197,7 +199,6 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
     led.work := li.strnode(self.position.value).str;
   end;
 
-
   procedure editor.arrowdown;
     var screenline : word;
   begin
@@ -221,6 +222,22 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
     led.del_to_end;
     arrowdown;
     led.to_start
+  end; { editor.newline }
+
+  procedure editor.delete;
+    var cur : buffer.cursor;
+  begin
+    if led.at_end then begin
+      if not position.at_end then begin
+	cur := buf.make_cursor;
+	cur.move_to(position);
+	cur.move_next;
+	led.work += li.strnode( cur.value ).str;
+	position.delete_next;
+	cur.free;
+      end
+    end
+    else led.del
   end;
 
 

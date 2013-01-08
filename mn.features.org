@@ -120,7 +120,7 @@ This was already done in cedit too. :)
 :ID: th42v961azf0
 :END:
 
-** TODO [2/5] #ED002 break / join lines in editor
+** DONE [4/6] #ED002 break / join lines in editor
 :PROPERTIES:
 :TS: <2013-01-03 01:40PM>
 :ID: 3kd48z719zf0
@@ -142,18 +142,27 @@ Breaking lines simply means that when the enter key is pressed:
 :ID: yux1esi0fzf0
 :END:
 
-*** TODO join
+*** DONE join lines when deleting newline
 :PROPERTIES:
 :TS: <2013-01-07 01:45PM>
 :ID: eyzbcg70fzf0
 :END:
 
-*** TODO update cursor index after deleting
+*** DONE update cursor index after deleting (unecessary!)
 :PROPERTIES:
 :TS: <2013-01-07 05:49PM>
 :ID: yux1esi0fzf0
 :END:
 
+Actually, when you delete the newline, the cursor stays in the same place.
+
+*** TODO also join lines when backspacing through newline
+:PROPERTIES:
+:TS: <2013-01-07 11:54PM>
+:ID: ouhg8oz0fzf0
+:END:
+
+This can wait.
 
 *** TODO update /all/ attached cursors when inserting items into the list
 :PROPERTIES:
