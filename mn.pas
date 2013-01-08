@@ -197,6 +197,8 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
 	^M	: newline;
 	^D	: delete;
 	^S	: save;
+         ^V : pagedown;
+         ^U : pageup;
 	#0      : case kbd.readkey(ch) of
 		    #72	: arrowup; // when you press the UP arrow!
 		    #80	: arrowdown; // when you press the DOWN arrow!
