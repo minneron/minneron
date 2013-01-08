@@ -19,13 +19,16 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
       procedure show;
       procedure run;
 
-      { cursor movement commands }
+     protected { cursor movement commands }
       procedure arrowup;
       procedure arrowdown;
       procedure home;
       procedure _end;
       procedure pageup;
       procedure pagedown;
+
+     protected { line manipulation commands }
+      procedure newline;
     end;
 
   constructor editor.create;
@@ -98,7 +101,7 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
     end;
 
   var line : string = '';
-  
+
   begin
     // clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
     show_curpos;
@@ -164,7 +167,7 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
 	^C, #27 : done := true;
 	^N	: arrowdown;
 	^P	: arrowup;
-	^M, #13	: ;
+	^M	: newline;
 	#0	: case kbd.readkey(ch) of
 		    #72	: arrowup; // when you press the UP arrow!
 		    #80	: arrowdown; // when you press the DOWN arrow!
@@ -209,6 +212,15 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
           //  scrollup1(1,80,14,25,nil);
       end;
     led.work := li.strnode(self.position.value).str;
+  end;
+
+
+  procedure editor.newline;
+  begin
+    position.inject_next( strnode.create( led.str_to_end ));
+    led.del_to_end;
+    arrowdown;
+    led.to_start
   end;
 
 

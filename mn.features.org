@@ -120,12 +120,12 @@ This was already done in cedit too. :)
 :ID: th42v961azf0
 :END:
 
-** TODO [0/2] #ED002 break / join lines in editor
+** TODO [2/5] #ED002 break / join lines in editor
 :PROPERTIES:
 :TS: <2013-01-03 01:40PM>
 :ID: 3kd48z719zf0
 :END:
-*** TODO break
+*** DONE break
 :PROPERTIES:
 :TS: <2013-01-07 01:46PM>
 :ID: fccivi70fzf0
@@ -136,12 +136,41 @@ Breaking lines simply means that when the enter key is pressed:
   - everything to the right of the cursor is moved to a new string-node
   - the new string node is inserted inline in the buffer
 
+*** DONE update cursors after break (editor.position and led.cpos)
+:PROPERTIES:
+:TS: <2013-01-07 05:49PM>
+:ID: yux1esi0fzf0
+:END:
+
 *** TODO join
 :PROPERTIES:
 :TS: <2013-01-07 01:45PM>
 :ID: eyzbcg70fzf0
 :END:
 
+*** TODO update cursor index after deleting
+:PROPERTIES:
+:TS: <2013-01-07 05:49PM>
+:ID: yux1esi0fzf0
+:END:
+
+
+*** TODO update /all/ attached cursors when inserting items into the list
+:PROPERTIES:
+:TS: <2013-01-07 06:42PM>
+:ID: 8zt2b8l0fzf0
+:END:
+    { append this cursor to the array so we get notified of inserts/deletes }
+    len := length( lis._cursors );
+    setlength( lis._cursors, len + 1 );
+    lis._cursors[ len ] := self;
+
+test case:
+    { when we insert, the cursors should update }
+    ls.insert( a );
+    chk.equal( ls.count, 3 );
+    chk.that( cur.index = 3, 'cursor index didn''t update after insertion' );
+    chk.equal( cur.index, 3 );
 
 ** TODO [0/0] #ED003 save the updated file to disk
 :PROPERTIES:
