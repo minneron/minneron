@@ -11,11 +11,14 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
   type
     editor = class
       buf : buf.buffer;
+      filename : string;
       x, y, h, w : integer;
       topline, position : buf.buffer.cursor;
       led : ui.zinput;  // led = Line EDitor
       constructor create;
       function load( path : string ) : boolean;
+      function save_as( path : string ) : boolean;
+      function save : boolean;
       procedure show;
       procedure run;
 
@@ -42,6 +45,7 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
     self.buf := buffer.create;
     topline := self.buf.make_cursor;
     position := self.buf.make_cursor;
+    filename := '';
   end;
 
   function editor.load( path : string ) : boolean;
@@ -57,7 +61,29 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
 	self.buf.append( stringtoken.create( line ));
       end;
       close( txt );
+      self.filename := path;
     end;
+  end; { editor.load }
+
+  function editor.save : boolean;
+    var txt: text; node : li.node;
+  begin
+    assign( txt, self.filename );
+    rewrite( txt );
+    for node in self.buf do begin
+      if node.kind = KSTR then writeln( txt, (node as strnode).str );
+    end;
+    close( txt );
+    result := true; // TODO error checking
+  end;
+
+  function editor.save_as( path : string ) : boolean;
+    var oldname : string;
+  begin
+    oldname := self.filename;
+    self.filename := path;
+    result := self.save;
+    if not result then self.filename := oldname
   end;
 
   procedure editor.show;
@@ -154,7 +180,7 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
   procedure editor.pagedown;
     var c : byte;
   begin for c := 1 to h do arrowdown;
-  end;
+  end; { editor.pagedown }
 
 
   procedure editor.run;
@@ -170,6 +196,7 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
 	^P	: arrowup;
 	^M	: newline;
 	^D	: delete;
+	^S	: save;
 	#0      : case kbd.readkey(ch) of
 		    #72	: arrowup; // when you press the UP arrow!
 		    #80	: arrowdown; // when you press the DOWN arrow!
