@@ -1,0 +1,28 @@
+
+                |ghello, |Ww|Bo|Gr|Cl|wd|W!
+
+The current keybindings are similar to those in emacs and bash:
+
+  |Wcursor movement
+  ^N : next line
+  ^P : previous line
+  ^U : page up
+  ^V : page down
+  ^B : back (left/up)
+  ^F : forward (right/down)
+  ^A : go to start of line
+  ^E : go to end of line
+
+  |Wediting
+  ^K : delete to end of line
+  ^H : backspace
+  ^D : delete
+
+  |Wfile management
+  ^S : save
+  ^C : exit
+
+If you don't like these keybindings, you can edit them in |gmin.pas|w.
+
+(Sorry, no config file yet, but stay tuned!)
+

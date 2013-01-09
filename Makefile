@@ -27,7 +27,7 @@ min:
 	mv $(GEN)/min .$
 
 run: min
-	./min min.pas
+	./min hello.min
 
 test: lib/xpl clean
 	cd ./lib/xpl; make test GEN=../../$(GEN)
