@@ -1,0 +1,73 @@
+#+title: minneron: minimal networked environment
+
+* Purpose
+
+Minneron is /(or will be)/ a small, user-extensible computing environment, inspired by tools such as oberon, emacs, squeak, forth, microsoft access, hypercard, eclipse, and the mozilla platform.
+
+Like most of these tools, it provides a self-contained development environment for building applications. What sets minneron apart is a focus on understandability. To quote Dan Ingalls,[fn:1]
+
+#+begin_quote
+If a system is to serve the creative spirit, it must be entirely comprehensible to a single individual.
+
+... [H]uman potential manifests itself in individuals. To realize this potential, we must provide a medium that can be mastered by a single individual. Any barrier that exists between the user and some part of the system will eventually be a barrier to creative expression.
+#+end_quote
+
+Every aspect of minneron's design is guided by this principle.
+
+* Features
+
+| component          | status                              |
+|--------------------+-------------------------------------|
+| virtual machine    | working. see [[http://retroforth.org/docs/The_Ngaro_Virtual_Machine.html][ngaro]]                  |
+| text editor        | primitive                           |
+| scripting language | currently [[http://retroforth.org/][retroforth]]. more to come. |
+| ui components      | primitive                           |
+| database           | /pending/                             |
+| version control    | /pending/                             |
+| network support    | /pending/                             |
+| graphics           | /pending/ (but see [[http://gamesketchlib.org/][gamesketchlib]])     |
+
+* Prerequisites
+
+Eventually, minneron will be fully bootstrapped from machine code on its own easily-portable virtual machine. For the time being, though, working with this source code requires the following tools:
+
+** free pascal compiler (development version / 2.7.x)
+
+For now, though, you will need to compile the source code here with the [[http://www.freepascal.org/develop.var][development version (2.7.x) of Free Pascal]]. You can either compile this yourself from the instructions on that page or download the [[ftp://ftp.freepascal.org/pub/fpc/snapshot/trunk/][nightly free pascal binary snapshot]] for your platform.
+
+** =git= (any modern version)
+
+=git= is a version control system. You can get it from your operating system's package manager, or from [[http://git-scm.com/][git-scm.com]].[fn:2]
+
+Your life will be much easier if you fork or clone this repository with =git= rather than attempting to download the source as a zip file. This is because the pascal libraries that minneron depends on are published as separate repositories on github. They are linked to this repository as git submodules (under the =lib/= directory). Git can take care of downloading them for you, and make sure you always have the correct version.
+
+Once you have git installed, you can get the minneron source code by issuing the following command:
+
+: git clone git@github.com:minneron/minneron.git
+
+** =make=
+
+=make= is a common tool to help automate the process of compiling independent files.
+
+If you are running a unix-like operating system, you probably already have =make= installed, or can obtain it through your system's package manager.
+
+On windows platforms, it is included with free pascal, and is also available via [[http://www.cygwin.com/][cygwin]].
+
+* Compiling and Running Minneron
+
+To compile minneron, type:
+
+: make min
+
+If all goes well, this will create an executable at =./min= (or =./min.exe= on windows).
+
+To run the program, type:
+
+: ./min hello.min
+
+* Footnotes
+
+[fn:1] The Dan Ingalls quote is from [[Http://www.cs.virginia.edu/~evans/cs655/readings/smalltalk.html][Design Principles Behind Smalltalk]]
+
+[fn:2] If you've never used git, you might also want to check out [[http://try.github.com/levels/1/challenges/1][try.github.com]] for a nice 15-minute interactive tutorial.
+
