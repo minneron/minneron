@@ -18,13 +18,16 @@ targets:
 	@echo 'available targets:'
 	@echo '--------------------------'
 	@echo 'make test  -> run all tests'
-	@echo 'make run   -> run minneron'
+	@echo 'make min   -> build ./min'
+	@echo 'make run   -> build and run'
 	@echo
 
-run:
-	$(FPC) -Mobjfpc mn.pas
-	mv $(GEN)/mn .
-	./mn mn.pas
+min:
+	$(FPC) -Mobjfpc min.pas
+	mv $(GEN)/min .$
+
+run: min
+	./min min.pas
 
 test: lib/xpl clean
 	cd ./lib/xpl; make test GEN=../../$(GEN)

@@ -1,4 +1,0 @@
-minneron
-========
-
-minimal networked environment

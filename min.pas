@@ -5,7 +5,7 @@ Copyright (c) 2012 Michal J Wallace. All rights reserved.
 Initial version forked from cedit.pas
 ---------------------------------------------------------------}
 {$i xpc.inc}
-program mn;
+program min;
 uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
 
   type
@@ -281,7 +281,7 @@ begin
   crt.clrscr;
   ed := editor.create;
   if paramcount = 0 then
-    writeln( 'usage : mn <filename>' )
+    writeln( 'usage : min <filename>' )
   else if ed.load( paramstr( 1 )) then
   begin
     ed.run;
