@@ -152,7 +152,8 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
     while ypos < self.h do begin
       cwritexy( 1, ypos, '|%' );
       inc( ypos )
-    end
+    end;
+    led.show
   end;
 
 
@@ -193,17 +194,17 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
     self.led := ui.zinput.create;
     self.home;
       repeat
-      show; led.show;
+      show;
       case kbd.readkey(ch) of
-         ^C : done := true;
-	^N	: arrowdown;
-	^P	: arrowup;
-	^M	: newline;
-	^D	: delete;
-	^S	: save;
-         ^V : pagedown;
-         ^U : pageup;
-	#0      : case kbd.readkey(ch) of
+        ^C : done := true;
+        ^N : arrowdown;
+        ^P : arrowup;
+        ^M : newline;
+        ^D : delete;
+        ^S : save;
+        ^V : pagedown;
+        ^U : pageup;
+        #0 : case kbd.readkey(ch) of
 		    #72	: arrowup; // when you press the UP arrow!
 		    #80	: arrowdown; // when you press the DOWN arrow!
 		    #71	: home;
