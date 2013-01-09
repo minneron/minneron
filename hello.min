@@ -1,6 +1,9 @@
 
                 |ghello, |Ww|Bo|Gr|Cl|wd|W!
 
+Welcome to minneron. At the moment, the only thing to see here is
+the text editor, which is still quite primitive.
+
 The current keybindings are similar to those in emacs and bash:
 
   |Wcursor movement
@@ -26,3 +29,21 @@ If you don't like these keybindings, you can edit them in |gmin.pas|w.
 
 (Sorry, no config file yet, but stay tuned!)
 
+For now, you can only edit one file at a time.
+
+|WTo edit a different file:
+
+  - SAVE with ^S (hold the control key, press S, release both)
+  - QUIT with ^Q
+
+Then, at the prompt, type:
+
+   |W./min filename.xxx
+
+|rNOTE: |wdue to a bug, the file must actually exist, and contain at least
+one line (blank is fine) before you can edit it. To create a new file
+like this, run the command:
+
+  echo >> filename.xxx
+
+This works on all modern operating systems.
