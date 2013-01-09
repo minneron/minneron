@@ -285,6 +285,7 @@ begin
     ed.run;
     ed.destroy;
     cwriteln( '|w|!k' );
+    crt.clrscr;
   end
   else writeln( 'unable to load file: ', paramstr( 1 ));
 end.
