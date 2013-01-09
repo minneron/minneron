@@ -37,18 +37,16 @@ clean:
 
 build : init obtangle
 
-init : lib/xpl
+init : lib/xpl/Makefile
 	@mkdir -p $(GEN)
 	@rm -f $(GEN)/library $(GEN)/retroImage
 
 # you don't want to run 'git submodule update' every time you run
 # the tests, because git will shove any changes you've made off
 # to a side branch.
-lib/xpl:
+lib/xpl/Makefile:
 	@git submodule init
 	@git submodule update
-
-
 
 obtangle:
 	@$(FPC) obtangle.pas
