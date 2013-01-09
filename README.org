@@ -14,6 +14,11 @@ If a system is to serve the creative spirit, it must be entirely comprehensible 
 
 Every aspect of minneron's design is guided by this principle.
 
+* License
+
+Minneron is open source software, available under the terms of the MIT/X11 License.
+See the file ~MIT-LICENSE.txt~ for complete details.
+
 * Features
 
 | component          | status                              |
