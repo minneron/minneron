@@ -244,7 +244,8 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
            self.topline.move_next
           //  scrollup1(1,80,y1,y2,nil);
           //  scrollup1(1,80,14,25,nil);
-      end;
+      end
+    else self.position.to_end;
     led.work := li.strnode(self.position.value).str;
   end;
 
