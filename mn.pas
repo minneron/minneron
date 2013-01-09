@@ -12,6 +12,7 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
     editor = class
       buf : buf.buffer;
       filename : string;
+      message  : string;
       x, y, h, w : integer;
       topline, position : buf.buffer.cursor;
       led : ui.zinput;  // led = Line EDitor
@@ -46,6 +47,7 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
     topline := self.buf.make_cursor;
     position := self.buf.make_cursor;
     filename := '';
+    message  := 'welcome to minneron.';
   end;
 
   function editor.load( path : string ) : boolean;
@@ -75,6 +77,7 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
     end;
     close( txt );
     result := true; // TODO error checking
+    message := filename + ' saved.';
   end;
 
   function editor.save_as( path : string ) : boolean;
@@ -96,13 +99,14 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
       cwritexy( 1, 1,
                 '|B[|C' + flushrt( n2s( self.position.index ), 6, '.' ) +
                 '|w/|c' + flushrt( n2s( self.buf.count ), 6, '.' ) +
-		'|B]' +
-                '|%' );
+                '|B] |G' + self.message +
+             '|%' );
+      self.message := '';
     end;
 
     procedure show_nums;
     begin
-      cwritexy( 1, ypos, '|Y|!m' );
+      cwritexy( 1, ypos, '|k|!c' );
       write( flushrt( n2s( cur.index ), 3, ' ' ));
       cwrite( '|!k|w' );
     end;
@@ -188,10 +192,10 @@ uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
   begin
     self.led := ui.zinput.create;
     self.home;
-    repeat
+      repeat
       show; led.show;
       case kbd.readkey(ch) of
-	^C, #27	: done := true;
+         ^C : done := true;
 	^N	: arrowdown;
 	^P	: arrowup;
 	^M	: newline;
