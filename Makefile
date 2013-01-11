@@ -30,8 +30,8 @@ min:
 run: clean min
 	./min hello.min
 
-tangled: *.org
-	$(TANGLE) *.org > tangled
+.tangled: *.org
+	$(TANGLE) *.org > .tangled
 
 
 clean:
