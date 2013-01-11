@@ -11,6 +11,7 @@ ROOT      = ../
 # compiler paths
 FPC       = fpc -gl -B -Fu$(GEN) -Fu$(XPL) -Fi$(XPL) -Fu./lib -FE$(GEN)
 FCL-PAS = $(FCL)/fcl-passrc
+TANGLE    = ./etc/tangle.el
 
 #------------------------------------------------------
 
@@ -26,16 +27,22 @@ min:
 	$(FPC) -Mobjfpc min.pas
 	mv $(GEN)/min .$
 
-run: min
+run: clean min
 	./min hello.min
 
-test: lib/xpl clean
-	cd ./lib/xpl; make test GEN=../../$(GEN)
+tangled: *.org
+	$(TANGLE) *.org > tangled
+
 
 clean:
 	delp $(GEN)
+	rm -f min tangled
 
-build : init obtangle
+test: lib/xpl clean tangled
+	cd ./lib/xpl; make test GEN=../../$(GEN)
+
+
+build : init
 
 init : lib/xpl/Makefile
 	@mkdir -p $(GEN)
@@ -48,8 +55,7 @@ lib/xpl/Makefile:
 	@git submodule init
 	@git submodule update
 
-obtangle:
-	@$(FPC) obtangle.pas
 
-test:
+#obtangle:
+#	@$(FPC) obtangle.pas
 
