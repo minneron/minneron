@@ -6,38 +6,37 @@
 :ID: fr5fryb1jzf0
 :END:
 #+begin_src pascal :tangle ".gen/min_ed.pas" :noweb tangle
-    {$i xpc.inc}
-    unit min_ed;
-    interface uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
+  {$i xpc.inc}
+  unit min_ed;
+  interface uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
+    type
+      editor = class
+        buf               : buf.buffer;
+        filename          : string;
+        message           : string;
+        x, y, h, w        : integer;
+        topline, position : buf.buffer.cursor;
+        led               : ui.zinput;  // led = Line EDitor
+        constructor create;
+        function load( path : string ) : boolean;
+        function save_as( path : string ) : boolean;
+        function save : boolean;
+        procedure show;
+        procedure run;
 
-      type
-        editor = class
-          buf : buf.buffer;
-          filename : string;
-          message  : string;
-          x, y, h, w : integer;
-          topline, position : buf.buffer.cursor;
-          led : ui.zinput;  // led = Line EDitor
-          constructor create;
-          function load( path : string ) : boolean;
-          function save_as( path : string ) : boolean;
-          function save : boolean;
-          procedure show;
-          procedure run;
-    
-         protected { cursor movement commands }
-          procedure arrowup;
-          procedure arrowdown;
-          procedure home;
-          procedure _end;
-          procedure pageup;
-          procedure pagedown;
-    
-         protected { line manipulation commands }
-          procedure newline;
-          procedure delete;
-        end;
-    <<implementation>>
+      protected { cursor movement commands }
+        procedure arrowup;
+        procedure arrowdown;
+        procedure home;
+        procedure _end;
+        procedure pageup;
+        procedure pagedown;
+
+      protected { line manipulation commands }
+        procedure newline;
+        procedure delete;
+      end;
+  implementation
   end.
 #+end_src
 
@@ -79,7 +78,7 @@
           self.filename := path;
         end;
       end; { editor.load }
-    
+
       function editor.save : boolean;
         var txt: text; node : li.node;
       begin
@@ -92,7 +91,7 @@
         result := true; // TODO error checking
         message := filename + ' saved.';
       end;
-    
+
       function editor.save_as( path : string ) : boolean;
         var oldname : string;
       begin
@@ -106,7 +105,7 @@
         var
           ypos : cardinal;
           cur  : buffer.cursor;
-    
+
         procedure show_curpos;
         begin
           cwritexy( 1, 1,
@@ -116,14 +115,14 @@
                  '|%' );
           self.message := '';
         end;
-    
+
         procedure show_nums;
         begin
           cwritexy( 1, ypos, '|k|!c' );
           write( flushrt( n2s( cur.index ), 3, ' ' ));
           cwrite( '|!k|w' );
         end;
-    
+
         procedure show_edit( line : string );
         begin
           { This simply positions the input widget. }
@@ -137,15 +136,15 @@
           // cwrite( '|!b|%' );
           led.show;
         end;
-    
+
         procedure show_line( line : string );
         begin
           cwrite( stri.trunc( line, cw.scr.w - cw.cur.x ));
           cwrite( '|%' ); // clreol
         end;
-    
+
       var line : string = '';
-    
+
       begin
         // clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
         show_curpos;
@@ -168,7 +167,7 @@
         end;
         led.show
       end;
-    
+
     
       procedure editor.home;
       begin
@@ -180,7 +179,7 @@
         else
           led.work := '<<marker>>';
       end;
-    
+
       procedure editor._end;
         var i : byte;
       begin
@@ -189,17 +188,17 @@
         for i := crt.windmaxy div 2 downto 1 do
           self.topline.move_prev;
       end;
-    
+
       procedure editor.pageup;
         var c : byte;
       begin for c := 1 to h do arrowup;
       end;
-    
+
       procedure editor.pagedown;
         var c : byte;
       begin for c := 1 to h do arrowdown;
       end; { editor.pagedown }
-    
+
     
       procedure editor.run;
         var done : boolean = false; ch : char;
@@ -245,7 +244,7 @@
         else self.position.move_next;
         led.work := li.strnode(self.position.value).str;
       end;
-    
+
       procedure editor.arrowdown;
         var screenline : word;
       begin
@@ -262,7 +261,7 @@
         else self.position.to_end;
         led.work := li.strnode(self.position.value).str;
       end;
-    
+
     
       procedure editor.newline;
       begin
@@ -271,7 +270,7 @@
         arrowdown;
         led.to_start
       end; { editor.newline }
-    
+
       procedure editor.delete;
         var cur : buffer.cursor;
       begin
@@ -287,6 +286,6 @@
         end
         else led.del
       end;
-    
+
     end.
 #+end_src
