@@ -1,6 +1,255 @@
 #+title: minneron
 
-* TODO behavior driven test harness
+
+
+* aspects
+:PROPERTIES:
+:TS: <2013-01-11 11:07AM>
+:ID: djgkuyd0kzf0
+:END:
+** structural view (modules)
+:PROPERTIES:
+:TS: <2013-01-11 11:21AM>
+:ID: 02li6ne0kzf0
+:END:
+*** DONE ngaro : a simple virtual computer                             :vm:
+:PROPERTIES:
+:TS: <2013-01-11 03:35AM>
+:ID: la310m71jzf0
+:END:
+*** document model (spanning tree into the graph)
+:PROPERTIES:
+:TS: <2013-01-03 04:13PM>
+:ID: v971ih00azf0
+:END:
+**** buffers
+:PROPERTIES:
+:TS: <2013-01-03 03:29PM>
+:ID: jek9h1d19zf0
+:END:
+***** TYPE buffer
+:PROPERTIES:
+:TS: <2013-01-04 02:51AM>
+:ID: o6e3l1u0azf0
+:END:
+
+The buffer is a simple, linear list of tokens, where tokens are either strings, or invisible markers pointing to document nodes.
+
+#+name: type:buffer
+#+begin_src pascal
+  type buffer = class( specialize ll.list <token> )
+  end;
+#+end_src
+
+***** TYPE Token
+:PROPERTIES:
+:TS: <2013-01-04 02:09AM>
+:ID: 2mxaf3s0azf0
+:END:
+
+#+name: @type:token
+#+begin_src pascal
+  type token = li.node;
+#+end_src
+
+***** TYPE StringToken
+:PROPERTIES:
+:TS: <2013-01-04 02:08AM>
+:ID: kaujt1s0azf0
+:END:
+
+#+name: @type:token
+#+begin_src pascal
+  type stringtoken = li.strnode;
+#+end_src
+
+***** TYPE TagToken
+:PROPERTIES:
+:TS: <2013-01-03 03:29PM>
+:ID: d28jz1d19zf0
+:END:
+
+#+name: @type:token
+#+begin_src pascal
+  type tagtoken = li.objnode;
+#+end_src
+
+Tag tokens are non-textual, and may hold any kind of data.
+
+Unlike the generic list cursors, which are pointers to link objects in the linked list, markers are data objects that are actually part of the buffer. This is so programs that traverse the list are able to see the markers.
+
+**** spans
+:PROPERTIES:
+:TS: <2013-01-03 03:57PM>
+:ID: f4x29ce19zf0
+:END:
+
+Span is a generic type, suitable for use with nested elements but also for arbitrary regions like selected text.
+
+#+name: @types
+#+begin_src pascal
+  type
+    generic span<t> = class
+    public
+      type tag = class( tagtoken )
+        is_start, is_end : boolean;
+        span             : specialize span<t>;
+      end;
+      start_tag, end_tag : tag;
+      obj : t;
+    end;
+#+end_src
+
+**** blocks
+:PROPERTIES:
+:TS: <2013-01-03 03:53PM>
+:ID: s5pjy4e19zf0
+:END:
+
+Blocks are spans that act like xml elements, in that they are nestable but non-overlapping, and that each node in the tree contains references to its siblings, children, and a single parent node.
+
+Aside from these fields, blocks can be of any type, and may or may not conform to any particular schema.
+
+Most likely they would be implemented as =type generic block<t>=.
+
+These can be used to indicate parsed structures such as lines of text, tokens (for syntax highlighting), etc.
+
+**** other embedded objects
+:PROPERTIES:
+:TS: <2013-01-03 04:06PM>
+:ID: nrrkq600azf0
+:END:
+
+Arbitrary objects can be embedded in the text. These may contain "clones" of text elsewhere in the document (or in another document, or calculated on the fly).
+
+They are expected to display themselves, just like textual nodes.
+**** «tokenizer»                                                        :tok:
+:PROPERTIES:
+:TS: <2013-01-11 05:05AM>
+:ID: er586tb1jzf0
+:END:
+#+name: ed:line->token
+#+begin_src pascal
+
+stringtoken.create( line )
+
+#+end_src
+*** user interface
+:PROPERTIES:
+:TS: <2013-01-11 11:07AM>
+:ID: lb6auzd0kzf0
+:END:
+**** line editor
+:PROPERTIES:
+:TS: <2013-01-11 11:22AM>
+:ID: 2cxcdoe0kzf0
+:END:
+
+**** editor type                                                      :ed:
+:PROPERTIES:
+:TS: <2013-01-11 11:09AM>
+:ID: zy54y2e0kzf0
+:END:
+***** loading the file
+:PROPERTIES:
+:TS: <2013-01-11 04:55AM>
+:ID: 6wgjjcb1jzf0
+:END:
+#+name: editor
+#+begin_src pascal
+  function editor.load( path : string ) : boolean;
+    var txt : text; line : string;
+  begin
+    if fs.exists( path ) then begin
+      assign( input, path );
+      reset( path );
+      while not eof( input ) do begin
+        readln( input, line );
+        self.buf.append( <<ed:make-line-node>> )
+      end;
+      close( input );
+      self.filename := path
+    end
+  end;
+#+end_src
+*** database
+:PROPERTIES:
+:TS: <2013-01-11 11:21AM>
+:ID: ae267me0kzf0
+:END:
+*** SECTION crawler concept (cursor+stack machine)                      :cur:
+:PROPERTIES:
+:TS: <2013-01-10 07:43AM>
+:ID: vfbhc031izf0
+:END:
+**** TODO add clasp as an actual node type, with left,right, and up pointers. :ll:
+:PROPERTIES:
+:TS: <2013-01-10 08:17AM>
+:ID: 9s66sl41izf0
+:END:
+**** TODO add hook as a node type with left, right, and down pointers. :ll:
+:PROPERTIES:
+:TS: <2013-01-10 08:19AM>
+:ID: rq33yn41izf0
+:END:
+** behavioral view (narrative)
+:PROPERTIES:
+:TS: <2013-01-11 11:07AM>
+:ID: v0ufazd0kzf0
+:END:
+*** SECTION starting point
+:PROPERTIES:
+:TS: <2013-01-11 04:49AM>
+:ID: 21j3a1b1jzf0
+:END:
+**** TODO SECT What you should already know.
+:PROPERTIES:
+:TS: <2013-01-11 04:53AM>
+:ID: 0zjgg8b1jzf0
+:END:
+**** TODO link to introductory pascal
+:PROPERTIES:
+:TS: <2013-01-11 04:53AM>
+:ID: u7x539b1jzf0
+:END:
+**** TODO show the cursor interface
+:PROPERTIES:
+:TS: <2013-01-11 04:49AM>
+:ID: r0oel1b1jzf0
+:END:
+**** TODO ui.input interface
+:PROPERTIES:
+:TS: <2013-01-11 04:50AM>
+:ID: olz7x3b1jzf0
+:END:
+*** CARD working through wordwrap / tokenization                   :wrap:tok:
+:PROPERTIES:
+:TS: <2013-01-11 03:17AM>
+:ID: f0042s61jzf0
+:END:
+**** NOTE still stuck on wordwrap
+:PROPERTIES:
+:TS: <2013-01-11 02:15AM>
+:ID: v6zgxw31jzf0
+:END:
+I'm still stuck. I know that word wrap is my next step, but I'm not sure what to do yet.
+Does zinput need to change?
+
+Suppose I leave zinput alone as a simple string editor, and I just use it to edit one token at a time. Every time I hit space or enter, I move the editor widget. This is nice, because it means I don't have to change zinput.
+
+It does mean I need to break the file into tokens. Right now, I'm using pascal's standard =ReadLn= function, which simply reads characters until it encounters a platform-specific newline marker.
+
+**** NOTE breaking the string into tokens
+:PROPERTIES:
+:TS: <2013-01-11 03:17AM>
+:ID: cpvbjt61jzf0
+:END:
+** devtools
+:PROPERTIES:
+:TS: <2013-01-11 11:08AM>
+:ID: okc3d1e0kzf0
+:END:
+*** TODO behavior driven test harness
 :PROPERTIES:
 :TS: <2013-01-11 03:40AM>
 :ID: ogu9pv71jzf0
@@ -29,224 +278,24 @@
     <<report>>
   end.
 #+end_src
-
-* SECTION starting point
+** planning
 :PROPERTIES:
-:TS: <2013-01-11 04:49AM>
-:ID: 21j3a1b1jzf0
+:TS: <2013-01-11 11:08AM>
+:ID: 1g9jt0e0kzf0
 :END:
-** TODO SECT What you should already know.
+** appendix
 :PROPERTIES:
-:TS: <2013-01-11 04:53AM>
-:ID: 0zjgg8b1jzf0
-:END:
-** TODO link to introductory pascal
-:PROPERTIES:
-:TS: <2013-01-11 04:53AM>
-:ID: u7x539b1jzf0
-:END:
-** TODO show the cursor interface
-:PROPERTIES:
-:TS: <2013-01-11 04:49AM>
-:ID: r0oel1b1jzf0
-:END:
-** TODO ui.input interface
-:PROPERTIES:
-:TS: <2013-01-11 04:50AM>
-:ID: olz7x3b1jzf0
+:TS: <2013-01-11 09:40AM>
+:ID: 7vwjky90kzf0
 :END:
 
 
-* loading the file
-:PROPERTIES:
-:TS: <2013-01-11 04:55AM>
-:ID: 6wgjjcb1jzf0
-:END:
-
-#+name: editor
-#+begin_src pascal
-  function editor.load( path : string ) : boolean;
-    var txt : text; line : string;
-  begin
-    if fs.exists( path ) then begin
-      assign( input, path );
-      reset( path );
-      while not eof( input ) do begin
-        readln( input, line );
-        self.buf.append( <<ed:make-line-node>> )
-      end;
-      close( input );
-      self.filename := path
-    end
-  end;
-#+end_src
-
-* «tokenizer»
-:PROPERTIES:
-:TS: <2013-01-11 05:05AM>
-:ID: er586tb1jzf0
-:END:
-#+name: ed:make-line-node
-#+begin_src pascal
-
-stringtoken.create( line )
-
-#+end_src
-
-* SECTION documents (spanning tree into the graph)
-:PROPERTIES:
-:TS: <2013-01-03 04:13PM>
-:ID: v971ih00azf0
-:END:
-** buffers
-:PROPERTIES:
-:TS: <2013-01-03 03:29PM>
-:ID: jek9h1d19zf0
-:END:
-*** TYPE buffer
-:PROPERTIES:
-:TS: <2013-01-04 02:51AM>
-:ID: o6e3l1u0azf0
-:END:
-
-The buffer is a simple, linear list of tokens, where tokens are either strings, or invisible markers pointing to document nodes.
-
-#+name: type:buffer
-#+begin_src pascal
-  type buffer = class( specialize ll.list <token> )
-  end;
-#+end_src
-
-*** TYPE Token
-:PROPERTIES:
-:TS: <2013-01-04 02:09AM>
-:ID: 2mxaf3s0azf0
-:END:
-
-#+name: @type:token
-#+begin_src pascal
-  type token = li.node;
-#+end_src
-
-*** TYPE StringToken
-:PROPERTIES:
-:TS: <2013-01-04 02:08AM>
-:ID: kaujt1s0azf0
-:END:
-
-#+name: @type:token
-#+begin_src pascal
-  type stringtoken = li.strnode;
-#+end_src
-
-*** TYPE TagToken
-:PROPERTIES:
-:TS: <2013-01-03 03:29PM>
-:ID: d28jz1d19zf0
-:END:
-
-#+name: @type:token
-#+begin_src pascal
-  type tagtoken = li.objnode;
-#+end_src
-
-Tag tokens are non-textual, and may hold any kind of data.
-
-Unlike the generic list cursors, which are pointers to link objects in the linked list, markers are data objects that are actually part of the buffer. This is so programs that traverse the list are able to see the markers.
-
-** spans
-:PROPERTIES:
-:TS: <2013-01-03 03:57PM>
-:ID: f4x29ce19zf0
-:END:
-
-Span is a generic type, suitable for use with nested elements but also for arbitrary regions like selected text.
-
-#+name: @types
-#+begin_src pascal
-  type
-    generic span<t> = class
-    public
-      type tag = class( tagtoken )
-        is_start, is_end : boolean;
-        span             : specialize span<t>;
-      end;
-      start_tag, end_tag : tag;
-      obj : t;
-    end;
-#+end_src
-
-** blocks
-:PROPERTIES:
-:TS: <2013-01-03 03:53PM>
-:ID: s5pjy4e19zf0
-:END:
-
-Blocks are spans that act like xml elements, in that they are nestable but non-overlapping, and that each node in the tree contains references to its siblings, children, and a single parent node.
-
-Aside from these fields, blocks can be of any type, and may or may not conform to any particular schema.
-
-Most likely they would be implemented as =type generic block<t>=.
-
-These can be used to indicate parsed structures such as lines of text, tokens (for syntax highlighting), etc.
-
-** other embedded objects
-:PROPERTIES:
-:TS: <2013-01-03 04:06PM>
-:ID: nrrkq600azf0
-:END:
-
-Arbitrary objects can be embedded in the text. These may contain "clones" of text elsewhere in the document (or in another document, or calculated on the fly).
-
-They are expected to display themselves, just like textual nodes.
-
-
-
-* CARD working through wordwrap / tokenization                     :minneron:
-:PROPERTIES:
-:TS: <2013-01-11 03:17AM>
-:ID: f0042s61jzf0
-:END:
-** NOTE still stuck on wordwrap
-:PROPERTIES:
-:TS: <2013-01-11 02:15AM>
-:ID: v6zgxw31jzf0
-:END:
-I'm still stuck. I know that word wrap is my next step, but I'm not sure what to do yet.
-Does zinput need to change?
-
-Suppose I leave zinput alone as a simple string editor, and I just use it to edit one token at a time. Every time I hit space or enter, I move the editor widget. This is nice, because it means I don't have to change zinput.
-
-It does mean I need to break the file into tokens. Right now, I'm using pascal's standard =ReadLn= function, which simply reads characters until it encounters a platform-specific newline marker.
-
-** NOTE breaking the string into tokens
-:PROPERTIES:
-:TS: <2013-01-11 03:17AM>
-:ID: cpvbjt61jzf0
-:END:
-
-* SECTION crawler concept (cursor+stack machine)
-:PROPERTIES:
-:TS: <2013-01-10 07:43AM>
-:ID: vfbhc031izf0
-:END:
-** TODO add clasp as an actual node type, with left,right, and up pointers.
-:PROPERTIES:
-:TS: <2013-01-10 08:17AM>
-:ID: 9s66sl41izf0
-:END:
-** TODO add hook as a node type with left, right, and down pointers.
-:PROPERTIES:
-:TS: <2013-01-10 08:19AM>
-:ID: rq33yn41izf0
-:END:
-
-* SECTION command dispatch
+* SECTION command dispatch                                              :cmd:
 :PROPERTIES:
 :TS: <2013-01-10 07:46AM>
 :ID: 6vnhj531izf0
 :END:
-** the document command language
+** the document command language                                       :cmd:
 :PROPERTIES:
 :TS: <2013-01-10 07:42AM>
 :ID: atnh8y21izf0
@@ -262,8 +311,7 @@ It does mean I need to break the file into tokens. Right now, I'm using pascal's
 :ID: if8k2631izf0
 :END:
 
-
-* SECTION command reference
+* SECTION command reference                                             :cmd:
 :PROPERTIES:
 :TS: <2013-01-10 08:24AM>
 :ID: rfxenx41izf0
@@ -349,12 +397,7 @@ It does mean I need to break the file into tokens. Right now, I'm using pascal's
 :ID: b0067451izf0
 :END:
 
-
-
-
-
-
-* SECTION displaying documents
+* SECTION displaying documents                                           :ui:
 :PROPERTIES:
 :TS: <2013-01-03 04:13PM>
 :ID: qbighi00azf0
@@ -381,8 +424,7 @@ In particular, two clones of the same node would have different geometries and c
 
 Note also that display nodes may not be textual: raster images, vector shapes, and dialog widgets are all perfectly valid options.
 
-
-* event dispatcher
+* event dispatcher                                                      :kbd:
 Wait for an event, then do something about it.
 
 #+name: procs
@@ -458,7 +500,7 @@ Wait for an event, then do something about it.
   end.
 #+end_src
 
-* FILE =min_ed.pas=
+* FILE =min_ed.pas=                                                    :ed:ifc:
 :PROPERTIES:
 :TS: <2013-01-11 05:09AM>
 :ID: fr5fryb1jzf0
@@ -498,7 +540,7 @@ Wait for an event, then do something about it.
   end.
 #+end_src
 
-* SECTION implementation
+* SECTION implementation                                                 :ed:
 :PROPERTIES:
 :TS: <2013-01-11 08:46AM>
 :ID: sghf0g70kzf0
@@ -748,13 +790,6 @@ Wait for an event, then do something about it.
     end.
 #+end_src
 
-
-* DONE ngaro : a simple virtual computer
-:PROPERTIES:
-:TS: <2013-01-11 03:35AM>
-:ID: la310m71jzf0
-:END:
-
 * TODO [3/14] general purpose traditional text editor
 ** DONE [6/6] #ED001 get ln.pas hooked up to cedit.
 :PROPERTIES:
@@ -971,7 +1006,6 @@ blocks are rectangles with a 2-dimensional bounding box
 :ID: r2bl0k81izf0
 :END:
 
-
 ** TODO [0/0] #ED005 regions (selections, highlights, etc)
 :PROPERTIES:
 :TS: <2013-01-03 01:41PM>
@@ -1024,8 +1058,7 @@ blocks are rectangles with a 2-dimensional bounding box
 :END:
 
 
-
-* [0/12] -- unfiled ---
+* [0/12] -- unfiled ---                                                 :uns:
 :PROPERTIES:
 :TS: <2013-01-07 01:45PM>
 :ID: abbhsg70fzf0
