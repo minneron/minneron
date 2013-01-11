@@ -1,6 +1,95 @@
 #+title: minneron
 
-* SECTION type model for document buffers
+* TODO behavior driven test harness
+:PROPERTIES:
+:TS: <2013-01-11 03:40AM>
+:ID: ogu9pv71jzf0
+:END:
+#+begin_src pascal :tangle ".gen/test_edcmds.pas" :padline yes :noweb tangle
+  program test_edcmds;
+  uses min;
+    var
+      ch       : char;
+      ed       : min.editor;
+      expected : string;
+      passed,  
+      failed   : cardinal;
+  
+    <<runln>>
+    <<testln>>
+    <<report>>
+  begin
+    ed.create;
+    while not eof do
+      case read( ch ) of
+        '$' : readln( ed.value );
+        '>' : runln;
+        '!' : testln;
+      end
+    <<report>>
+  end.
+#+end_src
+
+* SECTION starting point
+:PROPERTIES:
+:TS: <2013-01-11 04:49AM>
+:ID: 21j3a1b1jzf0
+:END:
+** TODO SECT What you should already know.
+:PROPERTIES:
+:TS: <2013-01-11 04:53AM>
+:ID: 0zjgg8b1jzf0
+:END:
+** TODO link to introductory pascal
+:PROPERTIES:
+:TS: <2013-01-11 04:53AM>
+:ID: u7x539b1jzf0
+:END:
+** TODO show the cursor interface
+:PROPERTIES:
+:TS: <2013-01-11 04:49AM>
+:ID: r0oel1b1jzf0
+:END:
+** TODO ui.input interface
+:PROPERTIES:
+:TS: <2013-01-11 04:50AM>
+:ID: olz7x3b1jzf0
+:END:
+
+
+* loading the file
+:PROPERTIES:
+:TS: <2013-01-11 04:55AM>
+:ID: 6wgjjcb1jzf0
+:END:
+#+begin_src pascal
+  function editor.load( path : string ) : boolean;
+    var txt : text; line : string;
+  begin
+    if fs.exists( path ) then begin
+      assign( input, path );
+      reset( path );
+      while not eof( input ) do begin
+        readln( input, line );
+        self.buf.append( <<make-line-node>> )
+      end;
+      close( input );
+      self.filename := path
+    end
+  end;
+#+end_src
+
+* 
+:PROPERTIES:
+:TS: <2013-01-11 05:05AM>
+:ID: er586tb1jzf0
+:END:
+
+stringtoken.create( line )
+
+
+
+* SECTION documents (spanning tree into the graph)
 :PROPERTIES:
 :TS: <2013-01-03 04:13PM>
 :ID: v971ih00azf0
@@ -16,7 +105,7 @@
 :ID: o6e3l1u0azf0
 :END:
 
-The buffer is a siple, linear list of tokens, where tokens are either strings, or invisible markers pointing to document nodes.
+The buffer is a simple, linear list of tokens, where tokens are either strings, or invisible markers pointing to document nodes.
 
 #+name: type:buffer
 #+begin_src pascal
@@ -59,7 +148,7 @@ The buffer is a siple, linear list of tokens, where tokens are either strings, o
 
 Tag tokens are non-textual, and may hold any kind of data.
 
-Unlike the generic list cursors which are pointers to link objects in the linked list, markers are data objects that are actually part of the buffer. This is so programs that traverse the list are able to inspect it.
+Unlike the generic list cursors, which are pointers to link objects in the linked list, markers are data objects that are actually part of the buffer. This is so programs that traverse the list are able to see the markers.
 
 ** spans
 :PROPERTIES:
@@ -106,6 +195,159 @@ These can be used to indicate parsed structures such as lines of text, tokens (f
 Arbitrary objects can be embedded in the text. These may contain "clones" of text elsewhere in the document (or in another document, or calculated on the fly).
 
 They are expected to display themselves, just like textual nodes.
+
+
+
+* CARD working through wordwrap / tokenization                     :minneron:
+:PROPERTIES:
+:TS: <2013-01-11 03:17AM>
+:ID: f0042s61jzf0
+:END:
+** NOTE still stuck on wordwrap
+:PROPERTIES:
+:TS: <2013-01-11 02:15AM>
+:ID: v6zgxw31jzf0
+:END:
+I'm still stuck. I know that word wrap is my next step, but I'm not sure what to do yet.
+Does zinput need to change?
+
+Suppose I leave zinput alone as a simple string editor, and I just use it to edit one token at a time. Every time I hit space or enter, I move the editor widget. This is nice, because it means I don't have to change zinput.
+
+It does mean I need to break the file into tokens. Right now, I'm using pascal's standard =ReadLn= function, which simply reads characters until it encounters a platform-specific newline marker.
+
+** NOTE breaking the string into tokens
+:PROPERTIES:
+:TS: <2013-01-11 03:17AM>
+:ID: cpvbjt61jzf0
+:END:
+
+* SECTION crawler concept (cursor+stack machine)
+:PROPERTIES:
+:TS: <2013-01-10 07:43AM>
+:ID: vfbhc031izf0
+:END:
+** TODO add clasp as an actual node type, with left,right, and up pointers.
+:PROPERTIES:
+:TS: <2013-01-10 08:17AM>
+:ID: 9s66sl41izf0
+:END:
+** TODO add hook as a node type with left, right, and down pointers.
+:PROPERTIES:
+:TS: <2013-01-10 08:19AM>
+:ID: rq33yn41izf0
+:END:
+
+* SECTION command dispatch
+:PROPERTIES:
+:TS: <2013-01-10 07:46AM>
+:ID: 6vnhj531izf0
+:END:
+** the document command language
+:PROPERTIES:
+:TS: <2013-01-10 07:42AM>
+:ID: atnh8y21izf0
+:END:
+** token-based dispatch
+:PROPERTIES:
+:TS: <2013-01-10 07:47AM>
+:ID: va99k631izf0
+:END:
+** string-based dispatch
+:PROPERTIES:
+:TS: <2013-01-10 07:46AM>
+:ID: if8k2631izf0
+:END:
+
+
+* SECTION command reference
+:PROPERTIES:
+:TS: <2013-01-10 08:24AM>
+:ID: rfxenx41izf0
+:END:
+** cursor movement commands
+:PROPERTIES:
+:TS: <2013-01-10 08:24AM>
+:ID: zm4gsw41izf0
+:END:
+** tree movement commands
+:PROPERTIES:
+:TS: <2013-01-10 08:31AM>
+:ID: 8ybhm851izf0
+:END:
+** version control commands
+:PROPERTIES:
+:TS: <2013-01-10 08:32AM>
+:ID: wekjl951izf0
+:END:
+*** undo/redo
+:PROPERTIES:
+:TS: <2013-01-10 08:32AM>
+:ID: 7y602a51izf0
+:END:
+
+** string manipulation commands
+:PROPERTIES:
+:TS: <2013-01-10 08:24AM>
+:ID: 8p551x41izf0
+:END:
+*** TODO insert char
+:PROPERTIES:
+:TS: <2013-01-10 08:25AM>
+:ID: xq7dbz41izf0
+:END:
+*** TODO delete char
+:PROPERTIES:
+:TS: <2013-01-10 08:26AM>
+:ID: zctajz41izf0
+:END:
+
+** compiler commands
+:PROPERTIES:
+:TS: <2013-01-10 08:25AM>
+:ID: yb66dy41izf0
+:END:
+
+** range/selection commands
+:PROPERTIES:
+:TS: <2013-01-10 08:29AM>
+:ID: 0izal551izf0
+:END:
+
+** token/highlight commands
+:PROPERTIES:
+:TS: <2013-01-10 08:29AM>
+:ID: 9o44r451izf0
+:END:
+*** set style
+:PROPERTIES:
+:TS: <2013-01-10 08:29AM>
+:ID: c83lc551izf0
+:END:
+*** break token (space bar)
+:PROPERTIES:
+:TS: <2013-01-10 08:52AM>
+:ID: ps0ca761izf0
+:END:
+
+** terminal commands
+:PROPERTIES:
+:TS: <2013-01-10 08:28AM>
+:ID: jntap351izf0
+:END:
+*** cursor position
+:PROPERTIES:
+:TS: <2013-01-10 08:28AM>
+:ID: x4h40451izf0
+:END:
+*** set color
+:PROPERTIES:
+:TS: <2013-01-10 08:28AM>
+:ID: b0067451izf0
+:END:
+
+
+
+
 
 
 * SECTION displaying documents

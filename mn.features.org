@@ -1,5 +1,11 @@
 #+title: minneron features
 
+* DONE ngaro : a simple virtual computer
+:PROPERTIES:
+:TS: <2013-01-11 03:35AM>
+:ID: la310m71jzf0
+:END:
+
 * TODO [3/14] general purpose traditional text editor
 ** DONE [6/6] #ED001 get ln.pas hooked up to cedit.
 :PROPERTIES:
@@ -187,11 +193,36 @@ test case:
 :ID: nfe6rz719zf0
 :END:
 
-** TODO [0/0] #ED004 word wrap / virtual line mode
+** TODO [0/3] #ED004 word wrap / virtual line mode
 :PROPERTIES:
 :TS: <2013-01-03 01:41PM>
 :ID: qr35d0819zf0
 :END:
+*** TODO add an offset to the cursor type
+:PROPERTIES:
+:TS: <2013-01-10 09:37AM>
+:ID: uzh4ta81izf0
+:END:
+*** TODO break the input text into tokens grouped by element nodes
+:PROPERTIES:
+:TS: <2013-01-10 09:37AM>
+:ID: uwf83b81izf0
+:END:
+*** TODO generate a list of blocks (display objects) from the elements
+:PROPERTIES:
+:TS: <2013-01-10 09:38AM>
+:ID: xzn4eb81izf0
+:END:
+
+elements are sequences/strings with a 1-dimensional length
+blocks are rectangles with a 2-dimensional bounding box
+*** TODO make a stack for offsets, so the document can be a tree
+:PROPERTIES:
+:TS: <2013-01-10 09:43AM>
+:ID: r2bl0k81izf0
+:END:
+
+
 ** TODO [0/0] #ED005 regions (selections, highlights, etc)
 :PROPERTIES:
 :TS: <2013-01-03 01:41PM>
@@ -245,7 +276,7 @@ test case:
 
 
 
-* [0/0] -- unfiled ---
+* [0/12] -- unfiled ---
 :PROPERTIES:
 :TS: <2013-01-07 01:45PM>
 :ID: abbhsg70fzf0
@@ -290,7 +321,6 @@ Rather than deal with the bytestream protocol, just load the files directly into
 :TS:       <2012-11-13 11:42AM>
 :ID:       ccr0wkq0exf0
 :END:
-
 
 ** TODO [0/0] [#A] parse org files - see file:~/r/@code/@py/o2x.py
 :PROPERTIES:
