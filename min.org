@@ -6,125 +6,11 @@
 :ID: q5gdnjf0kzf0
 :END:
 ** TODO [3/14] general purpose traditional text editor
-*** DONE [6/6] #ED001 get ln.pas hooked up to cedit.
+*** DONE [0/0] #ED001 bare bones text editor                            :ED001:
 :PROPERTIES:
 :TS: <2013-01-03 01:38PM>
 :ID: e526zw719zf0
 :END:
-**** DONE [3/3] CARD get cedit.pas working again
-:PROPERTIES:
-:TS:       <2012-11-10 12:42PM>
-:ID:       hcg7aat0axf0
-:END:
-***** DONE pntstuff.pas(66,15) Error: Wrong number of parameters specified for call to "killnode" :bug:
-:PROPERTIES:
-:TS:       <2012-11-10 12:54PM>
-:ID:       st87v6w0axf0
-:END:
-This just needed an @ to prevent invocation.
-
-***** DONE crtstuff.pas(1472,4) Fatal: Selected assembler reader not supported :bug:
-:PROPERTIES:
-:TS:       <2012-11-10 01:09PM>
-:ID:       uq04zvw0axf0
-:END:
-****** NOTE basically, crtstuff doesn't compile.
-:PROPERTIES:
-:TS:       <2012-11-10 01:36PM>
-:ID:       65f0e4y0axf0
-:END:
-****** NOTE workaround: use cw instead ( ?? )
-:PROPERTIES:
-:TS:       <2012-11-10 01:40PM>
-:ID:       dlvgsay0axf0
-:END:
-****** NOTE . or: just describe the program from the top down
-:PROPERTIES:
-:TS:       <2012-11-10 01:51PM>
-:ID:       qbkefty0axf0
-:END:
-Maybe rather than trying to compile it, with all those huge broken dependencies, I should just start at the begin section and try and clean it up.
-****** NOTE . decided to do both.
-:PROPERTIES:
-:TS:       <2012-11-10 03:09PM>
-:ID:       8k7jrf21axf0
-:END:
-I commented out most of cedit (anything that relied on my old code, especially). Now I'm going to step through and clean it up a little at a time, making sure it compiles.
-****** NOTE . refactoring, test framework, etc
-:PROPERTIES:
-:TS:       <2012-11-12 01:32PM>
-:ID:       ola4zkf0dxf0
-:END:
-Well, I got cedit to compile at some point in the past few days. I basically commented everything out that wasn't pure pascal, and then re-enabled one line at a time until it compiled. Along the way, I broke crtstuff down into smaller pieces.
-
-Unfortunately, it still doesn't work, so last night I started making a test framework. Actually, I /tried/ to use dunit, but I couldn't get it to compile... And then I decided it was just way bigger and complicated than I really needed anyway. Yes, the gestalt problem again.
-
-Anyway, I wrote my own little test system last night, so today I will track down the bugs in the linked list module by implementing some tests to specify how this thing is supposed to work.
-
-***** DONE cedit shows no text, crashes on arrowdown                :bug:
-:PROPERTIES:
-:TS:       <2012-11-12 01:48PM>
-:ID:       98dh8bg0dxf0
-:END:
-****** NOTE repaired ll.append/insert logic, then moved from objects->classes
-:PROPERTIES:
-:TS:       <2012-11-13 03:25AM>
-:ID:       pmcf1l30exf0
-:END:
-I think probably the code worked before, but I somehow broke things while trying to get it to compile at all. In any case, I now have a test framework cleared out a /bunch/ of duplicate logic from this thing.
-
-Still have one bug, but it's in ~cw.pas~, not ~cedit~, so I'm going to mark this done! :)
-**** DONE [0/0] create a simple line editor ( ui.zinput as reference? )
-:PROPERTIES:
-:TS:       <2012-11-10 02:37PM>
-:ID:       fr78ey01axf0
-:END:
-**** DONE [2/2] build oberon-style "text" (ll of strings + markers)
-:PROPERTIES:
-:TS:       <2012-11-13 11:53AM>
-:ID:       w4q793r0exf0
-:END:
-***** DONE [0/0] create a token type
-:PROPERTIES:
-:TS: <2013-01-01 10:45PM>
-:ID: ez8ho0117zf0
-:END:
-[0104.2013 04:54AM] done in type token (really same as li.strtoken)
-
-***** DONE [0/0] create linked list of tokens
-:PROPERTIES:
-:TS: <2013-01-01 10:47PM>
-:ID: 06kgs4117zf0
-:END:
-[0104.2013 04:55AM] done in type tagtoken = li.objtoken
-
-**** DONE [0/0] convert cedit to use the buffer type
-:PROPERTIES:
-:TS: <2013-01-04 04:56AM>
-:ID: f7a9vtz0azf0
-:END:
-
-I suppose in this case, we want to use elements/blocks.
-
-Looks like it's already using stringnodes, but that's pretty much the same as li.strnode, so i might as well use a list of li.nodes. But I'll go ahead and use the buffer type I created in mn.trail.
-
-Another thing I did was make the editor class (previously =listeditor=) be a container for a buffer, rather than a subclass.
-
-**** DONE [0/0] read lines of text as the initial chunks
-:PROPERTIES:
-:TS: <2013-01-01 10:46PM>
-:ID: kozjs1117zf0
-:END:
-
-This was already done in cedit too. :)
-
-
-**** DONE [0/0] show the line editor on the highlighted line
-:PROPERTIES:
-:TS: <2013-01-04 07:15AM>
-:ID: th42v961azf0
-:END:
-
 *** DONE [4/6] #ED002 break / join lines in editor
 :PROPERTIES:
 :TS: <2013-01-03 01:40PM>
@@ -208,6 +94,11 @@ test case:
 :TS: <2013-01-03 01:42PM>
 :ID: xdmg02819zf0
 :END:
+** TODO [0/8] outline support
+:PROPERTIES:
+:TS: <2013-01-11 12:15PM>
+:ID: cg3654h0kzf0
+:END:
 *** TODO [0/0] #ED007 show/hide individual blocks
 :PROPERTIES:
 :TS: <2013-01-03 01:42PM>
@@ -228,10 +119,20 @@ test case:
 :TS: <2013-01-03 01:43PM>
 :ID: cti3s4819zf0
 :END:
+** TODO [0/4] datagrid support
+:PROPERTIES:
+:TS: <2013-01-11 12:15PM>
+:ID: bj8bk5h0kzf0
+:END:
 *** TODO [0/0] #ED011 tabular blocks
 :PROPERTIES:
 :TS: <2013-01-03 01:44PM>
 :ID: 0bbcs5819zf0
+:END:
+** TODO [0/3] literate programming support
+:PROPERTIES:
+:TS: <2013-01-11 12:16PM>
+:ID: bx15a6h0kzf0
 :END:
 *** TODO [0/0] #ED012 tangle (generate source files)
 :PROPERTIES:
@@ -248,25 +149,12 @@ test case:
 :TS: <2013-01-03 01:46PM>
 :ID: wqf1y8819zf0
 :END:
-** TODO [0/2] task oriented, tiling window enviroment ( minneron )
+** TODO [0/1] task oriented, tiling window enviroment ( minneron )
 :PROPERTIES:
 :TS:       <2012-11-13 11:30AM>
 :ID:       v735uzp0exf0
 :END:
-*** graphical tmux-like thing for windows ( but with browsers, etc )
-:PROPERTIES:
-:TS:       <2012-11-10 11:18AM>
-:ID:       23q5upr0axf0
-:END:
-Could use windows API, or mozilla.
-*** i want to unify the emacs and tmux keybindngs                    :tmux:
-:PROPERTIES:
-:TS:       <2012-11-10 11:18AM>
-:ID:       5yfj6qr0axf0
-:END:
-especially for switching / resizing windows
-C-x | to do vertical split, maybe?
-** TODO [0/2] multi-colum / table based editor
+** TODO [0/0] multi-colum / table based editor
 :PROPERTIES:
 :TS:       <2012-11-10 11:27AM>
 :ID:       0knej5s0axf0
@@ -287,7 +175,7 @@ C-x | to do vertical split, maybe?
 :TS:       <2012-11-13 11:42AM>
 :ID:       n7z7sjq0exf0
 :END:
-* structural view (modules)
+* TODO <cleanup> structural view (modules)
 :PROPERTIES:
 :TS: <2013-01-11 11:21AM>
 :ID: 02li6ne0kzf0
@@ -472,7 +360,7 @@ stringtoken.create( line )
 :TS: <2013-01-10 08:19AM>
 :ID: rq33yn41izf0
 :END:
-* implementation view
+* TODO <cleanup> implementation view
 :PROPERTIES:
 :TS: <2013-01-11 11:07AM>
 :ID: v0ufazd0kzf0
@@ -538,6 +426,123 @@ Wait for an event, then do something about it.
 :PROPERTIES:
 :TS: <2013-01-10 07:46AM>
 :ID: if8k2631izf0
+:END:
+** DONE [6/6] implementing basic editor                              :ED001:
+:PROPERTIES:
+:TS: <2013-01-11 12:09PM>
+:ID: k3n7vug0kzf0
+:END:
+*** DONE [3/3] CARD get cedit.pas working again
+:PROPERTIES:
+:TS:       <2012-11-10 12:42PM>
+:ID:       hcg7aat0axf0
+:END:
+**** DONE pntstuff.pas(66,15) Error: Wrong number of parameters specified for call to "killnode" :bug:
+:PROPERTIES:
+:TS:       <2012-11-10 12:54PM>
+:ID:       st87v6w0axf0
+:END:
+This just needed an @ to prevent invocation.
+
+**** DONE crtstuff.pas(1472,4) Fatal: Selected assembler reader not supported :bug:
+:PROPERTIES:
+:TS:       <2012-11-10 01:09PM>
+:ID:       uq04zvw0axf0
+:END:
+***** NOTE basically, crtstuff doesn't compile.
+:PROPERTIES:
+:TS:       <2012-11-10 01:36PM>
+:ID:       65f0e4y0axf0
+:END:
+***** NOTE workaround: use cw instead ( ?? )
+:PROPERTIES:
+:TS:       <2012-11-10 01:40PM>
+:ID:       dlvgsay0axf0
+:END:
+***** NOTE . or: just describe the program from the top down
+:PROPERTIES:
+:TS:       <2012-11-10 01:51PM>
+:ID:       qbkefty0axf0
+:END:
+Maybe rather than trying to compile it, with all those huge broken dependencies, I should just start at the begin section and try and clean it up.
+***** NOTE . decided to do both.
+:PROPERTIES:
+:TS:       <2012-11-10 03:09PM>
+:ID:       8k7jrf21axf0
+:END:
+I commented out most of cedit (anything that relied on my old code, especially). Now I'm going to step through and clean it up a little at a time, making sure it compiles.
+***** NOTE . refactoring, test framework, etc
+:PROPERTIES:
+:TS:       <2012-11-12 01:32PM>
+:ID:       ola4zkf0dxf0
+:END:
+Well, I got cedit to compile at some point in the past few days. I basically commented everything out that wasn't pure pascal, and then re-enabled one line at a time until it compiled. Along the way, I broke crtstuff down into smaller pieces.
+
+Unfortunately, it still doesn't work, so last night I started making a test framework. Actually, I /tried/ to use dunit, but I couldn't get it to compile... And then I decided it was just way bigger and complicated than I really needed anyway. Yes, the gestalt problem again.
+
+Anyway, I wrote my own little test system last night, so today I will track down the bugs in the linked list module by implementing some tests to specify how this thing is supposed to work.
+
+**** DONE cedit shows no text, crashes on arrowdown                  :bug:
+:PROPERTIES:
+:TS:       <2012-11-12 01:48PM>
+:ID:       98dh8bg0dxf0
+:END:
+***** NOTE repaired ll.append/insert logic, then moved from objects->classes
+:PROPERTIES:
+:TS:       <2012-11-13 03:25AM>
+:ID:       pmcf1l30exf0
+:END:
+I think probably the code worked before, but I somehow broke things while trying to get it to compile at all. In any case, I now have a test framework cleared out a /bunch/ of duplicate logic from this thing.
+
+Still have one bug, but it's in ~cw.pas~, not ~cedit~, so I'm going to mark this done! :)
+*** DONE [0/0] create a simple line editor ( ui.zinput as reference? )
+:PROPERTIES:
+:TS:       <2012-11-10 02:37PM>
+:ID:       fr78ey01axf0
+:END:
+*** DONE [2/2] build oberon-style "text" (ll of strings + markers)
+:PROPERTIES:
+:TS:       <2012-11-13 11:53AM>
+:ID:       w4q793r0exf0
+:END:
+**** DONE [0/0] create a token type
+:PROPERTIES:
+:TS: <2013-01-01 10:45PM>
+:ID: ez8ho0117zf0
+:END:
+[0104.2013 04:54AM] done in type token (really same as li.strtoken)
+
+**** DONE [0/0] create linked list of tokens
+:PROPERTIES:
+:TS: <2013-01-01 10:47PM>
+:ID: 06kgs4117zf0
+:END:
+[0104.2013 04:55AM] done in type tagtoken = li.objtoken
+
+*** DONE [0/0] convert cedit to use the buffer type
+:PROPERTIES:
+:TS: <2013-01-04 04:56AM>
+:ID: f7a9vtz0azf0
+:END:
+
+I suppose in this case, we want to use elements/blocks.
+
+Looks like it's already using stringnodes, but that's pretty much the same as li.strnode, so i might as well use a list of li.nodes. But I'll go ahead and use the buffer type I created in mn.trail.
+
+Another thing I did was make the editor class (previously =listeditor=) be a container for a buffer, rather than a subclass.
+
+*** DONE [0/0] read lines of text as the initial chunks
+:PROPERTIES:
+:TS: <2013-01-01 10:46PM>
+:ID: kozjs1117zf0
+:END:
+
+This was already done in cedit too. :)
+
+*** DONE [0/0] show the line editor on the highlighted line
+:PROPERTIES:
+:TS: <2013-01-04 07:15AM>
+:ID: th42v961azf0
 :END:
 ** command reference                                                    :cmd:
 :PROPERTIES:
@@ -958,7 +963,20 @@ Rather than deal with the bytestream protocol, just load the files directly into
 :TS:       <2012-11-13 10:48AM>
 :ID:       re6c12o0exf0
 :END:
-* narrative view
+** i want to unify the emacs and tmux keybindngs                      :tmux:
+:PROPERTIES:
+:TS:       <2012-11-10 11:18AM>
+:ID:       5yfj6qr0axf0
+:END:
+especially for switching / resizing windows
+C-x | to do vertical split, maybe?
+** TODO graphical tmux-like thing for windows ( but with browsers, etc ) :unclear:
+:PROPERTIES:
+:TS:       <2012-11-10 11:18AM>
+:ID:       23q5upr0axf0
+:END:
+Could use windows API, or mozilla.
+* TODO <cleanup> narrative view
 :PROPERTIES:
 :TS: <2013-01-11 11:43AM>
 :ID: l6i37of0kzf0
@@ -1010,7 +1028,7 @@ It does mean I need to break the file into tokens. Right now, I'm using pascal's
 :TS: <2013-01-11 03:17AM>
 :ID: cpvbjt61jzf0
 :END:
-* support view (meta / tool stuff)
+* TODO <cleanup> support view (meta / tool stuff)
 :PROPERTIES:
 :TS: <2013-01-11 11:08AM>
 :ID: okc3d1e0kzf0
@@ -1076,7 +1094,7 @@ This could be compounded by the fact that I'm also trying to use kvm.
 :TS:       <2012-11-10 11:18AM>
 :ID:       d0c5kpr0axf0
 :END:
-* INBOX unfiled items - clarify!                                    :unclear:
+* TODO <cleanup> INBOX unfiled items - clarify!                                    :unclear:
 :PROPERTIES:
 :TS: <2013-01-11 11:48AM>
 :ID: m4p4mvf0kzf0
@@ -1128,7 +1146,7 @@ i wish i could use my normal keybindings for paging, etc in the browser
 :ID:       4dmjvur0axf0
 :END:
 
-* appendix
+* TODO <cleanup> appendix
 :PROPERTIES:
 :TS: <2013-01-11 09:40AM>
 :ID: 7vwjky90kzf0
