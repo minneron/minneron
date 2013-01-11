@@ -6,7 +6,7 @@
 :ID: q5gdnjf0kzf0
 :END:
 ** TODO [3/14] general purpose traditional text editor
-*** DONE [0/0] #ED001 bare bones text editor                            :ED001:
+*** DONE [0/0] #ED001 bare bones text editor                        :ED001:
 :PROPERTIES:
 :TS: <2013-01-03 01:38PM>
 :ID: e526zw719zf0
@@ -175,7 +175,12 @@ test case:
 :TS:       <2012-11-13 11:42AM>
 :ID:       n7z7sjq0exf0
 :END:
-* TODO <cleanup> structural view (modules)
+** TODO [0/0] a document command language                                 :cmd:
+:PROPERTIES:
+:TS: <2013-01-10 07:42AM>
+:ID: atnh8y21izf0
+:END:
+* TODO <cleanup> structural view (object interfaces)
 :PROPERTIES:
 :TS: <2013-01-11 11:21AM>
 :ID: 02li6ne0kzf0
@@ -302,6 +307,7 @@ They are expected to display themselves, just like textual nodes.
 stringtoken.create( line )
 
 #+end_src
+
 ** user interface
 :PROPERTIES:
 :TS: <2013-01-11 11:07AM>
@@ -318,54 +324,17 @@ stringtoken.create( line )
 :TS: <2013-01-11 11:09AM>
 :ID: zy54y2e0kzf0
 :END:
-**** loading the file
-:PROPERTIES:
-:TS: <2013-01-11 04:55AM>
-:ID: 6wgjjcb1jzf0
-:END:
-#+name: editor
-#+begin_src pascal
-  function editor.load( path : string ) : boolean;
-    var txt : text; line : string;
-  begin
-    if fs.exists( path ) then begin
-      assign( input, path );
-      reset( path );
-      while not eof( input ) do begin
-        readln( input, line );
-        self.buf.append( <<ed:make-line-node>> )
-      end;
-      close( input );
-      self.filename := path
-    end
-  end;
-#+end_src
 ** database
 :PROPERTIES:
 :TS: <2013-01-11 11:21AM>
 :ID: ae267me0kzf0
-:END:
-** SECTION crawler concept (cursor+stack machine)                      :cur:
-:PROPERTIES:
-:TS: <2013-01-10 07:43AM>
-:ID: vfbhc031izf0
-:END:
-*** TODO add clasp as an actual node type, with left,right, and up pointers. :ll:
-:PROPERTIES:
-:TS: <2013-01-10 08:17AM>
-:ID: 9s66sl41izf0
-:END:
-*** TODO add hook as a node type with left, right, and down pointers.  :ll:
-:PROPERTIES:
-:TS: <2013-01-10 08:19AM>
-:ID: rq33yn41izf0
 :END:
 * TODO <cleanup> implementation view
 :PROPERTIES:
 :TS: <2013-01-11 11:07AM>
 :ID: v0ufazd0kzf0
 :END:
-** event dispatcher                                                    :kbd:
+** TODO event dispatcher                                               :kbd:
 Wait for an event, then do something about it.
 
 #+name: procs
@@ -411,11 +380,6 @@ Wait for an event, then do something about it.
 :PROPERTIES:
 :TS: <2013-01-10 07:46AM>
 :ID: 6vnhj531izf0
-:END:
-**** the document command language                                   :cmd:
-:PROPERTIES:
-:TS: <2013-01-10 07:42AM>
-:ID: atnh8y21izf0
 :END:
 **** token-based dispatch
 :PROPERTIES:
@@ -544,7 +508,7 @@ This was already done in cedit too. :)
 :TS: <2013-01-04 07:15AM>
 :ID: th42v961azf0
 :END:
-** command reference                                                    :cmd:
+** command reference                                                   :cmd:
 :PROPERTIES:
 :TS: <2013-01-10 08:24AM>
 :ID: rfxenx41izf0
@@ -629,7 +593,7 @@ This was already done in cedit too. :)
 :TS: <2013-01-10 08:28AM>
 :ID: b0067451izf0
 :END:
-** displaying documents                                                  :ui:
+** displaying documents                                                 :ui:
 :PROPERTIES:
 :TS: <2013-01-03 04:13PM>
 :ID: qbighi00azf0
@@ -688,7 +652,7 @@ blocks are rectangles with a 2-dimensional bounding box
 :TS: <2013-01-01 10:35PM>
 :ID: tm74ek017zf0
 :END:
-** text editor implementation                                            :ed:
+** text editor implementation                                           :ed:
 :PROPERTIES:
 :TS: <2013-01-11 08:46AM>
 :ID: sghf0g70kzf0
@@ -976,6 +940,43 @@ C-x | to do vertical split, maybe?
 :ID:       23q5upr0axf0
 :END:
 Could use windows API, or mozilla.
+** SECTION crawler concept (cursor+stack machine)                      :cur:
+:PROPERTIES:
+:TS: <2013-01-10 07:43AM>
+:ID: vfbhc031izf0
+:END:
+*** TODO add clasp as an actual node type, with left,right, and up pointers. :ll:
+:PROPERTIES:
+:TS: <2013-01-10 08:17AM>
+:ID: 9s66sl41izf0
+:END:
+*** TODO add hook as a node type with left, right, and down pointers.  :ll:
+:PROPERTIES:
+:TS: <2013-01-10 08:19AM>
+:ID: rq33yn41izf0
+:END:
+** loading the file
+:PROPERTIES:
+:TS: <2013-01-11 04:55AM>
+:ID: 6wgjjcb1jzf0
+:END:
+#+name: editor
+#+begin_src pascal
+  function editor.load( path : string ) : boolean;
+    var txt : text; line : string;
+  begin
+    if fs.exists( path ) then begin
+      assign( input, path );
+      reset( path );
+      while not eof( input ) do begin
+        readln( input, line );
+        self.buf.append( <<ed:make-line-node>> )
+      end;
+      close( input );
+      self.filename := path
+    end
+  end;
+#+end_src
 * TODO <cleanup> narrative view
 :PROPERTIES:
 :TS: <2013-01-11 11:43AM>
@@ -1094,7 +1095,7 @@ This could be compounded by the fact that I'm also trying to use kvm.
 :TS:       <2012-11-10 11:18AM>
 :ID:       d0c5kpr0axf0
 :END:
-* TODO <cleanup> INBOX unfiled items - clarify!                                    :unclear:
+* TODO <cleanup> INBOX unfiled items - clarify!                     :unclear:
 :PROPERTIES:
 :TS: <2013-01-11 11:48AM>
 :ID: m4p4mvf0kzf0
@@ -1185,7 +1186,7 @@ i wish i could use my normal keybindings for paging, etc in the browser
   end.
 #+end_src
 
-*** FILE =min_ed.pas=                                                :ed:ifc:
+*** FILE =min_ed.pas=                                              :ed:ifc:
 :PROPERTIES:
 :TS: <2013-01-11 05:09AM>
 :ID: fr5fryb1jzf0
@@ -1226,3 +1227,4 @@ i wish i could use my normal keybindings for paging, etc in the browser
 #+end_src
 
 * end.
+
