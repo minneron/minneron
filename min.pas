@@ -4,7 +4,7 @@ Copyright (c) 2012 Michal J Wallace. All rights reserved.
 ---------------------------------------------------------------}
 {$i xpc.inc}
 program min;
-uses min_ed,
+  uses min_ed, crt, cw;
   var ed : editor;
 begin
   crt.clrscr;
@@ -15,7 +15,7 @@ begin
   begin
     ed.run;
     ed.destroy;
-    cwriteln( '|w|!k' );
+    cw.cwriteln( '|w|!k' );
     crt.clrscr;
   end
   else writeln( 'unable to load file: ', paramstr( 1 ));

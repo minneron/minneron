@@ -23,7 +23,7 @@ targets:
 	@echo 'make run   -> build and run'
 	@echo
 
-min:
+min: .tangled
 	$(FPC) -Mobjfpc min.pas
 	mv $(GEN)/min .$
 
@@ -38,7 +38,7 @@ clean:
 	delp $(GEN)
 	rm -f min tangled
 
-test: lib/xpl clean tangled
+test: lib/xpl clean .tangled
 	cd ./lib/xpl; make test GEN=../../$(GEN)
 
 
