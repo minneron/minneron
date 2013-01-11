@@ -1,0 +1,1186 @@
+#+title: minneron
+
+* TODO behavior driven test harness
+:PROPERTIES:
+:TS: <2013-01-11 03:40AM>
+:ID: ogu9pv71jzf0
+:END:
+#+begin_src pascal :tangle ".gen/test_edcmds.pas" :padline yes :noweb tangle
+  program test_edcmds;
+  uses min;
+    var
+      ch       : char;
+      ed       : min.editor;
+      expected : string;
+      passed,
+      failed   : cardinal;
+
+    <<runln>>
+    <<testln>>
+    <<report>>
+  begin
+    ed.create;
+    while not eof do
+      case read( ch ) of
+        '$' : readln( ed.value );
+        '>' : runln;
+        '!' : testln;
+      end
+    <<report>>
+  end.
+#+end_src
+
+* SECTION starting point
+:PROPERTIES:
+:TS: <2013-01-11 04:49AM>
+:ID: 21j3a1b1jzf0
+:END:
+** TODO SECT What you should already know.
+:PROPERTIES:
+:TS: <2013-01-11 04:53AM>
+:ID: 0zjgg8b1jzf0
+:END:
+** TODO link to introductory pascal
+:PROPERTIES:
+:TS: <2013-01-11 04:53AM>
+:ID: u7x539b1jzf0
+:END:
+** TODO show the cursor interface
+:PROPERTIES:
+:TS: <2013-01-11 04:49AM>
+:ID: r0oel1b1jzf0
+:END:
+** TODO ui.input interface
+:PROPERTIES:
+:TS: <2013-01-11 04:50AM>
+:ID: olz7x3b1jzf0
+:END:
+
+
+* loading the file
+:PROPERTIES:
+:TS: <2013-01-11 04:55AM>
+:ID: 6wgjjcb1jzf0
+:END:
+
+#+name: editor
+#+begin_src pascal
+  function editor.load( path : string ) : boolean;
+    var txt : text; line : string;
+  begin
+    if fs.exists( path ) then begin
+      assign( input, path );
+      reset( path );
+      while not eof( input ) do begin
+        readln( input, line );
+        self.buf.append( <<ed:make-line-node>> )
+      end;
+      close( input );
+      self.filename := path
+    end
+  end;
+#+end_src
+
+* «tokenizer»
+:PROPERTIES:
+:TS: <2013-01-11 05:05AM>
+:ID: er586tb1jzf0
+:END:
+#+name: ed:make-line-node
+#+begin_src pascal
+
+stringtoken.create( line )
+
+#+end_src
+
+* SECTION documents (spanning tree into the graph)
+:PROPERTIES:
+:TS: <2013-01-03 04:13PM>
+:ID: v971ih00azf0
+:END:
+** buffers
+:PROPERTIES:
+:TS: <2013-01-03 03:29PM>
+:ID: jek9h1d19zf0
+:END:
+*** TYPE buffer
+:PROPERTIES:
+:TS: <2013-01-04 02:51AM>
+:ID: o6e3l1u0azf0
+:END:
+
+The buffer is a simple, linear list of tokens, where tokens are either strings, or invisible markers pointing to document nodes.
+
+#+name: type:buffer
+#+begin_src pascal
+  type buffer = class( specialize ll.list <token> )
+  end;
+#+end_src
+
+*** TYPE Token
+:PROPERTIES:
+:TS: <2013-01-04 02:09AM>
+:ID: 2mxaf3s0azf0
+:END:
+
+#+name: @type:token
+#+begin_src pascal
+  type token = li.node;
+#+end_src
+
+*** TYPE StringToken
+:PROPERTIES:
+:TS: <2013-01-04 02:08AM>
+:ID: kaujt1s0azf0
+:END:
+
+#+name: @type:token
+#+begin_src pascal
+  type stringtoken = li.strnode;
+#+end_src
+
+*** TYPE TagToken
+:PROPERTIES:
+:TS: <2013-01-03 03:29PM>
+:ID: d28jz1d19zf0
+:END:
+
+#+name: @type:token
+#+begin_src pascal
+  type tagtoken = li.objnode;
+#+end_src
+
+Tag tokens are non-textual, and may hold any kind of data.
+
+Unlike the generic list cursors, which are pointers to link objects in the linked list, markers are data objects that are actually part of the buffer. This is so programs that traverse the list are able to see the markers.
+
+** spans
+:PROPERTIES:
+:TS: <2013-01-03 03:57PM>
+:ID: f4x29ce19zf0
+:END:
+
+Span is a generic type, suitable for use with nested elements but also for arbitrary regions like selected text.
+
+#+name: @types
+#+begin_src pascal
+  type
+    generic span<t> = class
+    public
+      type tag = class( tagtoken )
+        is_start, is_end : boolean;
+        span             : specialize span<t>;
+      end;
+      start_tag, end_tag : tag;
+      obj : t;
+    end;
+#+end_src
+
+** blocks
+:PROPERTIES:
+:TS: <2013-01-03 03:53PM>
+:ID: s5pjy4e19zf0
+:END:
+
+Blocks are spans that act like xml elements, in that they are nestable but non-overlapping, and that each node in the tree contains references to its siblings, children, and a single parent node.
+
+Aside from these fields, blocks can be of any type, and may or may not conform to any particular schema.
+
+Most likely they would be implemented as =type generic block<t>=.
+
+These can be used to indicate parsed structures such as lines of text, tokens (for syntax highlighting), etc.
+
+** other embedded objects
+:PROPERTIES:
+:TS: <2013-01-03 04:06PM>
+:ID: nrrkq600azf0
+:END:
+
+Arbitrary objects can be embedded in the text. These may contain "clones" of text elsewhere in the document (or in another document, or calculated on the fly).
+
+They are expected to display themselves, just like textual nodes.
+
+
+
+* CARD working through wordwrap / tokenization                     :minneron:
+:PROPERTIES:
+:TS: <2013-01-11 03:17AM>
+:ID: f0042s61jzf0
+:END:
+** NOTE still stuck on wordwrap
+:PROPERTIES:
+:TS: <2013-01-11 02:15AM>
+:ID: v6zgxw31jzf0
+:END:
+I'm still stuck. I know that word wrap is my next step, but I'm not sure what to do yet.
+Does zinput need to change?
+
+Suppose I leave zinput alone as a simple string editor, and I just use it to edit one token at a time. Every time I hit space or enter, I move the editor widget. This is nice, because it means I don't have to change zinput.
+
+It does mean I need to break the file into tokens. Right now, I'm using pascal's standard =ReadLn= function, which simply reads characters until it encounters a platform-specific newline marker.
+
+** NOTE breaking the string into tokens
+:PROPERTIES:
+:TS: <2013-01-11 03:17AM>
+:ID: cpvbjt61jzf0
+:END:
+
+* SECTION crawler concept (cursor+stack machine)
+:PROPERTIES:
+:TS: <2013-01-10 07:43AM>
+:ID: vfbhc031izf0
+:END:
+** TODO add clasp as an actual node type, with left,right, and up pointers.
+:PROPERTIES:
+:TS: <2013-01-10 08:17AM>
+:ID: 9s66sl41izf0
+:END:
+** TODO add hook as a node type with left, right, and down pointers.
+:PROPERTIES:
+:TS: <2013-01-10 08:19AM>
+:ID: rq33yn41izf0
+:END:
+
+* SECTION command dispatch
+:PROPERTIES:
+:TS: <2013-01-10 07:46AM>
+:ID: 6vnhj531izf0
+:END:
+** the document command language
+:PROPERTIES:
+:TS: <2013-01-10 07:42AM>
+:ID: atnh8y21izf0
+:END:
+** token-based dispatch
+:PROPERTIES:
+:TS: <2013-01-10 07:47AM>
+:ID: va99k631izf0
+:END:
+** string-based dispatch
+:PROPERTIES:
+:TS: <2013-01-10 07:46AM>
+:ID: if8k2631izf0
+:END:
+
+
+* SECTION command reference
+:PROPERTIES:
+:TS: <2013-01-10 08:24AM>
+:ID: rfxenx41izf0
+:END:
+** cursor movement commands
+:PROPERTIES:
+:TS: <2013-01-10 08:24AM>
+:ID: zm4gsw41izf0
+:END:
+** tree movement commands
+:PROPERTIES:
+:TS: <2013-01-10 08:31AM>
+:ID: 8ybhm851izf0
+:END:
+** version control commands
+:PROPERTIES:
+:TS: <2013-01-10 08:32AM>
+:ID: wekjl951izf0
+:END:
+*** undo/redo
+:PROPERTIES:
+:TS: <2013-01-10 08:32AM>
+:ID: 7y602a51izf0
+:END:
+
+** string manipulation commands
+:PROPERTIES:
+:TS: <2013-01-10 08:24AM>
+:ID: 8p551x41izf0
+:END:
+*** TODO insert char
+:PROPERTIES:
+:TS: <2013-01-10 08:25AM>
+:ID: xq7dbz41izf0
+:END:
+*** TODO delete char
+:PROPERTIES:
+:TS: <2013-01-10 08:26AM>
+:ID: zctajz41izf0
+:END:
+
+** compiler commands
+:PROPERTIES:
+:TS: <2013-01-10 08:25AM>
+:ID: yb66dy41izf0
+:END:
+
+** range/selection commands
+:PROPERTIES:
+:TS: <2013-01-10 08:29AM>
+:ID: 0izal551izf0
+:END:
+
+** token/highlight commands
+:PROPERTIES:
+:TS: <2013-01-10 08:29AM>
+:ID: 9o44r451izf0
+:END:
+*** set style
+:PROPERTIES:
+:TS: <2013-01-10 08:29AM>
+:ID: c83lc551izf0
+:END:
+*** break token (space bar)
+:PROPERTIES:
+:TS: <2013-01-10 08:52AM>
+:ID: ps0ca761izf0
+:END:
+
+** terminal commands
+:PROPERTIES:
+:TS: <2013-01-10 08:28AM>
+:ID: jntap351izf0
+:END:
+*** cursor position
+:PROPERTIES:
+:TS: <2013-01-10 08:28AM>
+:ID: x4h40451izf0
+:END:
+*** set color
+:PROPERTIES:
+:TS: <2013-01-10 08:28AM>
+:ID: b0067451izf0
+:END:
+
+
+
+
+
+
+* SECTION displaying documents
+:PROPERTIES:
+:TS: <2013-01-03 04:13PM>
+:ID: qbighi00azf0
+:END:
+** straightforward linear flow display
+:PROPERTIES:
+:TS: <2013-01-04 04:30AM>
+:ID: yb55yly0azf0
+:END:
+
+** the scene graph                                                   :later:
+:PROPERTIES:
+:TS: <2013-01-03 04:16PM>
+:ID: iza8lm00azf0
+:END:
+
+The block objects serve a secondary purpose, in that they can recursively display themselves (just like widgets in gamesketchlib or whatever).
+
+However, document structure and display structure needn't coincide: nodes might be hidden, or show up at arbitrary coordinates, etc.
+
+So it's likely that each node would have a corresponding display object, which understood coordinates, geometry, etc.
+
+In particular, two clones of the same node would have different geometries and coordinates.
+
+Note also that display nodes may not be textual: raster images, vector shapes, and dialog widgets are all perfectly valid options.
+
+
+* event dispatcher
+Wait for an event, then do something about it.
+
+#+name: procs
+#+begin_src pascal
+  function readkey( var ch : character ) : char;
+  begin
+    ch := crt.readkey;
+    result := ch
+  end;
+#+end_src
+
+#+name: vars
+#+begin_src pascal
+  var ch : char;
+#+end_src
+
+#+name: listen
+#+begin_src pascal
+  case readkey( ch ) of
+    #27, ^C : done := true;
+    ^N      : next_line;
+    ^P      : prev_line;
+    ^A      : line_start;
+    ^E      : line_end;
+    #0      : case crt.readkey of
+                #72 : prev_line;  // up
+                #80 : next_line;  // down
+                #71 : line_start; // home
+                #79 : line_end;   // end
+                #73 : pageup;
+                #81 : pagedown;
+              end;
+    else self_insert( ch )
+  end;
+#+end_src
+
+* code layout
+:PROPERTIES:
+:TS: <2013-01-04 04:30AM>
+:ID: amp15ny0azf0
+:END:
+** FILE buf.pas
+:PROPERTIES:
+:TS: <2013-01-04 04:31AM>
+:ID: u6chgny0azf0
+:END:
+
+#+begin_src pascal :tangle ".gen/buf.pas" :padline yes :noweb tangle
+  {$i xpc.inc}
+  unit buf;
+  interface uses xpc, ll, li;
+    <<@type:token>>
+    <<type:buffer>>
+  implementation
+  end.
+#+end_src
+
+** «main»
+#+begin_src pascal :tangle ".gen/mn.pas" :padline yes :noweb tangle
+  program mn;
+  uses crt, buf;
+    <<types>>
+    <<vars>>
+    <<procs>>
+    var quit : boolean = false;
+  begin
+    <<initialize>>
+    repeat
+      <<listen>>
+      <<update>>
+      <<render>>
+    until quit
+  end.
+#+end_src
+
+* FILE =min_ed.pas=
+:PROPERTIES:
+:TS: <2013-01-11 05:09AM>
+:ID: fr5fryb1jzf0
+:END:
+#+begin_src pascal :tangle ".gen/min_ed.pas" :noweb tangle
+  {$i xpc.inc}
+  unit min_ed;
+  interface uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
+    type
+      editor = class
+        buf               : buf.buffer;
+        filename          : string;
+        message           : string;
+        x, y, h, w        : integer;
+        topline, position : buf.buffer.cursor;
+        led               : ui.zinput;  // led = Line EDitor
+        constructor create;
+        function load( path : string ) : boolean;
+        function save_as( path : string ) : boolean;
+        function save : boolean;
+        procedure show;
+        procedure run;
+
+      protected { cursor movement commands }
+        procedure arrowup;
+        procedure arrowdown;
+        procedure home;
+        procedure _end;
+        procedure pageup;
+        procedure pagedown;
+
+      protected { line manipulation commands }
+        procedure newline;
+        procedure delete;
+      end;
+  implementation
+  end.
+#+end_src
+
+* SECTION implementation
+:PROPERTIES:
+:TS: <2013-01-11 08:46AM>
+:ID: sghf0g70kzf0
+:END:
+#+name: implementation
+#+begin_src pascal :tangle ".gen/min_ed.pas" :noweb tangle
+  implementation
+      constructor editor.create;
+      begin
+        inherited;
+        x := 1;
+        y := 1;
+        w := crt.windMaxX;
+        h := crt.windMaxY;
+        self.buf := buffer.create;
+        topline := self.buf.make_cursor;
+        position := self.buf.make_cursor;
+        filename := '';
+        message  := 'welcome to minneron.';
+      end;
+    
+      function editor.load( path : string ) : boolean;
+        var txt : text; line : string;
+      begin
+        result := fs.exists( path );
+        if result then begin
+          //  need to check for io errors in here
+          assign( txt, path );
+          reset( txt );
+          while not eof( txt ) do begin
+            readln( txt, line );
+            self.buf.append( stringtoken.create( line ));
+          end;
+          close( txt );
+          self.filename := path;
+        end;
+      end; { editor.load }
+
+      function editor.save : boolean;
+        var txt: text; node : li.node;
+      begin
+        assign( txt, self.filename );
+        rewrite( txt );
+        for node in self.buf do begin
+          if node.kind = KSTR then writeln( txt, (node as strnode).str );
+        end;
+        close( txt );
+        result := true; // TODO error checking
+        message := filename + ' saved.';
+      end;
+
+      function editor.save_as( path : string ) : boolean;
+        var oldname : string;
+      begin
+        oldname := self.filename;
+        self.filename := path;
+        result := self.save;
+        if not result then self.filename := oldname
+      end;
+    
+      procedure editor.show;
+        var
+          ypos : cardinal;
+          cur  : buffer.cursor;
+
+        procedure show_curpos;
+        begin
+          cwritexy( 1, 1,
+                    '|B[|C' + flushrt( n2s( self.position.index ), 6, '.' ) +
+                    '|w/|c' + flushrt( n2s( self.buf.count ), 6, '.' ) +
+                    '|B] |G' + self.message +
+                 '|%' );
+          self.message := '';
+        end;
+
+        procedure show_nums;
+        begin
+          cwritexy( 1, ypos, '|k|!c' );
+          write( flushrt( n2s( cur.index ), 3, ' ' ));
+          cwrite( '|!k|w' );
+        end;
+
+        procedure show_edit( line : string );
+        begin
+          { This simply positions the input widget. }
+          with self.led do begin
+            x := crt.wherex;
+            y := crt.wherey;
+            tcol := $0E; // bright yellow
+            dlen := crt.windmaxx - crt.wherex;
+          end;
+          // debug: clear to eol w/blue bg to show where control should be
+          // cwrite( '|!b|%' );
+          led.show;
+        end;
+
+        procedure show_line( line : string );
+        begin
+          cwrite( stri.trunc( line, cw.scr.w - cw.cur.x ));
+          cwrite( '|%' ); // clreol
+        end;
+
+      var line : string = '';
+
+      begin
+        // clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
+        show_curpos;
+        ypos := 2;
+        cur := self.buf.make_cursor;
+        cur.move_to( self.topline );
+        repeat
+          if cur.value.inheritsfrom( li.strnode ) then
+          begin
+            show_nums;
+            line := li.strnode( cur.value ).str;
+            if cur.index = position.index then show_edit( line )
+            else show_line( line );
+          end;
+          inc( ypos )
+        until ( ypos = self.h ) or ( not cur.move_next );
+        while ypos < self.h do begin
+          cwritexy( 1, ypos, '|%' );
+          inc( ypos )
+        end;
+        led.show
+      end;
+
+    
+      procedure editor.home;
+      begin
+        if self.buf.first = nil then exit;
+        position.to_top;
+        topline.to_top;
+        if position.value.inheritsfrom( li.strnode ) then
+          led.work := li.strnode( position.value ).str
+        else
+          led.work := '<<marker>>';
+      end;
+
+      procedure editor._end;
+        var i : byte;
+      begin
+        self.position.to_end;
+        self.topline.to_end;
+        for i := crt.windmaxy div 2 downto 1 do
+          self.topline.move_prev;
+      end;
+
+      procedure editor.pageup;
+        var c : byte;
+      begin for c := 1 to h do arrowup;
+      end;
+
+      procedure editor.pagedown;
+        var c : byte;
+      begin for c := 1 to h do arrowdown;
+      end; { editor.pagedown }
+
+    
+      procedure editor.run;
+        var done : boolean = false; ch : char;
+      begin
+        self.led := ui.zinput.create;
+        self.home;
+          repeat
+          show;
+          case kbd.readkey(ch) of
+            ^C : done := true;
+            ^N : arrowdown;
+            ^P : arrowup;
+            ^M : newline;
+            ^D : delete;
+            ^S : save;
+            ^V : pagedown;
+            ^U : pageup;
+            #0 : case kbd.readkey(ch) of
+                        #72 : arrowup; // when you press the UP arrow!
+                        #80 : arrowdown; // when you press the DOWN arrow!
+                        #71 : home;
+                        #79 : _end;
+                        #73 : pageup;
+                        #81 : pagedown;
+                        else led.handlestripped( ch ); led.show;
+                      end;
+            else led.handle( ch ); led.show;
+          end
+        until done;
+      end;
+    
+      procedure editor.arrowup;
+      begin
+        li.strnode(self.position.value).str := led.value;
+        if self.position.move_prev then
+        begin
+          if self.position.index - self.topline.index < 5 then
+              if self.topline.index > 1 then
+                 self.topline.move_prev;
+          //  scrolldown1(1,80,y1,y2,nil);
+          //  scrolldown1(1,80,14,25,nil);
+        end
+        else self.position.move_next;
+        led.work := li.strnode(self.position.value).str;
+      end;
+
+      procedure editor.arrowdown;
+        var screenline : word;
+      begin
+        li.strnode(self.position.value).str := led.value;
+        if self.position.move_next then
+          begin
+            assert( self.topline.index <= self.position.index );
+            screenline := self.position.index - self.topline.index;
+            if ( screenline > self.h - 5 ) and ( self.topline.index < self.buf.count ) then
+               self.topline.move_next
+              //  scrollup1(1,80,y1,y2,nil);
+              //  scrollup1(1,80,14,25,nil);
+          end
+        else self.position.to_end;
+        led.work := li.strnode(self.position.value).str;
+      end;
+
+    
+      procedure editor.newline;
+      begin
+        position.inject_next( strnode.create( led.str_to_end ));
+        led.del_to_end;
+        arrowdown;
+        led.to_start
+      end; { editor.newline }
+
+      procedure editor.delete;
+        var cur : buffer.cursor;
+      begin
+        if led.at_end then begin
+          if not position.at_end then begin
+            cur := buf.make_cursor;
+            cur.move_to(position);
+            cur.move_next;
+            led.work += li.strnode( cur.value ).str;
+            position.delete_next;
+            cur.free;
+          end
+        end
+        else led.del
+      end;
+
+    end.
+#+end_src
+
+
+* DONE ngaro : a simple virtual computer
+:PROPERTIES:
+:TS: <2013-01-11 03:35AM>
+:ID: la310m71jzf0
+:END:
+
+* TODO [3/14] general purpose traditional text editor
+** DONE [6/6] #ED001 get ln.pas hooked up to cedit.
+:PROPERTIES:
+:TS: <2013-01-03 01:38PM>
+:ID: e526zw719zf0
+:END:
+*** DONE [3/3] CARD get cedit.pas working again
+:PROPERTIES:
+:TS:       <2012-11-10 12:42PM>
+:ID:       hcg7aat0axf0
+:END:
+**** DONE pntstuff.pas(66,15) Error: Wrong number of parameters specified for call to "killnode" :bug:
+:PROPERTIES:
+:TS:       <2012-11-10 12:54PM>
+:ID:       st87v6w0axf0
+:END:
+This just needed an @ to prevent invocation.
+
+**** DONE crtstuff.pas(1472,4) Fatal: Selected assembler reader not supported :bug:
+:PROPERTIES:
+:TS:       <2012-11-10 01:09PM>
+:ID:       uq04zvw0axf0
+:END:
+***** NOTE basically, crtstuff doesn't compile.
+:PROPERTIES:
+:TS:       <2012-11-10 01:36PM>
+:ID:       65f0e4y0axf0
+:END:
+***** NOTE workaround: use cw instead ( ?? )
+:PROPERTIES:
+:TS:       <2012-11-10 01:40PM>
+:ID:       dlvgsay0axf0
+:END:
+***** NOTE . or: just describe the program from the top down
+:PROPERTIES:
+:TS:       <2012-11-10 01:51PM>
+:ID:       qbkefty0axf0
+:END:
+Maybe rather than trying to compile it, with all those huge broken dependencies, I should just start at the begin section and try and clean it up.
+***** NOTE . decided to do both.
+:PROPERTIES:
+:TS:       <2012-11-10 03:09PM>
+:ID:       8k7jrf21axf0
+:END:
+I commented out most of cedit (anything that relied on my old code, especially). Now I'm going to step through and clean it up a little at a time, making sure it compiles.
+***** NOTE . refactoring, test framework, etc
+:PROPERTIES:
+:TS:       <2012-11-12 01:32PM>
+:ID:       ola4zkf0dxf0
+:END:
+Well, I got cedit to compile at some point in the past few days. I basically commented everything out that wasn't pure pascal, and then re-enabled one line at a time until it compiled. Along the way, I broke crtstuff down into smaller pieces.
+
+Unfortunately, it still doesn't work, so last night I started making a test framework. Actually, I /tried/ to use dunit, but I couldn't get it to compile... And then I decided it was just way bigger and complicated than I really needed anyway. Yes, the gestalt problem again.
+
+Anyway, I wrote my own little test system last night, so today I will track down the bugs in the linked list module by implementing some tests to specify how this thing is supposed to work.
+
+**** DONE cedit shows no text, crashes on arrowdown                  :bug:
+:PROPERTIES:
+:TS:       <2012-11-12 01:48PM>
+:ID:       98dh8bg0dxf0
+:END:
+***** NOTE repaired ll.append/insert logic, then moved from objects->classes
+:PROPERTIES:
+:TS:       <2012-11-13 03:25AM>
+:ID:       pmcf1l30exf0
+:END:
+I think probably the code worked before, but I somehow broke things while trying to get it to compile at all. In any case, I now have a test framework cleared out a /bunch/ of duplicate logic from this thing.
+
+Still have one bug, but it's in ~cw.pas~, not ~cedit~, so I'm going to mark this done! :)
+*** DONE [0/0] create a simple line editor ( ui.zinput as reference? )
+:PROPERTIES:
+:TS:       <2012-11-10 02:37PM>
+:ID:       fr78ey01axf0
+:END:
+*** DONE [2/2] build oberon-style "text" (ll of strings + markers)
+:PROPERTIES:
+:TS:       <2012-11-13 11:53AM>
+:ID:       w4q793r0exf0
+:END:
+**** DONE [0/0] create a token type
+:PROPERTIES:
+:TS: <2013-01-01 10:45PM>
+:ID: ez8ho0117zf0
+:END:
+[0104.2013 04:54AM] done in type token (really same as li.strtoken)
+
+**** DONE [0/0] create linked list of tokens
+:PROPERTIES:
+:TS: <2013-01-01 10:47PM>
+:ID: 06kgs4117zf0
+:END:
+[0104.2013 04:55AM] done in type tagtoken = li.objtoken
+
+*** DONE [0/0] convert cedit to use the buffer type
+:PROPERTIES:
+:TS: <2013-01-04 04:56AM>
+:ID: f7a9vtz0azf0
+:END:
+
+I suppose in this case, we want to use elements/blocks.
+
+Looks like it's already using stringnodes, but that's pretty much the same as li.strnode, so i might as well use a list of li.nodes. But I'll go ahead and use the buffer type I created in mn.trail.
+
+Another thing I did was make the editor class (previously =listeditor=) be a container for a buffer, rather than a subclass.
+
+*** DONE [0/0] read lines of text as the initial chunks
+:PROPERTIES:
+:TS: <2013-01-01 10:46PM>
+:ID: kozjs1117zf0
+:END:
+
+This was already done in cedit too. :)
+
+
+*** DONE [0/0] show the line editor on the highlighted line
+:PROPERTIES:
+:TS: <2013-01-04 07:15AM>
+:ID: th42v961azf0
+:END:
+
+** DONE [4/6] #ED002 break / join lines in editor
+:PROPERTIES:
+:TS: <2013-01-03 01:40PM>
+:ID: 3kd48z719zf0
+:END:
+*** DONE break
+:PROPERTIES:
+:TS: <2013-01-07 01:46PM>
+:ID: fccivi70fzf0
+:END:
+
+Breaking lines simply means that when the enter key is pressed:
+
+  - everything to the right of the cursor is moved to a new string-node
+  - the new string node is inserted inline in the buffer
+
+*** DONE update cursors after break (editor.position and led.cpos)
+:PROPERTIES:
+:TS: <2013-01-07 05:49PM>
+:ID: yux1esi0fzf0
+:END:
+
+*** DONE join lines when deleting newline
+:PROPERTIES:
+:TS: <2013-01-07 01:45PM>
+:ID: eyzbcg70fzf0
+:END:
+
+*** DONE update cursor index after deleting (unecessary!)
+:PROPERTIES:
+:TS: <2013-01-07 05:49PM>
+:ID: yux1esi0fzf0
+:END:
+
+Actually, when you delete the newline, the cursor stays in the same place.
+
+*** TODO also join lines when backspacing through newline
+:PROPERTIES:
+:TS: <2013-01-07 11:54PM>
+:ID: ouhg8oz0fzf0
+:END:
+
+This can wait.
+
+*** TODO update /all/ attached cursors when inserting items into the list
+:PROPERTIES:
+:TS: <2013-01-07 06:42PM>
+:ID: 8zt2b8l0fzf0
+:END:
+    { append this cursor to the array so we get notified of inserts/deletes }
+    len := length( lis._cursors );
+    setlength( lis._cursors, len + 1 );
+    lis._cursors[ len ] := self;
+
+test case:
+    { when we insert, the cursors should update }
+    ls.insert( a );
+    chk.equal( ls.count, 3 );
+    chk.that( cur.index = 3, 'cursor index didn''t update after insertion' );
+    chk.equal( cur.index, 3 );
+
+** DONE [0/0] #ED003 save the updated file to disk
+:PROPERTIES:
+:TS: <2013-01-03 01:40PM>
+:ID: nfe6rz719zf0
+:END:
+
+** TODO [0/3] #ED004 word wrap / virtual line mode
+:PROPERTIES:
+:TS: <2013-01-03 01:41PM>
+:ID: qr35d0819zf0
+:END:
+*** TODO add an offset to the cursor type
+:PROPERTIES:
+:TS: <2013-01-10 09:37AM>
+:ID: uzh4ta81izf0
+:END:
+*** TODO break the input text into tokens grouped by element nodes
+:PROPERTIES:
+:TS: <2013-01-10 09:37AM>
+:ID: uwf83b81izf0
+:END:
+*** TODO generate a list of blocks (display objects) from the elements
+:PROPERTIES:
+:TS: <2013-01-10 09:38AM>
+:ID: xzn4eb81izf0
+:END:
+
+elements are sequences/strings with a 1-dimensional length
+blocks are rectangles with a 2-dimensional bounding box
+*** TODO make a stack for offsets, so the document can be a tree
+:PROPERTIES:
+:TS: <2013-01-10 09:43AM>
+:ID: r2bl0k81izf0
+:END:
+
+
+** TODO [0/0] #ED005 regions (selections, highlights, etc)
+:PROPERTIES:
+:TS: <2013-01-03 01:41PM>
+:ID: s36461819zf0
+:END:
+** TODO [0/0] #ED006 cut, copy, paste
+:PROPERTIES:
+:TS: <2013-01-03 01:42PM>
+:ID: xdmg02819zf0
+:END:
+** TODO [0/0] #ED007 show/hide individual blocks
+:PROPERTIES:
+:TS: <2013-01-03 01:42PM>
+:ID: r2n8o2819zf0
+:END:
+** TODO [0/0] #ED008 move blocks inside the outline
+:PROPERTIES:
+:TS: <2013-01-03 01:42PM>
+:ID: ug5a73819zf0
+:END:
+** TODO [0/0] #ED009 styles for blocks
+:PROPERTIES:
+:TS: <2013-01-03 01:43PM>
+:ID: lnl744819zf0
+:END:
+** TODO [0/0] #ED010 tokenize/highlight within blocks
+:PROPERTIES:
+:TS: <2013-01-03 01:43PM>
+:ID: cti3s4819zf0
+:END:
+** TODO [0/0] #ED011 tabular blocks
+:PROPERTIES:
+:TS: <2013-01-03 01:44PM>
+:ID: 0bbcs5819zf0
+:END:
+** TODO [0/0] #ED012 tangle (generate source files)
+:PROPERTIES:
+:TS: <2013-01-03 01:44PM>
+:ID: fx00t6819zf0
+:END:
+** TODO [0/0] #ED013 weave (generate html site)
+:PROPERTIES:
+:TS: <2013-01-03 01:45PM>
+:ID: l0e2c8819zf0
+:END:
+** TODO [0/0] #ED014 trailblaze (weave + version control)
+:PROPERTIES:
+:TS: <2013-01-03 01:46PM>
+:ID: wqf1y8819zf0
+:END:
+
+
+
+* [0/12] -- unfiled ---
+:PROPERTIES:
+:TS: <2013-01-07 01:45PM>
+:ID: abbhsg70fzf0
+:END:
+** TODO [0/0] build the block-based display engine (console based)
+:PROPERTIES:
+:TS: <2013-01-01 10:35PM>
+:ID: tm74ek017zf0
+:END:
+
+** TODO [0/0] build the command interpreter
+:PROPERTIES:
+:TS: <2013-01-01 10:35PM>
+:ID: 6v09mj017zf0
+:END:
+
+** TODO [0/0] load entire files directly into ram
+:PROPERTIES:
+:TS:       <2012-11-10 12:21PM>
+:ID:       hpwbsmu0axf0
+:END:
+Rather than deal with the bytestream protocol, just load the files directly into ram, and deal with them there. This gives us random access, etc.
+
+** TODO [0/0] simple syntax highlighting / tokenization
+:PROPERTIES:
+:TS:       <2012-11-13 11:42AM>
+:ID:       n7z7sjq0exf0
+:END:
+
+** TODO [0/2] harvest other editors ( once I have core editor working in pascal )
+:PROPERTIES:
+:TS:       <2012-11-13 11:42AM>
+:ID:       kt1h6kq0exf0
+:END:
+*** TODO [0/0] harvest diakonos
+:PROPERTIES:
+:TS:       <2012-11-13 11:40AM>
+:ID:       5g1jugq0exf0
+:END:
+*** TODO [0/0] harvest codemirror
+:PROPERTIES:
+:TS:       <2012-11-13 11:42AM>
+:ID:       ccr0wkq0exf0
+:END:
+
+** TODO [0/0] [#A] parse org files - see file:~/r/@code/@py/o2x.py
+:PROPERTIES:
+:TS:       <2012-11-10 11:18AM>
+:ID:       d0c5kpr0axf0
+:END:
+
+** TODO [0/0] load/save minno
+:PROPERTIES:
+:TS:       <2012-11-10 11:46AM>
+:ID:       det2o1t0axf0
+:END:
+** TODO [0/0] graph database ( port amoeba to pascal )
+:PROPERTIES:
+:TS:       <2012-11-13 11:26AM>
+:ID:       bnyckup0exf0
+:END:
+** TODO [0/2] multi-colum / table based editor
+:PROPERTIES:
+:TS:       <2012-11-10 11:27AM>
+:ID:       0knej5s0axf0
+:END:
+*** TODO [0/0] merge in file:~/r/work/griddemo.pas
+:PROPERTIES:
+:TS:       <2012-11-13 10:48AM>
+:ID:       re6c12o0exf0
+:END:
+*** TODO [0/0] simple table-based editor
+:PROPERTIES:
+:TS:       <2012-11-10 02:30PM>
+:ID:       uhv4ml01axf0
+:END:
+load arrays of nodes
+*** TODO [0/0] cw's end of line handling breaks ( on linux, anyway ).
+:PROPERTIES:
+:TS:       <2012-11-13 03:29AM>
+:ID:       mmherr30exf0
+:END:
+This could be compounded by the fact that I'm also trying to use kvm.
+
+** TODO [0/1] database forms
+:PROPERTIES:
+:TS:       <2012-11-13 11:48AM>
+:ID:       eso31uq0exf0
+:END:
+*** TODO [0/0] I think ymenu has a basic form. I could mix with html/django form model
+:PROPERTIES:
+:TS:       <2012-11-13 11:48AM>
+:ID:       xov0muq0exf0
+:END:
+** TODO [0/2] trailblazer / tangentcode editor ( graph db programming )
+:PROPERTIES:
+:TS:       <2012-11-13 11:37AM>
+:ID:       cxqhvbq0exf0
+:END:
+*** TODO [0/2] get all my pascal code into a database
+:PROPERTIES:
+:TS:       <2012-11-10 12:42PM>
+:ID:       k1b2zlv0axf0
+:END:
+maybe use the code tools?
+
+**** TODO convert old pascal source files to unicode
+:PROPERTIES:
+:TS:       <2012-11-10 02:21PM>
+:ID:       gs594801axf0
+:END:
+
+
+**** TODO parse pascal/oberon/turbo                               :parser:
+:PROPERTIES:
+:TS:       <2012-11-10 01:50PM>
+:ID:       yv64pry0axf0
+:END:
+*** TODO [0/0] implement org-babel-tangle
+:PROPERTIES:
+:TS:       <2012-11-13 11:06AM>
+:ID:       ls96dwo0exf0
+:END:
+** TODO [0/2] task oriented, tiling window enviroment ( minneron )
+:PROPERTIES:
+:TS:       <2012-11-13 11:30AM>
+:ID:       v735uzp0exf0
+:END:
+*** TODO [0/0] get tmux to work sort of like autohotkey              :tmux:
+:PROPERTIES:
+:TS:       <2012-11-10 11:18AM>
+:ID:       mpj2aqr0axf0
+:END:
+*** graphical tmux-like thing for windows ( but with browsers, etc )
+:PROPERTIES:
+:TS:       <2012-11-10 11:18AM>
+:ID:       23q5upr0axf0
+:END:
+Could use windows API, or mozilla.
+*** i want to unify the emacs and tmux keybindngs                    :tmux:
+:PROPERTIES:
+:TS:       <2012-11-10 11:18AM>
+:ID:       5yfj6qr0axf0
+:END:
+especially for switching / resizing windows
+C-x | to do vertical split, maybe?
+*** WANT browser keybidings for scroll, etc                       :browser:
+:PROPERTIES:
+:TS:       <2012-11-10 11:20AM>
+:ID:       kjx0ctr0axf0
+:END:
+i wish i could use my normal keybindings for paging, etc in the browser
+**** TODO try conkeror
+:PROPERTIES:
+:TS:       <2012-11-10 11:21AM>
+:ID:       4dmjvur0axf0
+:END:
+*** TODO console web browsers
