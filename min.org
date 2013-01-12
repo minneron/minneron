@@ -5,7 +5,7 @@
 :TS: <2013-01-11 11:41AM>
 :ID: q5gdnjf0kzf0
 :END:
-** TODO [3/14] general purpose traditional text editor
+** TODO [3/6] general purpose traditional text editor
 *** DONE [0/0] #ED001 bare bones text editor                        :ED001:
 :PROPERTIES:
 :TS: <2013-01-03 01:38PM>
@@ -94,7 +94,7 @@ test case:
 :TS: <2013-01-03 01:42PM>
 :ID: xdmg02819zf0
 :END:
-** TODO [0/8] outline support
+** TODO [0/4] outline support
 :PROPERTIES:
 :TS: <2013-01-11 12:15PM>
 :ID: cg3654h0kzf0
@@ -119,7 +119,7 @@ test case:
 :TS: <2013-01-03 01:43PM>
 :ID: cti3s4819zf0
 :END:
-** TODO [0/4] datagrid support
+** TODO [0/1] datagrid support
 :PROPERTIES:
 :TS: <2013-01-11 12:15PM>
 :ID: bj8bk5h0kzf0
@@ -149,7 +149,7 @@ test case:
 :TS: <2013-01-03 01:46PM>
 :ID: wqf1y8819zf0
 :END:
-** TODO [0/1] task oriented, tiling window enviroment ( minneron )
+** TODO [0/0] task oriented, tiling window enviroment ( minneron )
 :PROPERTIES:
 :TS:       <2012-11-13 11:30AM>
 :ID:       v735uzp0exf0
@@ -180,6 +180,73 @@ test case:
 :TS: <2013-01-10 07:42AM>
 :ID: atnh8y21izf0
 :END:
+* module view
+:PROPERTIES:
+:TS: <2013-01-11 09:40AM>
+:ID: 7vwjky90kzf0
+:END:
+*** TODO MODULE =buf= -> rename to docs or texts
+:PROPERTIES:
+:TS: <2013-01-04 04:31AM>
+:ID: u6chgny0azf0
+:END:
+
+#+begin_src pascal :tangle ".gen/buf.pas" :padline yes :noweb tangle
+  {$i xpc.inc}
+  unit buf;
+  interface uses xpc, ll, li;
+    <<@tokentypes>>
+    <<type:buffer>>
+  implementation
+  end.
+#+end_src
+
+*** MODULE =mn=                                                        :ed:ifc:
+:PROPERTIES:
+:TS: <2013-01-11 05:09AM>
+:ID: fr5fryb1jzf0
+:END:
+#+begin_src pascal :tangle ".gen/mn.pas" :noweb tangle
+  {$i xpc.inc}
+  unit mn;
+  interface uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
+    <<type:editor>>
+    <<type:span>>
+  implementation
+    <<imp:ed>>
+    <<imp:span>>
+  end.
+#+end_src
+
+*** PROGRAM =min=
+:PROPERTIES:
+:TS: <2013-01-12 06:30AM>
+:ID: 34nd9ah0lzf0
+:END:
+#+begin_src pascal :tangle ".gen/min.pas" :noweb tangle
+{ minneron
+----------------------------------------------------------------
+Copyright (c) 2012 Michal J Wallace. All rights reserved.
+---------------------------------------------------------------}
+{$i xpc.inc}
+program min;
+  uses mn, crt, cw;
+  var ed : editor;
+begin
+  crt.clrscr;
+  ed := editor.create;
+  if paramcount = 0 then
+    writeln( 'usage : min <filename>' )
+  else if ed.load( paramstr( 1 )) then
+  begin
+    ed.run;
+    ed.destroy;
+    cw.cwriteln( '|w|!k' );
+    crt.clrscr;
+  end
+  else writeln( 'unable to load file: ', paramstr( 1 ));
+end.
+#+end_src
 * TODO <cleanup> structural view (object interfaces)
 :PROPERTIES:
 :TS: <2013-01-11 11:21AM>
@@ -190,7 +257,7 @@ test case:
 :TS: <2013-01-11 03:35AM>
 :ID: la310m71jzf0
 :END:
-** document model (spanning tree into the graph)
+** [0/0] document model (spanning tree into the graph)
 :PROPERTIES:
 :TS: <2013-01-03 04:13PM>
 :ID: v971ih00azf0
@@ -214,13 +281,18 @@ The buffer is a simple, linear list of tokens, where tokens are either strings, 
   end;
 #+end_src
 
+*** tokens
+:PROPERTIES:
+:TS: <2013-01-12 06:41AM>
+:ID: x4i08sh0lzf0
+:END:
 **** TYPE Token
 :PROPERTIES:
 :TS: <2013-01-04 02:09AM>
 :ID: 2mxaf3s0azf0
 :END:
 
-#+name: @type:token
+#+name: @tokentypes
 #+begin_src pascal
   type token = li.node;
 #+end_src
@@ -231,7 +303,7 @@ The buffer is a simple, linear list of tokens, where tokens are either strings, 
 :ID: kaujt1s0azf0
 :END:
 
-#+name: @type:token
+#+name: @tokentypes
 #+begin_src pascal
   type stringtoken = li.strnode;
 #+end_src
@@ -242,7 +314,7 @@ The buffer is a simple, linear list of tokens, where tokens are either strings, 
 :ID: d28jz1d19zf0
 :END:
 
-#+name: @type:token
+#+name: @tokentypes
 #+begin_src pascal
   type tagtoken = li.objnode;
 #+end_src
@@ -259,18 +331,18 @@ Unlike the generic list cursors, which are pointers to link objects in the linke
 
 Span is a generic type, suitable for use with nested elements but also for arbitrary regions like selected text.
 
-#+name: @types
+#+name: type:span
 #+begin_src pascal
-  type
-    generic span<t> = class
-    public
-      type tag = class( tagtoken )
-        is_start, is_end : boolean;
-        span             : specialize span<t>;
-      end;
-      start_tag, end_tag : tag;
-      obj : t;
+  type generic span<t> = class
+  public
+    type tag = class( tagtoken )
+      is_start, is_end : boolean;
+      span             : specialize span<t>;
     end;
+  public
+    start_tag, end_tag : tag;
+    obj : t;
+  end;
 #+end_src
 
 *** blocks
@@ -324,6 +396,36 @@ stringtoken.create( line )
 :TS: <2013-01-11 11:09AM>
 :ID: zy54y2e0kzf0
 :END:
+#+name: type:editor
+#+begin_src pascal
+  type editor = class
+    buf               : buf.buffer;
+    filename          : string;
+    message           : string;
+    x, y, h, w        : integer;
+    topline, position : buf.buffer.cursor;
+    led               : ui.zinput;  // led = Line EDitor
+    constructor create;
+    function load( path : string ) : boolean;
+    function save_as( path : string ) : boolean;
+    function save : boolean;
+    procedure show;
+    procedure run;
+
+   protected { cursor movement commands }
+    procedure arrowup;
+    procedure arrowdown;
+    procedure home;
+    procedure _end;
+    procedure pageup;
+    procedure pagedown;
+
+   protected { line manipulation commands }
+    procedure newline;
+    procedure delete;
+  end;
+#+end_src
+
 ** database
 :PROPERTIES:
 :TS: <2013-01-11 11:21AM>
@@ -334,43 +436,258 @@ stringtoken.create( line )
 :TS: <2013-01-11 11:07AM>
 :ID: v0ufazd0kzf0
 :END:
-** TODO event dispatcher                                               :kbd:
-Wait for an event, then do something about it.
-
-#+name: procs
+** text editor implementation                                           :ed:
+:PROPERTIES:
+:TS: <2013-01-11 08:46AM>
+:ID: sghf0g70kzf0
+:END:
+#+name: imp:ed
 #+begin_src pascal
-  function readkey( var ch : character ) : char;
+  constructor editor.create;
   begin
-    ch := crt.readkey;
-    result := ch
+    inherited;
+    x := 1;
+    y := 1;
+    w := crt.windMaxX;
+    h := crt.windMaxY;
+    self.buf := buffer.create;
+    topline := self.buf.make_cursor;
+    position := self.buf.make_cursor;
+    filename := '';
+    message  := 'welcome to minneron.';
+  end;
+  
+  function editor.load( path : string ) : boolean;
+    var txt : text; line : string;
+  begin
+    result := fs.exists( path );
+    if result then begin
+      //  need to check for io errors in here
+      assign( txt, path );
+      reset( txt );
+      while not eof( txt ) do begin
+        readln( txt, line );
+        self.buf.append( stringtoken.create( line ));
+      end;
+      close( txt );
+      self.filename := path;
+    end;
+  end; { editor.load }
+
+  function editor.save : boolean;
+    var txt: text; node : li.node;
+  begin
+    assign( txt, self.filename );
+    rewrite( txt );
+    for node in self.buf do begin
+      if node.kind = KSTR then writeln( txt, (node as strnode).str );
+    end;
+    close( txt );
+    result := true; // TODO error checking
+    message := filename + ' saved.';
+  end;
+
+  function editor.save_as( path : string ) : boolean;
+    var oldname : string;
+  begin
+    oldname := self.filename;
+    self.filename := path;
+    result := self.save;
+    if not result then self.filename := oldname
+  end;
+  
+  procedure editor.show;
+    var
+      ypos : cardinal;
+      cur  : buffer.cursor;
+
+    procedure show_curpos;
+    begin
+      cwritexy( 1, 1,
+                '|B[|C' + flushrt( n2s( self.position.index ), 6, '.' ) +
+                '|w/|c' + flushrt( n2s( self.buf.count ), 6, '.' ) +
+                '|B] |G' + self.message +
+             '|%' );
+      self.message := '';
+    end;
+
+    procedure show_nums;
+    begin
+      cwritexy( 1, ypos, '|k|!c' );
+      write( flushrt( n2s( cur.index ), 3, ' ' ));
+      cwrite( '|!k|w' );
+    end;
+
+    procedure show_edit( line : string );
+    begin
+      { This simply positions the input widget. }
+      with self.led do begin
+        x := crt.wherex;
+        y := crt.wherey;
+        tcol := $0E; // bright yellow
+        dlen := crt.windmaxx - crt.wherex;
+      end;
+      // debug: clear to eol w/blue bg to show where control should be
+      // cwrite( '|!b|%' );
+      led.show;
+    end;
+
+    procedure show_line( line : string );
+    begin
+      cwrite( stri.trunc( line, cw.scr.w - cw.cur.x ));
+      cwrite( '|%' ); // clreol
+    end;
+
+  var line : string = '';
+
+  begin
+    // clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
+    show_curpos;
+    ypos := 2;
+    cur := self.buf.make_cursor;
+    cur.move_to( self.topline );
+    repeat
+      if cur.value.inheritsfrom( li.strnode ) then
+      begin
+        show_nums;
+        line := li.strnode( cur.value ).str;
+        if cur.index = position.index then show_edit( line )
+        else show_line( line );
+      end;
+      inc( ypos )
+    until ( ypos = self.h ) or ( not cur.move_next );
+    while ypos < self.h do begin
+      cwritexy( 1, ypos, '|%' );
+      inc( ypos )
+    end;
+    led.show
+  end;
+
+  
+  procedure editor.home;
+  begin
+    if self.buf.first = nil then exit;
+    position.to_top;
+    topline.to_top;
+    if position.value.inheritsfrom( li.strnode ) then
+      led.work := li.strnode( position.value ).str
+    else
+      led.work := '<<marker>>';
+  end;
+
+  procedure editor._end;
+    var i : byte;
+  begin
+    self.position.to_end;
+    self.topline.to_end;
+    for i := crt.windmaxy div 2 downto 1 do
+      self.topline.move_prev;
+  end;
+
+  procedure editor.pageup;
+    var c : byte;
+  begin for c := 1 to h do arrowup;
+  end;
+
+  procedure editor.pagedown;
+    var c : byte;
+  begin for c := 1 to h do arrowdown;
+  end; { editor.pagedown }
+
+  
+  procedure editor.run;
+    var done : boolean = false; ch : char;
+  begin
+    self.led := ui.zinput.create;
+    self.home;
+      repeat
+      show;
+      case kbd.readkey(ch) of
+        ^C : done := true;
+        ^N : arrowdown;
+        ^P : arrowup;
+        ^M : newline;
+        ^D : delete;
+        ^S : save;
+        ^V : pagedown;
+        ^U : pageup;
+        #0 : case kbd.readkey(ch) of
+                    #72 : arrowup; // when you press the UP arrow!
+                    #80 : arrowdown; // when you press the DOWN arrow!
+                    #71 : home;
+                    #79 : _end;
+                    #73 : pageup;
+                    #81 : pagedown;
+                    else led.handlestripped( ch ); led.show;
+                  end;
+        else led.handle( ch ); led.show;
+      end
+    until done;
+  end;
+  
+  procedure editor.arrowup;
+  begin
+    li.strnode(self.position.value).str := led.value;
+    if self.position.move_prev then
+    begin
+      if self.position.index - self.topline.index < 5 then
+          if self.topline.index > 1 then
+             self.topline.move_prev;
+      //  scrolldown1(1,80,y1,y2,nil);
+      //  scrolldown1(1,80,14,25,nil);
+    end
+    else self.position.move_next;
+    led.work := li.strnode(self.position.value).str;
+  end;
+
+  procedure editor.arrowdown;
+    var screenline : word;
+  begin
+    li.strnode(self.position.value).str := led.value;
+    if self.position.move_next then
+      begin
+        assert( self.topline.index <= self.position.index );
+        screenline := self.position.index - self.topline.index;
+        if ( screenline > self.h - 5 ) and ( self.topline.index < self.buf.count ) then
+           self.topline.move_next
+          //  scrollup1(1,80,y1,y2,nil);
+          //  scrollup1(1,80,14,25,nil);
+      end
+    else self.position.to_end;
+    led.work := li.strnode(self.position.value).str;
+  end;
+
+  
+  procedure editor.newline;
+  begin
+    position.inject_next( strnode.create( led.str_to_end ));
+    led.del_to_end;
+    arrowdown;
+    led.to_start
+  end; { editor.newline }
+
+  procedure editor.delete;
+    var cur : buffer.cursor;
+  begin
+    if led.at_end then begin
+      if not position.at_end then begin
+        cur := buf.make_cursor;
+        cur.move_to(position);
+        cur.move_next;
+        led.work += li.strnode( cur.value ).str;
+        position.delete_next;
+        cur.free;
+      end
+    end
+    else led.del
   end;
 #+end_src
-
-#+name: vars
-#+begin_src pascal
-  var ch : char;
-#+end_src
-
-#+name: listen
-#+begin_src pascal
-  case readkey( ch ) of
-    #27, ^C : done := true;
-    ^N      : next_line;
-    ^P      : prev_line;
-    ^A      : line_start;
-    ^E      : line_end;
-    #0      : case crt.readkey of
-                #72 : prev_line;  // up
-                #80 : next_line;  // down
-                #71 : line_start; // home
-                #79 : line_end;   // end
-                #73 : pageup;
-                #81 : pagedown;
-              end;
-    else self_insert( ch )
-  end;
-#+end_src
-
+*** TODO [0/0] load entire files directly into ram
+:PROPERTIES:
+:TS:       <2012-11-10 12:21PM>
+:ID:       hpwbsmu0axf0
+:END:
+Rather than deal with the bytestream protocol, just load the files directly into ram, and deal with them there. This gives us random access, etc.
 ** TODO [0/0] build the command interpreter
 :PROPERTIES:
 :TS: <2013-01-01 10:35PM>
@@ -652,261 +969,6 @@ blocks are rectangles with a 2-dimensional bounding box
 :TS: <2013-01-01 10:35PM>
 :ID: tm74ek017zf0
 :END:
-** text editor implementation                                           :ed:
-:PROPERTIES:
-:TS: <2013-01-11 08:46AM>
-:ID: sghf0g70kzf0
-:END:
-#+name: implementation
-#+begin_src pascal :tangle ".gen/min_ed.pas" :noweb tangle
-  implementation
-      constructor editor.create;
-      begin
-        inherited;
-        x := 1;
-        y := 1;
-        w := crt.windMaxX;
-        h := crt.windMaxY;
-        self.buf := buffer.create;
-        topline := self.buf.make_cursor;
-        position := self.buf.make_cursor;
-        filename := '';
-        message  := 'welcome to minneron.';
-      end;
-    
-      function editor.load( path : string ) : boolean;
-        var txt : text; line : string;
-      begin
-        result := fs.exists( path );
-        if result then begin
-          //  need to check for io errors in here
-          assign( txt, path );
-          reset( txt );
-          while not eof( txt ) do begin
-            readln( txt, line );
-            self.buf.append( stringtoken.create( line ));
-          end;
-          close( txt );
-          self.filename := path;
-        end;
-      end; { editor.load }
-
-      function editor.save : boolean;
-        var txt: text; node : li.node;
-      begin
-        assign( txt, self.filename );
-        rewrite( txt );
-        for node in self.buf do begin
-          if node.kind = KSTR then writeln( txt, (node as strnode).str );
-        end;
-        close( txt );
-        result := true; // TODO error checking
-        message := filename + ' saved.';
-      end;
-
-      function editor.save_as( path : string ) : boolean;
-        var oldname : string;
-      begin
-        oldname := self.filename;
-        self.filename := path;
-        result := self.save;
-        if not result then self.filename := oldname
-      end;
-    
-      procedure editor.show;
-        var
-          ypos : cardinal;
-          cur  : buffer.cursor;
-
-        procedure show_curpos;
-        begin
-          cwritexy( 1, 1,
-                    '|B[|C' + flushrt( n2s( self.position.index ), 6, '.' ) +
-                    '|w/|c' + flushrt( n2s( self.buf.count ), 6, '.' ) +
-                    '|B] |G' + self.message +
-                 '|%' );
-          self.message := '';
-        end;
-
-        procedure show_nums;
-        begin
-          cwritexy( 1, ypos, '|k|!c' );
-          write( flushrt( n2s( cur.index ), 3, ' ' ));
-          cwrite( '|!k|w' );
-        end;
-
-        procedure show_edit( line : string );
-        begin
-          { This simply positions the input widget. }
-          with self.led do begin
-            x := crt.wherex;
-            y := crt.wherey;
-            tcol := $0E; // bright yellow
-            dlen := crt.windmaxx - crt.wherex;
-          end;
-          // debug: clear to eol w/blue bg to show where control should be
-          // cwrite( '|!b|%' );
-          led.show;
-        end;
-
-        procedure show_line( line : string );
-        begin
-          cwrite( stri.trunc( line, cw.scr.w - cw.cur.x ));
-          cwrite( '|%' ); // clreol
-        end;
-
-      var line : string = '';
-
-      begin
-        // clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
-        show_curpos;
-        ypos := 2;
-        cur := self.buf.make_cursor;
-        cur.move_to( self.topline );
-        repeat
-          if cur.value.inheritsfrom( li.strnode ) then
-          begin
-            show_nums;
-            line := li.strnode( cur.value ).str;
-            if cur.index = position.index then show_edit( line )
-            else show_line( line );
-          end;
-          inc( ypos )
-        until ( ypos = self.h ) or ( not cur.move_next );
-        while ypos < self.h do begin
-          cwritexy( 1, ypos, '|%' );
-          inc( ypos )
-        end;
-        led.show
-      end;
-
-    
-      procedure editor.home;
-      begin
-        if self.buf.first = nil then exit;
-        position.to_top;
-        topline.to_top;
-        if position.value.inheritsfrom( li.strnode ) then
-          led.work := li.strnode( position.value ).str
-        else
-          led.work := '<<marker>>';
-      end;
-
-      procedure editor._end;
-        var i : byte;
-      begin
-        self.position.to_end;
-        self.topline.to_end;
-        for i := crt.windmaxy div 2 downto 1 do
-          self.topline.move_prev;
-      end;
-
-      procedure editor.pageup;
-        var c : byte;
-      begin for c := 1 to h do arrowup;
-      end;
-
-      procedure editor.pagedown;
-        var c : byte;
-      begin for c := 1 to h do arrowdown;
-      end; { editor.pagedown }
-
-    
-      procedure editor.run;
-        var done : boolean = false; ch : char;
-      begin
-        self.led := ui.zinput.create;
-        self.home;
-          repeat
-          show;
-          case kbd.readkey(ch) of
-            ^C : done := true;
-            ^N : arrowdown;
-            ^P : arrowup;
-            ^M : newline;
-            ^D : delete;
-            ^S : save;
-            ^V : pagedown;
-            ^U : pageup;
-            #0 : case kbd.readkey(ch) of
-                        #72 : arrowup; // when you press the UP arrow!
-                        #80 : arrowdown; // when you press the DOWN arrow!
-                        #71 : home;
-                        #79 : _end;
-                        #73 : pageup;
-                        #81 : pagedown;
-                        else led.handlestripped( ch ); led.show;
-                      end;
-            else led.handle( ch ); led.show;
-          end
-        until done;
-      end;
-    
-      procedure editor.arrowup;
-      begin
-        li.strnode(self.position.value).str := led.value;
-        if self.position.move_prev then
-        begin
-          if self.position.index - self.topline.index < 5 then
-              if self.topline.index > 1 then
-                 self.topline.move_prev;
-          //  scrolldown1(1,80,y1,y2,nil);
-          //  scrolldown1(1,80,14,25,nil);
-        end
-        else self.position.move_next;
-        led.work := li.strnode(self.position.value).str;
-      end;
-
-      procedure editor.arrowdown;
-        var screenline : word;
-      begin
-        li.strnode(self.position.value).str := led.value;
-        if self.position.move_next then
-          begin
-            assert( self.topline.index <= self.position.index );
-            screenline := self.position.index - self.topline.index;
-            if ( screenline > self.h - 5 ) and ( self.topline.index < self.buf.count ) then
-               self.topline.move_next
-              //  scrollup1(1,80,y1,y2,nil);
-              //  scrollup1(1,80,14,25,nil);
-          end
-        else self.position.to_end;
-        led.work := li.strnode(self.position.value).str;
-      end;
-
-    
-      procedure editor.newline;
-      begin
-        position.inject_next( strnode.create( led.str_to_end ));
-        led.del_to_end;
-        arrowdown;
-        led.to_start
-      end; { editor.newline }
-
-      procedure editor.delete;
-        var cur : buffer.cursor;
-      begin
-        if led.at_end then begin
-          if not position.at_end then begin
-            cur := buf.make_cursor;
-            cur.move_to(position);
-            cur.move_next;
-            led.work += li.strnode( cur.value ).str;
-            position.delete_next;
-            cur.free;
-          end
-        end
-        else led.del
-      end;
-
-    end.
-#+end_src
-*** TODO [0/0] load entire files directly into ram
-:PROPERTIES:
-:TS:       <2012-11-10 12:21PM>
-:ID:       hpwbsmu0axf0
-:END:
-Rather than deal with the bytestream protocol, just load the files directly into ram, and deal with them there. This gives us random access, etc.
 ** database implementation
 :PROPERTIES:
 :TS: <2013-01-11 12:01PM>
@@ -1146,85 +1208,4 @@ i wish i could use my normal keybindings for paging, etc in the browser
 :TS:       <2012-11-10 11:21AM>
 :ID:       4dmjvur0axf0
 :END:
-
-* TODO <cleanup> appendix
-:PROPERTIES:
-:TS: <2013-01-11 09:40AM>
-:ID: 7vwjky90kzf0
-:END:
-*** FILE buf.pas
-:PROPERTIES:
-:TS: <2013-01-04 04:31AM>
-:ID: u6chgny0azf0
-:END:
-
-#+begin_src pascal :tangle ".gen/buf.pas" :padline yes :noweb tangle
-  {$i xpc.inc}
-  unit buf;
-  interface uses xpc, ll, li;
-    <<@type:token>>
-    <<type:buffer>>
-  implementation
-  end.
-#+end_src
-
-*** «main»
-#+begin_src pascal :tangle ".gen/mn.pas" :padline yes :noweb tangle
-  program mn;
-  uses crt, buf;
-    <<types>>
-    <<vars>>
-    <<procs>>
-    var quit : boolean = false;
-  begin
-    <<initialize>>
-    repeat
-      <<listen>>
-      <<update>>
-      <<render>>
-    until quit
-  end.
-#+end_src
-
-*** FILE =min_ed.pas=                                              :ed:ifc:
-:PROPERTIES:
-:TS: <2013-01-11 05:09AM>
-:ID: fr5fryb1jzf0
-:END:
-#+begin_src pascal :tangle ".gen/min_ed.pas" :noweb tangle
-  {$i xpc.inc}
-  unit min_ed;
-  interface uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
-    type
-      editor = class
-        buf               : buf.buffer;
-        filename          : string;
-        message           : string;
-        x, y, h, w        : integer;
-        topline, position : buf.buffer.cursor;
-        led               : ui.zinput;  // led = Line EDitor
-        constructor create;
-        function load( path : string ) : boolean;
-        function save_as( path : string ) : boolean;
-        function save : boolean;
-        procedure show;
-        procedure run;
-
-      protected { cursor movement commands }
-        procedure arrowup;
-        procedure arrowdown;
-        procedure home;
-        procedure _end;
-        procedure pageup;
-        procedure pagedown;
-
-      protected { line manipulation commands }
-        procedure newline;
-        procedure delete;
-      end;
-  implementation
-  end.
-#+end_src
-
 * end.
-

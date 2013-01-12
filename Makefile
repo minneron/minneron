@@ -24,7 +24,7 @@ targets:
 	@echo
 
 min: .tangled
-	$(FPC) -Mobjfpc min.pas
+	$(FPC) -Mobjfpc $(GEN)/min.pas
 	mv $(GEN)/min .$
 
 run: clean min
@@ -36,7 +36,7 @@ run: clean min
 
 clean:
 	delp $(GEN)
-	rm -f min tangled
+	rm -f min .tangled
 
 test: lib/xpl clean .tangled
 	cd ./lib/xpl; make test GEN=../../$(GEN)
