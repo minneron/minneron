@@ -180,7 +180,7 @@ test case:
 :TS: <2013-01-10 07:42AM>
 :ID: atnh8y21izf0
 :END:
-* package view (modules/programs)
+* package view (module outlines)
 :PROPERTIES:
 :TS: <2013-01-11 09:40AM>
 :ID: 7vwjky90kzf0
@@ -215,11 +215,10 @@ test case:
     <<type:editor>>
     <<type:span>>
   implementation
-    <<imp:ed>>
-    <<imp:span>>
+    <<@imp:ed>>
+    <<@imp:span>>
   end.
 #+end_src
-
 *** PROGRAM =min=
 :PROPERTIES:
 :TS: <2013-01-12 06:30AM>
@@ -403,17 +402,22 @@ They are expected to display themselves, just like textual nodes.
 :TS: <2013-01-11 11:21AM>
 :ID: ae267me0kzf0
 :END:
-* TODO <cleanup> implementation view
+* procedural view (current procedure/method definitions)
 :PROPERTIES:
 :TS: <2013-01-11 11:07AM>
 :ID: v0ufazd0kzf0
 :END:
-** text editor implementation                                           :ed:
+** DONE editor routines                                                 :ed:
 :PROPERTIES:
 :TS: <2013-01-11 08:46AM>
 :ID: sghf0g70kzf0
 :END:
-#+name: imp:ed
+*** class methods
+:PROPERTIES:
+:TS: <2013-01-12 07:37AM>
+:ID: 7hd3ldk0lzf0
+:END:
+#+name: @imp:ed
 #+begin_src pascal
   constructor editor.create;
   begin
@@ -428,7 +432,15 @@ They are expected to display themselves, just like textual nodes.
     filename := '';
     message  := 'welcome to minneron.';
   end;
-  
+#+end_src
+
+*** disk interface
+:PROPERTIES:
+:TS: <2013-01-12 07:38AM>
+:ID: f41aqek0lzf0
+:END:
+#+name: @imp:ed
+#+begin_src pascal
   function editor.load( path : string ) : boolean;
     var txt : text; line : string;
   begin
@@ -467,7 +479,16 @@ They are expected to display themselves, just like textual nodes.
     result := self.save;
     if not result then self.filename := oldname
   end;
-  
+#+end_src
+
+*** display interface
+:PROPERTIES:
+:TS: <2013-01-12 07:39AM>
+:ID: 1oyksgk0lzf0
+:END:
+#+name: @imp:ed
+#+begin_src pascal
+
   procedure editor.show;
     var
       ypos : cardinal;
@@ -534,8 +555,16 @@ They are expected to display themselves, just like textual nodes.
     end;
     led.show
   end;
+#+end_src
 
-  
+*** cursor movement interface
+:PROPERTIES:
+:TS: <2013-01-12 07:41AM>
+:ID: 34ca2jk0lzf0
+:END:
+#+name: @imp:ed
+#+begin_src pascal
+
   procedure editor.home;
   begin
     if self.buf.first = nil then exit;
@@ -565,38 +594,10 @@ They are expected to display themselves, just like textual nodes.
     var c : byte;
   begin for c := 1 to h do arrowdown;
   end; { editor.pagedown }
+#+end_src
 
-  
-  procedure editor.run;
-    var done : boolean = false; ch : char;
-  begin
-    self.led := ui.zinput.create;
-    self.home;
-      repeat
-      show;
-      case kbd.readkey(ch) of
-        ^C : done := true;
-        ^N : arrowdown;
-        ^P : arrowup;
-        ^M : newline;
-        ^D : delete;
-        ^S : save;
-        ^V : pagedown;
-        ^U : pageup;
-        #0 : case kbd.readkey(ch) of
-                    #72 : arrowup; // when you press the UP arrow!
-                    #80 : arrowdown; // when you press the DOWN arrow!
-                    #71 : home;
-                    #79 : _end;
-                    #73 : pageup;
-                    #81 : pagedown;
-                    else led.handlestripped( ch ); led.show;
-                  end;
-        else led.handle( ch ); led.show;
-      end
-    until done;
-  end;
-  
+#+name: @imp:ed
+#+begin_src pascal
   procedure editor.arrowup;
   begin
     li.strnode(self.position.value).str := led.value;
@@ -628,8 +629,55 @@ They are expected to display themselves, just like textual nodes.
     else self.position.to_end;
     led.work := li.strnode(self.position.value).str;
   end;
+#+end_src
 
-  
+*** modal interface
+:PROPERTIES:
+:TS: <2013-01-12 07:41AM>
+:ID: lxfhwjk0lzf0
+:END:
+
+#+name: @imp:ed
+#+begin_src pascal
+  procedure editor.run;
+    var done : boolean = false; ch : char;
+  begin
+    self.led := ui.zinput.create;
+    self.home;
+      repeat
+      show;
+      case kbd.readkey(ch) of
+        ^C : done := true;
+        ^N : arrowdown;
+        ^P : arrowup;
+        ^M : newline;
+        ^D : delete;
+        ^S : save;
+        ^V : pagedown;
+        ^U : pageup;
+        #0 : case kbd.readkey(ch) of
+                    #72 : arrowup; // when you press the UP arrow!
+                    #80 : arrowdown; // when you press the DOWN arrow!
+                    #71 : home;
+                    #79 : _end;
+                    #73 : pageup;
+                    #81 : pagedown;
+                    else led.handlestripped( ch ); led.show;
+                  end;
+        else led.handle( ch ); led.show;
+      end
+    until done;
+  end;
+#+end_src
+
+*** multi-line editor commands
+:PROPERTIES:
+:TS: <2013-01-12 07:42AM>
+:ID: pn7bmlk0lzf0
+:END:
+
+#+name: @imp:ed
+#+begin_src pascal
   procedure editor.newline;
   begin
     position.inject_next( strnode.create( led.str_to_end ));
@@ -654,31 +702,66 @@ They are expected to display themselves, just like textual nodes.
     else led.del
   end;
 #+end_src
-*** TODO [0/0] load entire files directly into ram
+** TODO «tokenizer»                                                    :tok:
 :PROPERTIES:
-:TS:       <2012-11-10 12:21PM>
-:ID:       hpwbsmu0axf0
+:TS: <2013-01-11 05:05AM>
+:ID: er586tb1jzf0
 :END:
-Rather than deal with the bytestream protocol, just load the files directly into ram, and deal with them there. This gives us random access, etc.
-** TODO [0/0] build the command interpreter
+#+name: ed.load:line->node
+#+begin_src pascal
+token.create( line )
+#+end_src
+* TODO planning view (implementation plans for new features)
 :PROPERTIES:
-:TS: <2013-01-01 10:35PM>
-:ID: 6v09mj017zf0
+:TS: <2013-01-11 11:43AM>
+:ID: l6i37of0kzf0
 :END:
-*** command dispatch                                                  :cmd:
+** prerequisites
 :PROPERTIES:
-:TS: <2013-01-10 07:46AM>
-:ID: 6vnhj531izf0
+:TS: <2013-01-11 04:49AM>
+:ID: 21j3a1b1jzf0
 :END:
-**** token-based dispatch
+*** TODO SECT What you should already know.
 :PROPERTIES:
-:TS: <2013-01-10 07:47AM>
-:ID: va99k631izf0
+:TS: <2013-01-11 04:53AM>
+:ID: 0zjgg8b1jzf0
 :END:
-**** string-based dispatch
+*** TODO link to introductory pascal
 :PROPERTIES:
-:TS: <2013-01-10 07:46AM>
-:ID: if8k2631izf0
+:TS: <2013-01-11 04:53AM>
+:ID: u7x539b1jzf0
+:END:
+*** TODO show the cursor interface
+:PROPERTIES:
+:TS: <2013-01-11 04:49AM>
+:ID: r0oel1b1jzf0
+:END:
+*** TODO ui.input interface
+:PROPERTIES:
+:TS: <2013-01-11 04:50AM>
+:ID: olz7x3b1jzf0
+:END:
+** CARD working through wordwrap / tokenization                   :wrap:tok:
+:PROPERTIES:
+:TS: <2013-01-11 03:17AM>
+:ID: f0042s61jzf0
+:END:
+*** NOTE still stuck on wordwrap
+:PROPERTIES:
+:TS: <2013-01-11 02:15AM>
+:ID: v6zgxw31jzf0
+:END:
+I'm still stuck. I know that word wrap is my next step, but I'm not sure what to do yet.
+Does zinput need to change?
+
+Suppose I leave zinput alone as a simple string editor, and I just use it to edit one token at a time. Every time I hit space or enter, I move the editor widget. This is nice, because it means I don't have to change zinput.
+
+It does mean I need to break the file into tokens. Right now, I'm using pascal's standard =ReadLn= function, which simply reads characters until it encounters a platform-specific newline marker.
+
+*** NOTE breaking the string into tokens
+:PROPERTIES:
+:TS: <2013-01-11 03:17AM>
+:ID: cpvbjt61jzf0
 :END:
 ** DONE [6/6] implementing basic editor                              :ED001:
 :PROPERTIES:
@@ -797,92 +880,69 @@ This was already done in cedit too. :)
 :TS: <2013-01-04 07:15AM>
 :ID: th42v961azf0
 :END:
-** command reference                                                   :cmd:
+** TODO [0/0] load entire files directly into ram
 :PROPERTIES:
-:TS: <2013-01-10 08:24AM>
-:ID: rfxenx41izf0
+:TS:       <2012-11-10 12:21PM>
+:ID:       hpwbsmu0axf0
 :END:
-*** cursor movement commands
+Rather than deal with the bytestream protocol, just load the files directly into ram, and deal with them there. This gives us random access, etc.
+** TODO [0/0] command interpreter                                      :cmd:
 :PROPERTIES:
-:TS: <2013-01-10 08:24AM>
-:ID: zm4gsw41izf0
+:TS: <2013-01-01 10:35PM>
+:ID: 6v09mj017zf0
 :END:
-*** tree movement commands
+*** token-based dispatch
 :PROPERTIES:
-:TS: <2013-01-10 08:31AM>
-:ID: 8ybhm851izf0
+:TS: <2013-01-10 07:47AM>
+:ID: va99k631izf0
 :END:
-*** version control commands
+*** string-based dispatch
 :PROPERTIES:
-:TS: <2013-01-10 08:32AM>
-:ID: wekjl951izf0
+:TS: <2013-01-10 07:46AM>
+:ID: if8k2631izf0
 :END:
-**** undo/redo
+** SECTION crawler concept (cursor+stack machine)                      :cur:
 :PROPERTIES:
-:TS: <2013-01-10 08:32AM>
-:ID: 7y602a51izf0
+:TS: <2013-01-10 07:43AM>
+:ID: vfbhc031izf0
 :END:
-
-*** string manipulation commands
+*** TODO add clasp as an actual node type, with left,right, and up pointers. :ll:
 :PROPERTIES:
-:TS: <2013-01-10 08:24AM>
-:ID: 8p551x41izf0
+:TS: <2013-01-10 08:17AM>
+:ID: 9s66sl41izf0
 :END:
-**** TODO insert char
+*** TODO add hook as a node type with left, right, and down pointers.  :ll:
 :PROPERTIES:
-:TS: <2013-01-10 08:25AM>
-:ID: xq7dbz41izf0
+:TS: <2013-01-10 08:19AM>
+:ID: rq33yn41izf0
 :END:
-**** TODO delete char
+** [0/0] table editor implementation
 :PROPERTIES:
-:TS: <2013-01-10 08:26AM>
-:ID: zctajz41izf0
+:TS:       <2012-11-10 02:30PM>
+:ID:       uhv4ml01axf0
 :END:
-
-*** compiler commands
+*** load arrays of nodes
 :PROPERTIES:
-:TS: <2013-01-10 08:25AM>
-:ID: yb66dy41izf0
+:TS: <2013-01-11 12:01PM>
+:ID: nhqb8ig0kzf0
 :END:
-
-*** range/selection commands
+*** TODO [0/0] merge in file:~/r/work/griddemo.pas
 :PROPERTIES:
-:TS: <2013-01-10 08:29AM>
-:ID: 0izal551izf0
+:TS:       <2012-11-13 10:48AM>
+:ID:       re6c12o0exf0
 :END:
-
-*** token/highlight commands
+** TODO database implementation
 :PROPERTIES:
-:TS: <2013-01-10 08:29AM>
-:ID: 9o44r451izf0
-:END:
-**** set style
-:PROPERTIES:
-:TS: <2013-01-10 08:29AM>
-:ID: c83lc551izf0
-:END:
-**** break token (space bar)
-:PROPERTIES:
-:TS: <2013-01-10 08:52AM>
-:ID: ps0ca761izf0
+:TS: <2013-01-11 12:01PM>
+:ID: xob8dhg0kzf0
 :END:
 
-*** terminal commands
+** TODO [0/0] build the block-based display engine (console based)
 :PROPERTIES:
-:TS: <2013-01-10 08:28AM>
-:ID: jntap351izf0
+:TS: <2013-01-01 10:35PM>
+:ID: tm74ek017zf0
 :END:
-**** cursor position
-:PROPERTIES:
-:TS: <2013-01-10 08:28AM>
-:ID: x4h40451izf0
-:END:
-**** set color
-:PROPERTIES:
-:TS: <2013-01-10 08:28AM>
-:ID: b0067451izf0
-:END:
-** displaying documents                                                 :ui:
+** TODO displaying documents                                            :ui:
 :PROPERTIES:
 :TS: <2013-01-03 04:13PM>
 :ID: qbighi00azf0
@@ -907,23 +967,24 @@ So it's likely that each node would have a corresponding display object, which u
 
 In particular, two clones of the same node would have different geometries and coordinates.
 
-Note also that display nodes may not be textual: raster images, vector shapes, and dialog widgets are all perfectly valid options.
-*** word wrap implementation plan
+Note also that display nodes may not be textual: raster images, vector shapes,
+and dialog widgets are all perfectly valid options.
+** TODO word wrap implementation plan
 :PROPERTIES:
 :TS: <2013-01-11 11:45AM>
 :ID: hnyjxqf0kzf0
 :END:
-**** TODO add an offset to the cursor type
+*** TODO add an offset to the cursor type
 :PROPERTIES:
 :TS: <2013-01-10 09:37AM>
 :ID: uzh4ta81izf0
 :END:
-**** TODO break the input text into tokens grouped by element nodes
+*** TODO break the input text into tokens grouped by element nodes
 :PROPERTIES:
 :TS: <2013-01-10 09:37AM>
 :ID: uwf83b81izf0
 :END:
-**** TODO generate a list of blocks (display objects) from the elements
+*** TODO generate a list of blocks (display objects) from the elements
 :PROPERTIES:
 :TS: <2013-01-10 09:38AM>
 :ID: xzn4eb81izf0
@@ -931,147 +992,15 @@ Note also that display nodes may not be textual: raster images, vector shapes, a
 
 elements are sequences/strings with a 1-dimensional length
 blocks are rectangles with a 2-dimensional bounding box
-**** TODO make a stack for offsets, so the document can be a tree
+*** TODO make a stack for offsets, so the document can be a tree
 :PROPERTIES:
 :TS: <2013-01-10 09:43AM>
 :ID: r2bl0k81izf0
 :END:
-*** TODO [0/0] build the block-based display engine (console based)
+* TODO narrative view (completed plans, snapshots of old versions, etc)
 :PROPERTIES:
-:TS: <2013-01-01 10:35PM>
-:ID: tm74ek017zf0
-:END:
-** database implementation
-:PROPERTIES:
-:TS: <2013-01-11 12:01PM>
-:ID: xob8dhg0kzf0
-:END:
-** [0/0] table editor implementation
-:PROPERTIES:
-:TS:       <2012-11-10 02:30PM>
-:ID:       uhv4ml01axf0
-:END:
-*** load arrays of nodes
-:PROPERTIES:
-:TS: <2013-01-11 12:01PM>
-:ID: nhqb8ig0kzf0
-:END:
-*** TODO [0/0] merge in file:~/r/work/griddemo.pas
-:PROPERTIES:
-:TS:       <2012-11-13 10:48AM>
-:ID:       re6c12o0exf0
-:END:
-** i want to unify the emacs and tmux keybindngs                      :tmux:
-:PROPERTIES:
-:TS:       <2012-11-10 11:18AM>
-:ID:       5yfj6qr0axf0
-:END:
-especially for switching / resizing windows
-C-x | to do vertical split, maybe?
-** TODO graphical tmux-like thing for windows ( but with browsers, etc ) :unclear:
-:PROPERTIES:
-:TS:       <2012-11-10 11:18AM>
-:ID:       23q5upr0axf0
-:END:
-Could use windows API, or mozilla.
-** SECTION crawler concept (cursor+stack machine)                      :cur:
-:PROPERTIES:
-:TS: <2013-01-10 07:43AM>
-:ID: vfbhc031izf0
-:END:
-*** TODO add clasp as an actual node type, with left,right, and up pointers. :ll:
-:PROPERTIES:
-:TS: <2013-01-10 08:17AM>
-:ID: 9s66sl41izf0
-:END:
-*** TODO add hook as a node type with left, right, and down pointers.  :ll:
-:PROPERTIES:
-:TS: <2013-01-10 08:19AM>
-:ID: rq33yn41izf0
-:END:
-** loading the file
-:PROPERTIES:
-:TS: <2013-01-11 04:55AM>
-:ID: 6wgjjcb1jzf0
-:END:
-#+name: editor
-#+begin_src pascal
-  function editor.load( path : string ) : boolean;
-    var txt : text; line : string;
-  begin
-    if fs.exists( path ) then begin
-      assign( input, path );
-      reset( path );
-      while not eof( input ) do begin
-        readln( input, line );
-        self.buf.append( <<ed:make-line-node>> )
-      end;
-      close( input );
-      self.filename := path
-    end
-  end;
-#+end_src
-
-** «tokenizer»                                                         :tok:
-:PROPERTIES:
-:TS: <2013-01-11 05:05AM>
-:ID: er586tb1jzf0
-:END:
-#+name: ed.load:line->node
-#+begin_src pascal
-token.create( line )
-#+end_src
-* TODO <cleanup> narrative view
-:PROPERTIES:
-:TS: <2013-01-11 11:43AM>
-:ID: l6i37of0kzf0
-:END:
-** prerequisites
-:PROPERTIES:
-:TS: <2013-01-11 04:49AM>
-:ID: 21j3a1b1jzf0
-:END:
-*** TODO SECT What you should already know.
-:PROPERTIES:
-:TS: <2013-01-11 04:53AM>
-:ID: 0zjgg8b1jzf0
-:END:
-*** TODO link to introductory pascal
-:PROPERTIES:
-:TS: <2013-01-11 04:53AM>
-:ID: u7x539b1jzf0
-:END:
-*** TODO show the cursor interface
-:PROPERTIES:
-:TS: <2013-01-11 04:49AM>
-:ID: r0oel1b1jzf0
-:END:
-*** TODO ui.input interface
-:PROPERTIES:
-:TS: <2013-01-11 04:50AM>
-:ID: olz7x3b1jzf0
-:END:
-** CARD working through wordwrap / tokenization                   :wrap:tok:
-:PROPERTIES:
-:TS: <2013-01-11 03:17AM>
-:ID: f0042s61jzf0
-:END:
-*** NOTE still stuck on wordwrap
-:PROPERTIES:
-:TS: <2013-01-11 02:15AM>
-:ID: v6zgxw31jzf0
-:END:
-I'm still stuck. I know that word wrap is my next step, but I'm not sure what to do yet.
-Does zinput need to change?
-
-Suppose I leave zinput alone as a simple string editor, and I just use it to edit one token at a time. Every time I hit space or enter, I move the editor widget. This is nice, because it means I don't have to change zinput.
-
-It does mean I need to break the file into tokens. Right now, I'm using pascal's standard =ReadLn= function, which simply reads characters until it encounters a platform-specific newline marker.
-
-*** NOTE breaking the string into tokens
-:PROPERTIES:
-:TS: <2013-01-11 03:17AM>
-:ID: cpvbjt61jzf0
+:TS: <2013-01-12 07:58AM>
+:ID: qxoi0cl0lzf0
 :END:
 * TODO <cleanup> support view (meta / tool stuff)
 :PROPERTIES:
@@ -1190,4 +1119,102 @@ i wish i could use my normal keybindings for paging, etc in the browser
 :TS:       <2012-11-10 11:21AM>
 :ID:       4dmjvur0axf0
 :END:
+** TODO command reference                                              :cmd:
+:PROPERTIES:
+:TS: <2013-01-10 08:24AM>
+:ID: rfxenx41izf0
+:END:
+*** cursor movement commands
+:PROPERTIES:
+:TS: <2013-01-10 08:24AM>
+:ID: zm4gsw41izf0
+:END:
+*** tree movement commands
+:PROPERTIES:
+:TS: <2013-01-10 08:31AM>
+:ID: 8ybhm851izf0
+:END:
+*** version control commands
+:PROPERTIES:
+:TS: <2013-01-10 08:32AM>
+:ID: wekjl951izf0
+:END:
+**** undo/redo
+:PROPERTIES:
+:TS: <2013-01-10 08:32AM>
+:ID: 7y602a51izf0
+:END:
+
+*** string manipulation commands
+:PROPERTIES:
+:TS: <2013-01-10 08:24AM>
+:ID: 8p551x41izf0
+:END:
+**** TODO insert char
+:PROPERTIES:
+:TS: <2013-01-10 08:25AM>
+:ID: xq7dbz41izf0
+:END:
+**** TODO delete char
+:PROPERTIES:
+:TS: <2013-01-10 08:26AM>
+:ID: zctajz41izf0
+:END:
+
+*** compiler commands
+:PROPERTIES:
+:TS: <2013-01-10 08:25AM>
+:ID: yb66dy41izf0
+:END:
+
+*** range/selection commands
+:PROPERTIES:
+:TS: <2013-01-10 08:29AM>
+:ID: 0izal551izf0
+:END:
+
+*** token/highlight commands
+:PROPERTIES:
+:TS: <2013-01-10 08:29AM>
+:ID: 9o44r451izf0
+:END:
+**** set style
+:PROPERTIES:
+:TS: <2013-01-10 08:29AM>
+:ID: c83lc551izf0
+:END:
+**** break token (space bar)
+:PROPERTIES:
+:TS: <2013-01-10 08:52AM>
+:ID: ps0ca761izf0
+:END:
+
+*** terminal commands
+:PROPERTIES:
+:TS: <2013-01-10 08:28AM>
+:ID: jntap351izf0
+:END:
+**** cursor position
+:PROPERTIES:
+:TS: <2013-01-10 08:28AM>
+:ID: x4h40451izf0
+:END:
+**** set color
+:PROPERTIES:
+:TS: <2013-01-10 08:28AM>
+:ID: b0067451izf0
+:END:
+** TODO graphical tmux-like thing for windows ( but with browsers, etc ) :unclear:
+:PROPERTIES:
+:TS:       <2012-11-10 11:18AM>
+:ID:       23q5upr0axf0
+:END:
+Could use windows API, or mozilla.
+** i want to unify the emacs and tmux keybindngs                      :tmux:
+:PROPERTIES:
+:TS:       <2012-11-10 11:18AM>
+:ID:       5yfj6qr0axf0
+:END:
+especially for switching / resizing windows
+C-x | to do vertical split, maybe?
 * end.
