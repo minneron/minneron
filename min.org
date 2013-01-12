@@ -1,17 +1,17 @@
 #+title: minneron
 
-* requirements view (features/use cases)
+* requirements view (features/use cases)                                 :rq:
 :PROPERTIES:
 :TS: <2013-01-11 11:41AM>
 :ID: q5gdnjf0kzf0
 :END:
 ** TODO [3/6] general purpose traditional text editor
-*** DONE [0/0] #ED001 bare bones text editor                        :ED001:
+*** DONE [0/0] #ED001 bare bones text editor                        :ed001:
 :PROPERTIES:
 :TS: <2013-01-03 01:38PM>
 :ID: e526zw719zf0
 :END:
-*** DONE [4/6] #ED002 break / join lines in editor
+*** DONE [4/6] #ED002 break / join lines in editor                  :ed002:
 :PROPERTIES:
 :TS: <2013-01-03 01:40PM>
 :ID: 3kd48z719zf0
@@ -72,24 +72,24 @@ test case:
     chk.that( cur.index = 3, 'cursor index didn''t update after insertion' );
     chk.equal( cur.index, 3 );
 
-*** DONE [0/0] #ED003 save the updated file to disk
+*** DONE [0/0] #ED003 save the updated file to disk                 :ed003:
 :PROPERTIES:
 :TS: <2013-01-03 01:40PM>
 :ID: nfe6rz719zf0
 :END:
 
-*** TODO [0/0] #ED004 word wrap / virtual line mode
+*** TODO [0/0] #ED004 word wrap / virtual line mode                 :ed004:
 :PROPERTIES:
 :TS: <2013-01-03 01:41PM>
 :ID: qr35d0819zf0
 :END:
 
-*** TODO [0/0] #ED005 regions (selections, highlights, etc)
+*** TODO [0/0] #ED005 regions (selections, highlights, etc)         :ed005:
 :PROPERTIES:
 :TS: <2013-01-03 01:41PM>
 :ID: s36461819zf0
 :END:
-*** TODO [0/0] #ED006 cut, copy, paste
+*** TODO [0/0] #ED006 cut, copy, paste                              :ed006:
 :PROPERTIES:
 :TS: <2013-01-03 01:42PM>
 :ID: xdmg02819zf0
@@ -124,7 +124,7 @@ test case:
 :TS: <2013-01-11 12:15PM>
 :ID: bj8bk5h0kzf0
 :END:
-*** TODO [0/0] #ED011 tabular blocks
+*** TODO [0/0] #ED011 tabular blocks                                :ed011:
 :PROPERTIES:
 :TS: <2013-01-03 01:44PM>
 :ID: 0bbcs5819zf0
@@ -180,7 +180,7 @@ test case:
 :TS: <2013-01-10 07:42AM>
 :ID: atnh8y21izf0
 :END:
-* package view (module outlines)
+* package view (module outlines)                                         :pk:
 :PROPERTIES:
 :TS: <2013-01-11 09:40AM>
 :ID: 7vwjky90kzf0
@@ -248,7 +248,7 @@ begin
   else writeln( 'unable to load file: ', paramstr( 1 ));
 end.
 #+end_src
-* structural view (interface declaraions)
+* structural view (interface declaraions)                                :st:
 :PROPERTIES:
 :TS: <2013-01-11 11:21AM>
 :ID: 02li6ne0kzf0
@@ -402,7 +402,7 @@ They are expected to display themselves, just like textual nodes.
 :TS: <2013-01-11 11:21AM>
 :ID: ae267me0kzf0
 :END:
-* procedural view (current procedure/method definitions)
+* procedural view (current procedure/method definitions)                 :pr:
 :PROPERTIES:
 :TS: <2013-01-11 11:07AM>
 :ID: v0ufazd0kzf0
@@ -711,12 +711,131 @@ They are expected to display themselves, just like textual nodes.
 #+begin_src pascal
 token.create( line )
 #+end_src
-* TODO planning view (implementation plans for new features)
+* planning view (implementation plans for new features)                  :pl:
 :PROPERTIES:
 :TS: <2013-01-11 11:43AM>
 :ID: l6i37of0kzf0
 :END:
-** prerequisites
+** TODO [0/4] word wrap implementation                                :ed004:
+:PROPERTIES:
+:TS: <2013-01-11 11:45AM>
+:ID: hnyjxqf0kzf0
+:END:
+*** TODO break input lines down into tokens
+:PROPERTIES:
+:TS: <2013-01-11 03:17AM>
+:ID: cpvbjt61jzf0
+:END:
+*** TODO add an offset to the cursor type
+:PROPERTIES:
+:TS: <2013-01-10 09:37AM>
+:ID: uzh4ta81izf0
+:END:
+*** TODO break the input text into tokens grouped by element nodes
+:PROPERTIES:
+:TS: <2013-01-10 09:37AM>
+:ID: uwf83b81izf0
+:END:
+*** TODO generate a list of blocks (display objects) from the elements
+:PROPERTIES:
+:TS: <2013-01-10 09:38AM>
+:ID: xzn4eb81izf0
+:END:
+elements are sequences/strings with a 1-dimensional length
+blocks are rectangles with a 2-dimensional bounding box
+*** TODO make a stack for offsets, so the document can be a tree
+:PROPERTIES:
+:TS: <2013-01-10 09:43AM>
+:ID: r2bl0k81izf0
+:END:
+** TODO [0/2] command interpreter plan                                  :cmd:
+:PROPERTIES:
+:TS: <2013-01-01 10:35PM>
+:ID: 6v09mj017zf0
+:END:
+*** TODO number-based dispatch
+:PROPERTIES:
+:TS: <2013-01-10 07:47AM>
+:ID: va99k631izf0
+:END:
+*** TODO string-based dispatch
+:PROPERTIES:
+:TS: <2013-01-10 07:46AM>
+:ID: if8k2631izf0
+:END:
+** TODO [0/2] block-based display plan                               :ed007:
+:PROPERTIES:
+:TS: <2013-01-01 10:35PM>
+:ID: tm74ek017zf0
+:END:
+*** TODO displaying documents                                          :ui:
+:PROPERTIES:
+:TS: <2013-01-03 04:13PM>
+:ID: qbighi00azf0
+:END:
+**** straightforward linear flow display
+:PROPERTIES:
+:TS: <2013-01-04 04:30AM>
+:ID: yb55yly0azf0
+:END:
+
+**** the scene graph                                               :later:
+:PROPERTIES:
+:TS: <2013-01-03 04:16PM>
+:ID: iza8lm00azf0
+:END:
+
+The block objects serve a secondary purpose, in that they can recursively display themselves (just like widgets in gamesketchlib or whatever).
+
+However, document structure and display structure needn't coincide: nodes might be hidden, or show up at arbitrary coordinates, etc.
+
+So it's likely that each node would have a corresponding display object, which understood coordinates, geometry, etc.
+
+In particular, two clones of the same node would have different geometries and coordinates.
+
+Note also that display nodes may not be textual: raster images, vector shapes,
+and dialog widgets are all perfectly valid options.
+*** TODO SECTION crawler concept (cursor+stack machine)               :cur:
+:PROPERTIES:
+:TS: <2013-01-10 07:43AM>
+:ID: vfbhc031izf0
+:END:
+**** TODO add clasp as an actual node type, with left,right, and up pointers. :ll:
+:PROPERTIES:
+:TS: <2013-01-10 08:17AM>
+:ID: 9s66sl41izf0
+:END:
+**** TODO add hook as a node type with left, right, and down pointers. :ll:
+:PROPERTIES:
+:TS: <2013-01-10 08:19AM>
+:ID: rq33yn41izf0
+:END:
+** TODO [0/0] table editor implementation                            :ed011:
+:PROPERTIES:
+:TS:       <2012-11-10 02:30PM>
+:ID:       uhv4ml01axf0
+:END:
+*** load arrays of nodes
+:PROPERTIES:
+:TS: <2013-01-11 12:01PM>
+:ID: nhqb8ig0kzf0
+:END:
+*** TODO [0/0] merge in file:~/r/work/griddemo.pas
+:PROPERTIES:
+:TS:       <2012-11-13 10:48AM>
+:ID:       re6c12o0exf0
+:END:
+** TODO database implementation
+:PROPERTIES:
+:TS: <2013-01-11 12:01PM>
+:ID: xob8dhg0kzf0
+:END:
+* narrative view (completed plans/notes, old versions, etc)              :nr:
+:PROPERTIES:
+:TS: <2013-01-12 07:58AM>
+:ID: qxoi0cl0lzf0
+:END:
+** TODO [0/4] prerequisites
 :PROPERTIES:
 :TS: <2013-01-11 04:49AM>
 :ID: 21j3a1b1jzf0
@@ -741,29 +860,7 @@ token.create( line )
 :TS: <2013-01-11 04:50AM>
 :ID: olz7x3b1jzf0
 :END:
-** CARD working through wordwrap / tokenization                   :wrap:tok:
-:PROPERTIES:
-:TS: <2013-01-11 03:17AM>
-:ID: f0042s61jzf0
-:END:
-*** NOTE still stuck on wordwrap
-:PROPERTIES:
-:TS: <2013-01-11 02:15AM>
-:ID: v6zgxw31jzf0
-:END:
-I'm still stuck. I know that word wrap is my next step, but I'm not sure what to do yet.
-Does zinput need to change?
-
-Suppose I leave zinput alone as a simple string editor, and I just use it to edit one token at a time. Every time I hit space or enter, I move the editor widget. This is nice, because it means I don't have to change zinput.
-
-It does mean I need to break the file into tokens. Right now, I'm using pascal's standard =ReadLn= function, which simply reads characters until it encounters a platform-specific newline marker.
-
-*** NOTE breaking the string into tokens
-:PROPERTIES:
-:TS: <2013-01-11 03:17AM>
-:ID: cpvbjt61jzf0
-:END:
-** DONE [6/6] implementing basic editor                              :ED001:
+** DONE [6/6] implementing basic editor                              :ed001:
 :PROPERTIES:
 :TS: <2013-01-11 12:09PM>
 :ID: k3n7vug0kzf0
@@ -880,129 +977,24 @@ This was already done in cedit too. :)
 :TS: <2013-01-04 07:15AM>
 :ID: th42v961azf0
 :END:
-** TODO [0/0] load entire files directly into ram
+** CARD working through wordwrap / tokenization                       :ed004:
 :PROPERTIES:
-:TS:       <2012-11-10 12:21PM>
-:ID:       hpwbsmu0axf0
+:TS: <2013-01-11 03:17AM>
+:ID: f0042s61jzf0
 :END:
-Rather than deal with the bytestream protocol, just load the files directly into ram, and deal with them there. This gives us random access, etc.
-** TODO [0/0] command interpreter                                      :cmd:
+*** NOTE still stuck on wordwrap
 :PROPERTIES:
-:TS: <2013-01-01 10:35PM>
-:ID: 6v09mj017zf0
+:TS: <2013-01-11 02:15AM>
+:ID: v6zgxw31jzf0
 :END:
-*** token-based dispatch
-:PROPERTIES:
-:TS: <2013-01-10 07:47AM>
-:ID: va99k631izf0
-:END:
-*** string-based dispatch
-:PROPERTIES:
-:TS: <2013-01-10 07:46AM>
-:ID: if8k2631izf0
-:END:
-** SECTION crawler concept (cursor+stack machine)                      :cur:
-:PROPERTIES:
-:TS: <2013-01-10 07:43AM>
-:ID: vfbhc031izf0
-:END:
-*** TODO add clasp as an actual node type, with left,right, and up pointers. :ll:
-:PROPERTIES:
-:TS: <2013-01-10 08:17AM>
-:ID: 9s66sl41izf0
-:END:
-*** TODO add hook as a node type with left, right, and down pointers.  :ll:
-:PROPERTIES:
-:TS: <2013-01-10 08:19AM>
-:ID: rq33yn41izf0
-:END:
-** [0/0] table editor implementation
-:PROPERTIES:
-:TS:       <2012-11-10 02:30PM>
-:ID:       uhv4ml01axf0
-:END:
-*** load arrays of nodes
-:PROPERTIES:
-:TS: <2013-01-11 12:01PM>
-:ID: nhqb8ig0kzf0
-:END:
-*** TODO [0/0] merge in file:~/r/work/griddemo.pas
-:PROPERTIES:
-:TS:       <2012-11-13 10:48AM>
-:ID:       re6c12o0exf0
-:END:
-** TODO database implementation
-:PROPERTIES:
-:TS: <2013-01-11 12:01PM>
-:ID: xob8dhg0kzf0
-:END:
+I'm still stuck. I know that word wrap is my next step, but I'm not sure what to do yet.
+Does zinput need to change?
 
-** TODO [0/0] build the block-based display engine (console based)
-:PROPERTIES:
-:TS: <2013-01-01 10:35PM>
-:ID: tm74ek017zf0
-:END:
-** TODO displaying documents                                            :ui:
-:PROPERTIES:
-:TS: <2013-01-03 04:13PM>
-:ID: qbighi00azf0
-:END:
-*** straightforward linear flow display
-:PROPERTIES:
-:TS: <2013-01-04 04:30AM>
-:ID: yb55yly0azf0
-:END:
+Suppose I leave zinput alone as a simple string editor, and I just use it to edit one token at a time. Every time I hit space or enter, I move the editor widget. This is nice, because it means I don't have to change zinput.
 
-*** the scene graph                                                 :later:
-:PROPERTIES:
-:TS: <2013-01-03 04:16PM>
-:ID: iza8lm00azf0
-:END:
+It does mean I need to break the file into tokens. Right now, I'm using pascal's standard =ReadLn= function, which simply reads characters until it encounters a platform-specific newline marker.
 
-The block objects serve a secondary purpose, in that they can recursively display themselves (just like widgets in gamesketchlib or whatever).
-
-However, document structure and display structure needn't coincide: nodes might be hidden, or show up at arbitrary coordinates, etc.
-
-So it's likely that each node would have a corresponding display object, which understood coordinates, geometry, etc.
-
-In particular, two clones of the same node would have different geometries and coordinates.
-
-Note also that display nodes may not be textual: raster images, vector shapes,
-and dialog widgets are all perfectly valid options.
-** TODO word wrap implementation plan
-:PROPERTIES:
-:TS: <2013-01-11 11:45AM>
-:ID: hnyjxqf0kzf0
-:END:
-*** TODO add an offset to the cursor type
-:PROPERTIES:
-:TS: <2013-01-10 09:37AM>
-:ID: uzh4ta81izf0
-:END:
-*** TODO break the input text into tokens grouped by element nodes
-:PROPERTIES:
-:TS: <2013-01-10 09:37AM>
-:ID: uwf83b81izf0
-:END:
-*** TODO generate a list of blocks (display objects) from the elements
-:PROPERTIES:
-:TS: <2013-01-10 09:38AM>
-:ID: xzn4eb81izf0
-:END:
-
-elements are sequences/strings with a 1-dimensional length
-blocks are rectangles with a 2-dimensional bounding box
-*** TODO make a stack for offsets, so the document can be a tree
-:PROPERTIES:
-:TS: <2013-01-10 09:43AM>
-:ID: r2bl0k81izf0
-:END:
-* TODO narrative view (completed plans, snapshots of old versions, etc)
-:PROPERTIES:
-:TS: <2013-01-12 07:58AM>
-:ID: qxoi0cl0lzf0
-:END:
-* TODO <cleanup> support view (meta / tool stuff)
+* TODO <cleanup> support view (meta / tool stuff)                        :su:
 :PROPERTIES:
 :TS: <2013-01-11 11:08AM>
 :ID: okc3d1e0kzf0
@@ -1068,7 +1060,7 @@ This could be compounded by the fact that I'm also trying to use kvm.
 :TS:       <2012-11-10 11:18AM>
 :ID:       d0c5kpr0axf0
 :END:
-* TODO <cleanup> INBOX unfiled items - clarify!                     :unclear:
+* TODO <cleanup> INBOX unfiled items - clarify!                          :xx:
 :PROPERTIES:
 :TS: <2013-01-11 11:48AM>
 :ID: m4p4mvf0kzf0
@@ -1217,4 +1209,10 @@ Could use windows API, or mozilla.
 :END:
 especially for switching / resizing windows
 C-x | to do vertical split, maybe?
+** TODO [0/0] load entire files directly into ram
+:PROPERTIES:
+:TS:       <2012-11-10 12:21PM>
+:ID:       hpwbsmu0axf0
+:END:
+Rather than deal with the bytestream protocol, just load the files directly into ram, and deal with them there. This gives us random access, etc.
 * end.
