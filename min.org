@@ -175,7 +175,7 @@ test case:
 :TS:       <2012-11-13 11:42AM>
 :ID:       n7z7sjq0exf0
 :END:
-** TODO [0/0] a document command language                                 :cmd:
+** TODO [0/0] a document command language                              :cmd:
 :PROPERTIES:
 :TS: <2013-01-10 07:42AM>
 :ID: atnh8y21izf0
@@ -203,7 +203,7 @@ test case:
   end.
 #+end_src
 
-*** MODULE =mn=                                                        :ed:ifc:
+*** MODULE =mn=                                                    :ed:ifc:
 :PROPERTIES:
 :TS: <2013-01-11 05:09AM>
 :ID: fr5fryb1jzf0
@@ -258,12 +258,12 @@ end.
 :TS: <2013-01-11 03:35AM>
 :ID: la310m71jzf0
 :END:
-** [4/6] document model (spanning tree into the graph)                  :doc:
+** [1/3] document model (spanning tree into the graph)                  :doc:
 :PROPERTIES:
 :TS: <2013-01-03 04:13PM>
 :ID: v971ih00azf0
 :END:
-*** DONE TYPE buffer
+*** TYPE buffer
 :PROPERTIES:
 :TS: <2013-01-04 02:51AM>
 :ID: o6e3l1u0azf0
@@ -277,7 +277,7 @@ The buffer is a simple, linear list of tokens, where tokens are either strings, 
   end;
 #+end_src
 
-*** DONE TYPE token
+*** TYPE token
 :PROPERTIES:
 :TS: <2013-01-12 06:41AM>
 :ID: x4i08sh0lzf0
@@ -290,7 +290,7 @@ The buffer is a simple, linear list of tokens, where tokens are either strings, 
 
 Just plain old string nodes for now.
 
-*** DONE TYPE anchor
+*** TYPE anchor                                                    :unused:
 :PROPERTIES:
 :TS: <2013-01-04 02:09AM>
 :ID: 2mxaf3s0azf0
@@ -305,26 +305,15 @@ Anchors are non-textual, and may hold any kind of data. They correspond roughly 
 
 Unlike the generic list cursors, which are pointers to link objects in the linked list, anchors are data objects that are actually part of the buffer. This is so programs that traverse the list are able to see and make use of them.
 
-*** DONE TYPE span
+*** TYPE element
 :PROPERTIES:
-:TS: <2013-01-03 03:57PM>
-:ID: f4x29ce19zf0
+:TS: <2013-01-12 03:20PM>
+:ID: 8br01s51lzf0
 :END:
 
-Span is a generic type, suitable for use with nested elements but also for arbitrary regions like selected text.
-
-#+name: type:span
+#+name: type:element
 #+begin_src pascal
-  type generic span<t> = class
-  public
-    type tag = class( anchor )
-      is_start, is_end : boolean;
-      span             : specialize span<t>;
-    end;
-  public
-    start_tag, end_tag : tag;
-    obj : t;
-  end;
+  type element = li.lisnode;
 #+end_src
 
 *** TODO blocks
@@ -340,6 +329,26 @@ Aside from these fields, blocks can be of any type, and may or may not conform t
 Most likely they would be implemented as =type generic block<t>=.
 
 These can be used to indicate parsed structures such as lines of text, tokens (for syntax highlighting), etc.
+
+*** DONE TYPE span
+:PROPERTIES:
+:TS: <2013-01-03 03:57PM>
+:ID: f4x29ce19zf0
+:END:
+#+name: type:span
+#+begin_src pascal
+  { used for selections }
+  type generic span<t> = class
+  public
+    type tag = class( anchor )
+      is_start, is_end : boolean;
+      span             : specialize span<t>;
+    end;
+  public
+    start_tag, end_tag : tag;
+    obj : t;
+  end;
+#+end_src
 
 *** TODO other embedded objects
 :PROPERTIES:
@@ -716,7 +725,7 @@ token.create( line )
 :TS: <2013-01-11 11:43AM>
 :ID: l6i37of0kzf0
 :END:
-** TODO [0/4] word wrap implementation                                :ed004:
+** TODO [1/4] word wrap implementation                                :ed004:
 :PROPERTIES:
 :TS: <2013-01-11 11:45AM>
 :ID: hnyjxqf0kzf0
@@ -731,38 +740,14 @@ token.create( line )
 :TS: <2013-01-10 09:37AM>
 :ID: uzh4ta81izf0
 :END:
-*** TODO break the input text into tokens grouped by element nodes
-:PROPERTIES:
-:TS: <2013-01-10 09:37AM>
-:ID: uwf83b81izf0
-:END:
-*** TODO generate a list of blocks (display objects) from the elements
+
+*** TODO generate display blocks from the line spans
 :PROPERTIES:
 :TS: <2013-01-10 09:38AM>
 :ID: xzn4eb81izf0
 :END:
 elements are sequences/strings with a 1-dimensional length
 blocks are rectangles with a 2-dimensional bounding box
-*** TODO make a stack for offsets, so the document can be a tree
-:PROPERTIES:
-:TS: <2013-01-10 09:43AM>
-:ID: r2bl0k81izf0
-:END:
-** TODO [0/2] command interpreter plan                                  :cmd:
-:PROPERTIES:
-:TS: <2013-01-01 10:35PM>
-:ID: 6v09mj017zf0
-:END:
-*** TODO number-based dispatch
-:PROPERTIES:
-:TS: <2013-01-10 07:47AM>
-:ID: va99k631izf0
-:END:
-*** TODO string-based dispatch
-:PROPERTIES:
-:TS: <2013-01-10 07:46AM>
-:ID: if8k2631izf0
-:END:
 ** TODO [0/2] block-based display plan                               :ed007:
 :PROPERTIES:
 :TS: <2013-01-01 10:35PM>
@@ -810,6 +795,36 @@ and dialog widgets are all perfectly valid options.
 :TS: <2013-01-10 08:19AM>
 :ID: rq33yn41izf0
 :END:
+*** TODO make a stack for offsets, so the document can be a tree
+:PROPERTIES:
+:TS: <2013-01-10 09:43AM>
+:ID: r2bl0k81izf0
+:END:
+*** TODO introduce the block type (nested span)
+:PROPERTIES:
+:TS: <2013-01-12 02:50PM>
+:ID: 3xyfre41lzf0
+:END:
+*** TODO break the input text into tokens grouped by element nodes
+:PROPERTIES:
+:TS: <2013-01-10 09:37AM>
+:ID: uwf83b81izf0
+:END:
+** TODO [0/2] command interpreter plan                                 :cmd:
+:PROPERTIES:
+:TS: <2013-01-01 10:35PM>
+:ID: 6v09mj017zf0
+:END:
+*** TODO number-based dispatch
+:PROPERTIES:
+:TS: <2013-01-10 07:47AM>
+:ID: va99k631izf0
+:END:
+*** TODO string-based dispatch
+:PROPERTIES:
+:TS: <2013-01-10 07:46AM>
+:ID: if8k2631izf0
+:END:
 ** TODO [0/0] table editor implementation                            :ed011:
 :PROPERTIES:
 :TS:       <2012-11-10 02:30PM>
@@ -825,7 +840,7 @@ and dialog widgets are all perfectly valid options.
 :TS:       <2012-11-13 10:48AM>
 :ID:       re6c12o0exf0
 :END:
-** TODO database implementation
+** TODO [0/0] database implementation
 :PROPERTIES:
 :TS: <2013-01-11 12:01PM>
 :ID: xob8dhg0kzf0
@@ -977,7 +992,7 @@ This was already done in cedit too. :)
 :TS: <2013-01-04 07:15AM>
 :ID: th42v961azf0
 :END:
-** CARD working through wordwrap / tokenization                       :ed004:
+** CARD working through wordwrap / tokenization                      :ed004:
 :PROPERTIES:
 :TS: <2013-01-11 03:17AM>
 :ID: f0042s61jzf0
@@ -993,6 +1008,17 @@ Does zinput need to change?
 Suppose I leave zinput alone as a simple string editor, and I just use it to edit one token at a time. Every time I hit space or enter, I move the editor widget. This is nice, because it means I don't have to change zinput.
 
 It does mean I need to break the file into tokens. Right now, I'm using pascal's standard =ReadLn= function, which simply reads characters until it encounters a platform-specific newline marker.
+*** NOTE spans should not be the superclass for elements
+:PROPERTIES:
+:TS: <2013-01-12 02:49PM>
+:ID: jd1crc41lzf0
+:END:
+
+For a while, I thought it made sense to have a strictly linear text buffer, where each block was marked by two separate anchors. The idea was that cursor movement would then always be either an array offset change, or it would be a pointer change.
+
+I think this was simply me over-applying the jumptree metaphor and picturing a rim - a single, linear list of tokens.
+
+But this data structure is un-necessary. Instead of two anchor nodes, I can just use a single element node.
 
 * TODO <cleanup> support view (meta / tool stuff)                        :su:
 :PROPERTIES:
