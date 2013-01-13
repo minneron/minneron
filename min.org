@@ -1368,13 +1368,11 @@ forth  : dereference.
 
 Pascal code really has no business using @.
 
-
 ** PLAN . build the code generator from the bottom up
 :PROPERTIES:
 :TS: <2013-01-12 05:56PM>
 :ID: d7vcc1d1lzf0
 :END:
-
 *** TODO NOTE . implement addition from nand / not+and+xor
 :PROPERTIES:
 :TS: <2013-01-12 06:02PM>
@@ -1418,7 +1416,6 @@ i can see how to do it with :
 #+end_src
 
 
-
 *** NOTE . branches ( forward jumps )
 :PROPERTIES:
 :TS: <2013-01-12 06:00PM>
@@ -1457,6 +1454,21 @@ Remember: do these first because we get loops for free from the overflow.
 :END:
 
 
+** PLAN . code generator + parse engine + oberon grammar = bottom up compiler
+:PROPERTIES:
+:TS: <2013-01-12 06:28PM>
+:ID: yqxheie1lzf0
+:END:
+*** NOTE . keep the grammar LL(1) at this point (so no backtracking)
+:PROPERTIES:
+:TS: <2013-01-12 06:34PM>
+:ID: igmhx600mzf0
+:END:
+*** NOTE . push values to a stack as they're matched. gen code immediately.
+:PROPERTIES:
+:TS: <2013-01-12 06:33PM>
+:ID: iw2hn600mzf0
+:END:
 
 ** PLAN . emit code to allow /both/ static and dynamic type checking
 :PROPERTIES:
@@ -1477,7 +1489,6 @@ the only difference is that the type checking code is inserted up front.
     emit_return( p.has_result );
   end;
 #+end_src
-
 
 ** PLAN building more scalar types
 :PROPERTIES:
