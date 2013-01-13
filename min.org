@@ -515,36 +515,6 @@ They are expected to display themselves, just like textual nodes.
     <<ed/show:main>>
   end;
 #+end_src
-**** «ed/show:main»
-:PROPERTIES:
-:TS: <2013-01-13 04:40AM>
-:ID: 9u9baas0mzf0
-:END:
-#+name: ed/show:main
-#+begin_src pascal
-  begin
-    // clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
-    show_curpos;
-    ypos := 2;
-    cur := self.buf.make_cursor;
-    cur.move_to( self.topline );
-    repeat
-      if cur.value.inheritsfrom( li.strnode ) then
-      begin
-        show_nums;
-        line := li.strnode( cur.value ).str;
-        if cur.index = position.index then show_edit( line )
-        else show_line( line );
-      end;
-      inc( ypos )
-    until ( ypos = self.h ) or ( not cur.move_next );
-    while ypos < self.h do begin
-      cwritexy( 1, ypos, '|%' );
-      inc( ypos )
-    end;
-    led.show
-  end;
-#+end_src
 **** «ed/show/curpos»
 :PROPERTIES:
 :TS: <2013-01-13 04:34AM>
@@ -597,17 +567,33 @@ They are expected to display themselves, just like textual nodes.
     led.show;
   end;
 #+end_src
-**** «ed/show/line»
+**** «ed/show/node»
 :PROPERTIES:
-:TS: <2013-01-13 04:34AM>
-:ID: 8lf6f0s0mzf0
+:TS: <2013-01-13 04:48AM>
+:ID: 51l0hns0mzf0
 :END:
-#+name: ed/show/line
+**** «ed/show:main»
+:PROPERTIES:
+:TS: <2013-01-13 04:40AM>
+:ID: 9u9baas0mzf0
+:END:
+#+name: ed/show:main
 #+begin_src pascal
-  procedure show_line( line : string );
   begin
-    cwrite( stri.trunc( line, cw.scr.w - cw.cur.x ));
-    cwrite( '|%' ); // clreol
+    // clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
+    show_curpos;
+    ypos := 2;
+
+    cur := self.buf.make_cursor;
+    cur.move_to( self.topline );
+    repeat
+
+    until ( ypos = self.h ) or ( not cur.move_next );
+    while ypos < self.h do begin
+      cwritexy( 1, ypos, '|%' );
+      inc( ypos )
+    end;
+    led.show
   end;
 #+end_src
 
@@ -770,11 +756,81 @@ token.create( line )
 :TS: <2013-01-11 11:43AM>
 :ID: l6i37of0kzf0
 :END:
-** TODO [1/4] word wrap implementation                                :ed004:
+** TODO [1/8] word wrap implementation                                :ed004:
 :PROPERTIES:
 :TS: <2013-01-11 11:45AM>
 :ID: hnyjxqf0kzf0
 :END:
+*** DONE remove «ed/show/line»
+:PROPERTIES:
+:TS: <2013-01-13 04:34AM>
+:ID: 8lf6f0s0mzf0
+:END:
+#+name: ed/show/line/0
+#+begin_src pascal
+  {$if blaze_point < 10}
+  procedure show_line( line : string );
+  begin
+    cwrite( stri.trunc( line, cw.scr.w - cw.cur.x ));
+    cwrite( '|%' ); // clreol
+  end;
+ 
+  {test against li.strnode to distinguish from anchors, which will no longer use }
+  if cur.value.inheritsfrom( li.strnode ) then
+  begin
+    show_nums;
+    line := li.strnode( cur.value ).str;
+    if cur.index = position.index then show_edit( line )
+    else show_line( line );
+    inc( ypos )
+  end;
+  {$endif}
+#+end_src
+
+*** TODO refactor to show list of display nodes
+:PROPERTIES:
+:TS: <2013-01-13 05:15AM>
+:ID: fjlidwt0mzf0
+:END:
+
+#+begin_src pascal
+  for block in buf do inc( ypos, show_block( block );
+#+end_src
+
+
+
+*** TODO implement new ed/show/block with wrapping and dynamic height
+:PROPERTIES:
+:TS: <2013-01-13 04:52AM>
+:ID: w1i9ats0mzf0
+:END:
+#+name: ed/show/line
+#+begin_src pascal
+  token := li.strnode( line_cursor.value ).lis;
+  
+  for token in cur.value.lines do
+    display
+  end;
+#+end_src
+
+*** TODO show placeholder for line numbers on wrap
+:PROPERTIES:
+:TS: <2013-01-13 05:05AM>
+:ID: 2va21gt0mzf0
+:END:
+#+name: ed/show/wrap
+#+begin_src 
+
+#+end_src
+
+
+
+*** TODO implement 
+:PROPERTIES:
+:TS: <2013-01-13 04:57AM>
+:ID: 8y3jb1t0mzf0
+:END:
+
 *** TODO break input lines down into tokens
 :PROPERTIES:
 :TS: <2013-01-11 03:17AM>
@@ -793,6 +849,8 @@ token.create( line )
 :END:
 elements are sequences/strings with a 1-dimensional length
 blocks are rectangles with a 2-dimensional bounding box
+
+
 ** TODO [0/2] block-based display plan                               :ed007:
 :PROPERTIES:
 :TS: <2013-01-01 10:35PM>
@@ -854,6 +912,11 @@ and dialog widgets are all perfectly valid options.
 :PROPERTIES:
 :TS: <2013-01-10 09:37AM>
 :ID: uwf83b81izf0
+:END:
+*** TODO generalize wrap algorithm from ed004 to arbitrary blocks
+:PROPERTIES:
+:TS: <2013-01-13 04:53AM>
+:ID: ozhfqus0mzf0
 :END:
 ** TODO [0/2] command interpreter plan                                 :cmd:
 :PROPERTIES:
