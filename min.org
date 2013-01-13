@@ -495,53 +495,33 @@ They are expected to display themselves, just like textual nodes.
 :TS: <2013-01-12 07:39AM>
 :ID: 1oyksgk0lzf0
 :END:
+**** editor.show
+:PROPERTIES:
+:TS: <2013-01-13 04:33AM>
+:ID: l0l8ixr0mzf0
+:END:
 #+name: @imp:ed
 #+begin_src pascal
-
   procedure editor.show;
     var
       ypos : cardinal;
       cur  : buffer.cursor;
-
-    procedure show_curpos;
-    begin
-      cwritexy( 1, 1,
-                '|B[|C' + flushrt( n2s( self.position.index ), 6, '.' ) +
-                '|w/|c' + flushrt( n2s( self.buf.count ), 6, '.' ) +
-                '|B] |G' + self.message +
-             '|%' );
-      self.message := '';
-    end;
-
-    procedure show_nums;
-    begin
-      cwritexy( 1, ypos, '|k|!c' );
-      write( flushrt( n2s( cur.index ), 3, ' ' ));
-      cwrite( '|!k|w' );
-    end;
-
-    procedure show_edit( line : string );
-    begin
-      { This simply positions the input widget. }
-      with self.led do begin
-        x := crt.wherex;
-        y := crt.wherey;
-        tcol := $0E; // bright yellow
-        dlen := crt.windmaxx - crt.wherex;
-      end;
-      // debug: clear to eol w/blue bg to show where control should be
-      // cwrite( '|!b|%' );
-      led.show;
-    end;
-
-    procedure show_line( line : string );
-    begin
-      cwrite( stri.trunc( line, cw.scr.w - cw.cur.x ));
-      cwrite( '|%' ); // clreol
-    end;
-
-  var line : string = '';
-
+      line : string = '';
+    <<ed/show/curpos>>
+    <<ed/show/nums>>
+    <<ed/show/edit>>
+    <<ed/show/line>>
+  begin
+    <<ed/show:main>>
+  end;
+#+end_src
+**** «ed/show:main»
+:PROPERTIES:
+:TS: <2013-01-13 04:40AM>
+:ID: 9u9baas0mzf0
+:END:
+#+name: ed/show:main
+#+begin_src pascal
   begin
     // clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
     show_curpos;
@@ -563,6 +543,71 @@ They are expected to display themselves, just like textual nodes.
       inc( ypos )
     end;
     led.show
+  end;
+#+end_src
+**** «ed/show/curpos»
+:PROPERTIES:
+:TS: <2013-01-13 04:34AM>
+:ID: j4k6vzr0mzf0
+:END:
+#+name: ed/show/curpos
+#+begin_src pascal
+  procedure show_curpos;
+  begin
+    cwritexy( 1, 1,
+              '|B[|C' + flushrt( n2s( self.position.index ), 6, '.' ) +
+              '|w/|c' + flushrt( n2s( self.buf.count ), 6, '.' ) +
+              '|B] |G' + self.message +
+           '|%' );
+    self.message := '';
+  end;
+#+end_src
+**** «ed/show/nums»
+:PROPERTIES:
+:TS: <2013-01-13 04:34AM>
+:ID: dfe840s0mzf0
+:END:
+#+name: ed/show/nums
+#+begin_src pascal
+  procedure show_nums;
+  begin
+    cwritexy( 1, ypos, '|k|!c' );
+    write( flushrt( n2s( cur.index ), 3, ' ' ));
+    cwrite( '|!k|w' );
+  end;
+#+end_src
+**** «ed/show/edit»
+:PROPERTIES:
+:TS: <2013-01-13 04:34AM>
+:ID: de5ca0s0mzf0
+:END:
+#+name: ed/show/edit
+#+begin_src pascal
+  procedure show_edit( line : string );
+  begin
+    { This simply positions the input widget. }
+    with self.led do begin
+      x := crt.wherex;
+      y := crt.wherey;
+      tcol := $0E; // bright yellow
+      dlen := crt.windmaxx - crt.wherex;
+    end;
+    // debug: clear to eol w/blue bg to show where control should be
+    // cwrite( '|!b|%' );
+    led.show;
+  end;
+#+end_src
+**** «ed/show/line»
+:PROPERTIES:
+:TS: <2013-01-13 04:34AM>
+:ID: 8lf6f0s0mzf0
+:END:
+#+name: ed/show/line
+#+begin_src pascal
+  procedure show_line( line : string );
+  begin
+    cwrite( stri.trunc( line, cw.scr.w - cw.cur.x ));
+    cwrite( '|%' ); // clreol
   end;
 #+end_src
 
