@@ -1,0 +1,182 @@
+* requirements view (features/use cases)                             :rq:min:
+:PROPERTIES:
+:TS: <2013-01-11 11:41AM>
+:ID: q5gdnjf0kzf0
+:END:
+** TODO [3/6] general purpose traditional text editor
+*** DONE [0/0] #ED001 bare bones text editor                        :ed001:
+:PROPERTIES:
+:TS: <2013-01-03 01:38PM>
+:ID: e526zw719zf0
+:END:
+*** DONE [4/6] #ED002 break / join lines in editor                  :ed002:
+:PROPERTIES:
+:TS: <2013-01-03 01:40PM>
+:ID: 3kd48z719zf0
+:END:
+**** DONE break
+:PROPERTIES:
+:TS: <2013-01-07 01:46PM>
+:ID: fccivi70fzf0
+:END:
+
+Breaking lines simply means that when the enter key is pressed:
+
+  - everything to the right of the cursor is moved to a new string-node
+  - the new string node is inserted inline in the buffer
+
+**** DONE update cursors after break (editor.position and led.cpos)
+:PROPERTIES:
+:TS: <2013-01-07 05:49PM>
+:ID: yux1esi0fzf0
+:END:
+
+**** DONE join lines when deleting newline
+:PROPERTIES:
+:TS: <2013-01-07 01:45PM>
+:ID: eyzbcg70fzf0
+:END:
+
+**** DONE update cursor index after deleting (unecessary!)
+:PROPERTIES:
+:TS: <2013-01-07 05:49PM>
+:ID: yux1esi0fzf0
+:END:
+
+Actually, when you delete the newline, the cursor stays in the same place.
+
+**** TODO also join lines when backspacing through newline
+:PROPERTIES:
+:TS: <2013-01-07 11:54PM>
+:ID: ouhg8oz0fzf0
+:END:
+
+This can wait.
+
+**** TODO update /all/ attached cursors when inserting items into the list
+:PROPERTIES:
+:TS: <2013-01-07 06:42PM>
+:ID: 8zt2b8l0fzf0
+:END:
+    { append this cursor to the array so we get notified of inserts/deletes }
+    len := length( lis._cursors );
+    setlength( lis._cursors, len + 1 );
+    lis._cursors[ len ] := self;
+
+test case:
+    { when we insert, the cursors should update }
+    ls.insert( a );
+    chk.equal( ls.count, 3 );
+    chk.that( cur.index = 3, 'cursor index didn''t update after insertion' );
+    chk.equal( cur.index, 3 );
+
+*** DONE [0/0] #ED003 save the updated file to disk                 :ed003:
+:PROPERTIES:
+:TS: <2013-01-03 01:40PM>
+:ID: nfe6rz719zf0
+:END:
+
+*** TODO [0/0] #ED004 word wrap / virtual line mode                 :ed004:
+:PROPERTIES:
+:TS: <2013-01-03 01:41PM>
+:ID: qr35d0819zf0
+:END:
+
+*** TODO [0/0] #ED005 regions (selections, highlights, etc)         :ed005:
+:PROPERTIES:
+:TS: <2013-01-03 01:41PM>
+:ID: s36461819zf0
+:END:
+*** TODO [0/0] #ED006 cut, copy, paste                              :ed006:
+:PROPERTIES:
+:TS: <2013-01-03 01:42PM>
+:ID: xdmg02819zf0
+:END:
+** TODO [0/4] outline support
+:PROPERTIES:
+:TS: <2013-01-11 12:15PM>
+:ID: cg3654h0kzf0
+:END:
+*** TODO [0/0] #ED007 show/hide individual blocks
+:PROPERTIES:
+:TS: <2013-01-03 01:42PM>
+:ID: r2n8o2819zf0
+:END:
+*** TODO [0/0] #ED008 move blocks inside the outline
+:PROPERTIES:
+:TS: <2013-01-03 01:42PM>
+:ID: ug5a73819zf0
+:END:
+*** TODO [0/0] #ED009 styles for blocks
+:PROPERTIES:
+:TS: <2013-01-03 01:43PM>
+:ID: lnl744819zf0
+:END:
+*** TODO [0/0] #ED010 tokenize/highlight within blocks
+:PROPERTIES:
+:TS: <2013-01-03 01:43PM>
+:ID: cti3s4819zf0
+:END:
+** TODO [0/1] datagrid support
+:PROPERTIES:
+:TS: <2013-01-11 12:15PM>
+:ID: bj8bk5h0kzf0
+:END:
+*** TODO [0/0] #ED011 tabular blocks                                :ed011:
+:PROPERTIES:
+:TS: <2013-01-03 01:44PM>
+:ID: 0bbcs5819zf0
+:END:
+** TODO [0/3] literate programming support
+:PROPERTIES:
+:TS: <2013-01-11 12:16PM>
+:ID: bx15a6h0kzf0
+:END:
+*** TODO [0/0] #ED012 tangle (generate source files)
+:PROPERTIES:
+:TS: <2013-01-03 01:44PM>
+:ID: fx00t6819zf0
+:END:
+*** TODO [0/0] #ED013 weave (generate html site)
+:PROPERTIES:
+:TS: <2013-01-03 01:45PM>
+:ID: l0e2c8819zf0
+:END:
+*** TODO [0/0] #ED014 trailblaze (weave + version control)
+:PROPERTIES:
+:TS: <2013-01-03 01:46PM>
+:ID: wqf1y8819zf0
+:END:
+** TODO [0/0] task oriented, tiling window enviroment ( minneron )
+:PROPERTIES:
+:TS:       <2012-11-13 11:30AM>
+:ID:       v735uzp0exf0
+:END:
+** TODO [0/0] multi-colum / table based editor
+:PROPERTIES:
+:TS:       <2012-11-10 11:27AM>
+:ID:       0knej5s0axf0
+:END:
+** TODO [0/0] graph database ( port amoeba to pascal )
+:PROPERTIES:
+:TS:       <2012-11-13 11:26AM>
+:ID:       bnyckup0exf0
+:END:
+** TODO [0/0] load/save minno
+:PROPERTIES:
+:TS:       <2012-11-10 11:46AM>
+:ID:       det2o1t0axf0
+:END:
+
+** TODO [0/0] simple syntax highlighting / tokenization
+:PROPERTIES:
+:TS:       <2012-11-13 11:42AM>
+:ID:       n7z7sjq0exf0
+:END:
+** TODO [0/0] a document command language                              :cmd:
+:PROPERTIES:
+:TS: <2013-01-10 07:42AM>
+:ID: atnh8y21izf0
+:END:
+
+

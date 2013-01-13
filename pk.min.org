@@ -1,0 +1,70 @@
+* package view (module outlines)                                     :pk:min:
+:PROPERTIES:
+:TS: <2013-01-11 09:40AM>
+:ID: 7vwjky90kzf0
+:END:
+*** TODO MODULE =buf= -> rename to docs or texts
+:PROPERTIES:
+:TS: <2013-01-04 04:31AM>
+:ID: u6chgny0azf0
+:END:
+
+#+begin_src pascal :tangle ".gen/buf.pas" :padline yes :noweb tangle
+  {$i xpc.inc}
+  unit buf;
+  interface uses xpc, ll, li;
+    <<type:token>>
+    <<type:anchor>>
+    <<type:buffer>>
+    <<type:span>>
+  implementation
+  end.
+#+end_src
+
+*** MODULE =mn=                                                    :ed:ifc:
+:PROPERTIES:
+:TS: <2013-01-11 05:09AM>
+:ID: fr5fryb1jzf0
+:END:
+#+begin_src pascal :tangle ".gen/mn.pas" :noweb tangle
+  {$i xpc.inc}
+  unit mn;
+  interface uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
+    <<type:editor>>
+    <<type:span>>
+  implementation
+    <<@imp:ed>>
+    <<@imp:span>>
+  end.
+#+end_src
+*** PROGRAM =min=
+:PROPERTIES:
+:TS: <2013-01-12 06:30AM>
+:ID: 34nd9ah0lzf0
+:END:
+#+begin_src pascal :tangle ".gen/min.pas" :noweb tangle
+{ minneron
+----------------------------------------------------------------
+Copyright (c) 2012 Michal J Wallace. All rights reserved.
+---------------------------------------------------------------}
+{$i xpc.inc}
+program min;
+  uses mn, crt, cw;
+  var ed : editor;
+begin
+  crt.clrscr;
+  ed := editor.create;
+  if paramcount = 0 then
+    writeln( 'usage : min <filename>' )
+  else if ed.load( paramstr( 1 )) then
+  begin
+    ed.run;
+    ed.destroy;
+    cw.cwriteln( '|w|!k' );
+    crt.clrscr;
+  end
+  else writeln( 'unable to load file: ', paramstr( 1 ));
+end.
+#+end_src
+
+
