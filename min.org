@@ -774,7 +774,7 @@ token.create( line )
     cwrite( stri.trunc( line, cw.scr.w - cw.cur.x ));
     cwrite( '|%' ); // clreol
   end;
- 
+
   {test against li.strnode to distinguish from anchors, which will no longer use }
   if cur.value.inheritsfrom( li.strnode ) then
   begin
@@ -807,7 +807,7 @@ token.create( line )
 #+name: ed/show/line
 #+begin_src pascal
   token := li.strnode( line_cursor.value ).lis;
-  
+
   for token in cur.value.lines do
     display
   end;
@@ -819,13 +819,13 @@ token.create( line )
 :ID: 2va21gt0mzf0
 :END:
 #+name: ed/show/wrap
-#+begin_src 
+#+begin_src
 
 #+end_src
 
 
 
-*** TODO implement 
+*** TODO implement
 :PROPERTIES:
 :TS: <2013-01-13 04:57AM>
 :ID: 8y3jb1t0mzf0
@@ -1488,14 +1488,14 @@ Pascal code really has no business using @.
 :END:
 
 #+begin_src pascal
-  
+
   carries := 0;
   repeat
     simple_add := a xor b;
     carries := a and b;
     carries := carries shl 1
   until carries = 0 or bits := 8;
-  
+
 #+end_src
 
 **** DONE also figure out how to implement =shl= with those primitives
@@ -1555,7 +1555,7 @@ Remember: do these first because we get loops for free from the overflow.
 :ID: x0mbv5d1lzf0
 :END:
 
-**** NOTE . 
+**** NOTE .
 :PROPERTIES:
 :TS: <2013-01-12 06:01PM>
 :ID: zus599d1lzf0
@@ -1584,7 +1584,7 @@ Remember: do these first because we get loops for free from the overflow.
 :ID: 34kahkc1lzf0
 :END:
 
-compiler's type system can be re-used in the vm. 
+compiler's type system can be re-used in the vm.
 the only difference is that the type checking code is inserted up front.
 
 #+begin_src pascal
@@ -1619,5 +1619,52 @@ the only difference is that the type checking code is inserted up front.
 
 
 
+
+* DRAFT . record type descriptor
+:PROPERTIES:
+:TS: <2013-01-13 08:08AM>
+:ID: ale3uv11mzf0
+:END:
+#+begin_src pascal
+  type
+    kind     = object { haskell gadt / pascal variant record }
+      kind_id      : primary;
+      num_variants : cardinal;
+      variants     : pointer;
+      num_classes  : cardinal;
+      classes      : pointer;
+      num_coldefs  : cardinal; { fields common to all variants }
+      coldefs      : pointer;
+    end;
+
+    variant  = object
+      variant_id  : primary;
+      kind_id     : foreign;
+      order       : cardinal;
+      num_coldefs : cardinal;
+      fields      : pointer;
+    end;
+
+    classdef = object
+      symbol : string;
+    end;
+
+    coldef   = object
+    end;
+
+#+end_src
+** NOTE . explanation
+:PROPERTIES:
+:TS: <2013-01-13 09:02AM>
+:ID: m0ocpd41mzf0
+:END:
+This is a start on model of a type system for the database / language.
+
+Remember, the idea is that algebraic data types ( variant records ) are used everywhere in the system, for message passing ( events / inputs ), display output
+(want to draw a circle? output a circle record!) abstract syntax trees / documents, and (of course) actual database records.
+
+The same type descriptors should /also/ be reused in procedure signatures, and even the implicit types created by the variable and argument declarations in a (possibly nested) procedure definition.
+
+Above, I was trying to figure out how to model these things using the relational model. The =pointer= type really needs to be something else. Probably something more like a =reference= type, that can be either a pointer or a foreign key, depending on whether the record has been loaded into working ram or not.
 
 * end.
