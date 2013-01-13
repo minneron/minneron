@@ -1,5 +1,5 @@
 # directory paths, relative to this directory:
-XPL       = ./lib/xpl/code
+XPL       = ~/x/code
 GEN	  = ./.gen
 PPU	  = $(GEN)
 EXE	  = $(GEN)
@@ -27,18 +27,19 @@ min: .tangled
 	$(FPC) -Mobjfpc $(GEN)/min.pas
 	mv $(GEN)/min .$
 
-run: clean min
+run: min
 	./min hello.min
 
 .tangled: pr.min.org st.min.org pk.min.org
-	$(TANGLE) mk.org > .tangled
+	cat pr.min.org st.min.org pk.min.org > .tangled
+	$(TANGLE) .tangled
 
 clean:
 	delp $(GEN)
 	rm -f min .tangled
 
-test: lib/xpl clean .tangled
-	cd ./lib/xpl; make test GEN=../../$(GEN)
+test: #clean .tangled
+	@echo 'no tests yet'
 
 
 build : init
