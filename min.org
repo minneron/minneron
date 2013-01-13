@@ -1241,4 +1241,264 @@ C-x | to do vertical split, maybe?
 :ID:       hpwbsmu0axf0
 :END:
 Rather than deal with the bytestream protocol, just load the files directly into ram, and deal with them there. This gives us random access, etc.
+** IDEA li.node -> atom/cell
+:PROPERTIES:
+:TS: <2013-01-12 03:32PM>
+:ID: s8i3gc61lzf0
+:END:
+
+First, li is the wrong name for the unit, because it's not actually an interpreter, just a hand-built scanner / parser.
+
+Second, it kind of makes sense to use node for items in the document / tree / graph structure. An html tag is something like a nested record after all.
+
+A better name for these things would be atom or cell, as in lisp.
+
+** PLAN building primitive types up from registers
+:PROPERTIES:
+:TS: <2013-01-12 04:00PM>
+:ID: 51dk9s61lzf0
+:END:
+
+1. cardinal -> computer cells as natural number
+2. pointer  -> using cardinals to reference positions in ram
+3. array    -> pointer + /relative/ pointer (length).
+4. bitmap   -> so we can draw pixels to make our characters
+5. char     -> so we can create a simple bitmap font
+
+** PLAN an 8-bit character device
+:PROPERTIES:
+:TS: <2013-01-12 04:00PM>
+:ID: 2455zm71lzf0
+:END:
+*** .
+ A simple terminal program would probably fit in 256 bytes, so an 8-bit computer for a character generator isn't out of the question if we can store the character map in rom and refer to it with a single byte.
+
+ The old text display at (* 80 25) is 2000 bytes, or 4000 if we add another byte for color. That wastes 96 bytes if video ram is 4k.
+
+ Since 2000 or 4000 is more than a single register can handle at 8 bits, we have to use 2 of them to loop through video ram.
+
+ This is actually a nice machine to use because with 8 bits, we only need an adder, and it'll just loop around after 256 instructions.
+
+ What would be really cool is if we could introduce the instruction set along with this, and even show how we could build it out of circuits.
+
+*** NOTE . uses for the 160 extendend characters (+ 128 32)
+ :PROPERTIES:
+ :TS: <2013-01-12 04:13PM>
+ :ID: fi9g6981lzf0
+ :END:
+
+40 : shavian / quickscript
+16 : hex numbers
+16 : math: \ne \le \ge lam \pi \radic \sup2 in \not and or dot subset superset \div \times
+12 : box drawing (4 corners, -, |, |- -|, +, T, upside down T)
+ 6 : chess pieces (1k 2q 3r 4b 5n 6p)
+ 4 : card suits (d c s h)
+ 4 : l,r,u,d arrows
+ 3 : walls ( 4/5 shade (same as 1/5), 3/5 shade, 2/5 shade )
+ 2 : chevrons
+ 2 : game: face, ghost
+ 2 : half blocks (vertical and horizontal)
+ 1 : type symbol \curren (currency)
+
+(- 128 (+ 40 16 16 12 6 4 4 3 2 2 2 1 ))
+
+20 left over for the user, but of course we will implement unicode later.
+
+** PLAN building a type system for nodes (records/tuples/messages...)
+:PROPERTIES:
+:TS: <2013-01-12 04:54PM>
+:ID: jqz9j5a1lzf0
+:END:
+
+*** STEP . array size as a type
+:PROPERTIES:
+:TS: <2013-01-12 04:58PM>
+:ID: 5d2iqba1lzf0
+:END:
+Not in the old pascal sense, just "a thing that takes up x bytes."
+
+
+*** STEP . create an array the size of RAM at address 0
+:PROPERTIES:
+:TS: <2013-01-12 05:17PM>
+:ID: 8eqak7b1lzf0
+:END:
+
+*** STEP . pointer + size + array = string or dynamic array
+:PROPERTIES:
+:TS: <2013-01-12 05:06PM>
+:ID: uw798qa1lzf0
+:END:
+pointer points to index 0. previous cell would hold the length.
+*** STEP . tuple is a size-3 array of ( name, slotcount, array of coldefs )
+:PROPERTIES:
+:TS: <2013-01-12 04:56PM>
+:ID: q6jik9a1lzf0
+:END:
+*** TODO STEP . coldef <already defined in file:minneron.vue>
+:PROPERTIES:
+:TS: <2013-01-12 05:13PM>
+:ID: ahui21b1lzf0
+:END:
+*** STEP . define a procedure to allocate an amount of ram
+:PROPERTIES:
+:TS: <2013-01-12 05:18PM>
+:ID: u5vc79b1lzf0
+:END:
+
+
+
+Here's an easy approach, assuming we can access individual bytes:
+
+#+begin_src pascal
+  function allocate( cells : cardinal ) : pointer;
+  begin
+    result := pointer( @ram + here );
+    inc( vm.here, num_cells );
+  end;
+#+end_src
+
+*** TODO decide between forth/pascal usages of '@'                  :wejal:
+:PROPERTIES:
+:TS: <2013-01-12 05:38PM>
+:ID: ykygi7c1lzf0
+:END:
+pascal : address of.
+forth  : dereference.
+
+Pascal code really has no business using @.
+
+
+** PLAN . build the code generator from the bottom up
+:PROPERTIES:
+:TS: <2013-01-12 05:56PM>
+:ID: d7vcc1d1lzf0
+:END:
+
+*** TODO NOTE . implement addition from nand / not+and+xor
+:PROPERTIES:
+:TS: <2013-01-12 06:02PM>
+:ID: kxoizad1lzf0
+:END:
+
+#+begin_src pascal
+  
+  carries := 0;
+  repeat
+    simple_add := a xor b;
+    carries := a and b;
+    carries := carries shl 1
+  until carries = 0 or bits := 8;
+  
+#+end_src
+
+**** DONE also figure out how to implement =shl= with those primitives
+:PROPERTIES:
+:TS: <2013-01-12 06:07PM>
+:ID: 8nphxjd1lzf0
+:END:
+
+i can see how to do it with :
+#+begin_src pascal
+  { pascal has a 'shl' operator, but if it didn't,
+    you could make it yourself from AND and OR }
+  function shift_left_from_scratch( b : byte ) : byte;
+    var s : byte;
+  begin
+    s := 0;
+    if ( b and 128 ) <> 0 then s := s or 64;
+    if ( b and  64 ) <> 0 then s := s or 32;
+    if ( b and  32 ) <> 0 then s := s or 16;
+    if ( b and  16 ) <> 0 then s := s or  8;
+    if ( b and   8 ) <> 0 then s := s or  4;
+    if ( b and   4 ) <> 0 then s := s or  2;
+    if ( b and   2 ) <> 0 then s := s or  1;
+    result := s
+  end;
+#+end_src
+
+
+
+*** NOTE . branches ( forward jumps )
+:PROPERTIES:
+:TS: <2013-01-12 06:00PM>
+:ID: uee4q7d1lzf0
+:END:
+Remember: do these first because we get loops for free from the overflow.
+
+*** NOTE . loops ( backward jumps )
+:PROPERTIES:
+:TS: <2013-01-12 05:59PM>
+:ID: x1k5l5d1lzf0
+:END:
+
+*** NOTE . invocation ( calling conventions )
+:PROPERTIES:
+:TS: <2013-01-12 06:00PM>
+:ID: nu81r6d1lzf0
+:END:
+
+**** NOTE . procedure calls ( gosub )
+:PROPERTIES:
+:TS: <2013-01-12 05:59PM>
+:ID: 1qb5r5d1lzf0
+:END:
+
+**** NOTE . procedure return
+:PROPERTIES:
+:TS: <2013-01-12 05:59PM>
+:ID: x0mbv5d1lzf0
+:END:
+
+**** NOTE . 
+:PROPERTIES:
+:TS: <2013-01-12 06:01PM>
+:ID: zus599d1lzf0
+:END:
+
+
+
+** PLAN . emit code to allow /both/ static and dynamic type checking
+:PROPERTIES:
+:TS: <2013-01-12 05:46PM>
+:ID: 34kahkc1lzf0
+:END:
+
+compiler's type system can be re-used in the vm. 
+the only difference is that the type checking code is inserted up front.
+
+#+begin_src pascal
+  procedure emit_procedure( p : proc_def );
+  begin
+    emit_dynamic_checks;
+    p.static_start := here;
+    emit_local_inits( p.local_defs );
+    emit_proc_body( p.body );
+    emit_return( p.has_result );
+  end;
+#+end_src
+
+
+** PLAN building more scalar types
+:PROPERTIES:
+:TS: <2013-01-12 04:56PM>
+:ID: wtkfp8a1lzf0
+:END:
+*** NOTE . introduce big integers
+:PROPERTIES:
+:TS: <2013-01-12 04:55PM>
+:ID: z1o6j7a1lzf0
+:END:
+*** NOTE . introduce sets
+:PROPERTIES:
+:TS: <2013-01-12 04:55PM>
+:ID: xtha87a1lzf0
+:END:
+
+
+
+
+
+
+
 * end.
