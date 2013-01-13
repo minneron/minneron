@@ -9,7 +9,8 @@ FCL = ~/ver/fpc/packages
 ROOT      = ../
 
 # compiler paths
-FPC       = fpc -gl -B -Fu$(GEN) -Fu$(XPL) -Fi$(XPL) -Fu./lib -FE$(GEN)
+FPC_PATH  = fpc
+FPC       = $(FPC_PATH) -gl -B -Fu$(GEN) -Fu$(XPL) -Fi$(XPL) -Fu./lib -FE$(GEN) -O-
 FCL-PAS = $(FCL)/fcl-passrc
 TANGLE    = ./etc/tangle.el
 
