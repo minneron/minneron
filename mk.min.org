@@ -1,0 +1,16 @@
+#+title: make helper for minneron
+#+include: pr.min.org
+#+include: st.min.org
+#+include: pk.min.org
+
+* COMMENT org-babel-tangler optimizations
+:PROPERTIES:
+:TS: <2013-01-13 09:27AM>
+:ID: uzgboj51mzf0
+:END:
+
+This file includes only the org files necessary to tangle minneron, and puts them in bottom-up order.
+
+- pr.min.org -> procedural view
+- st.min.org -> structural view
+- pk.min.org -> package view

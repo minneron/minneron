@@ -30,9 +30,8 @@ min: .tangled
 run: clean min
 	./min hello.min
 
-.tangled: *.org
-	$(TANGLE) *.org > .tangled
-
+.tangled: pr.min.org st.min.org pk.min.org
+	$(TANGLE) mk.org > .tangled
 
 clean:
 	delp $(GEN)
