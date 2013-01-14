@@ -2,7 +2,7 @@
 #+tags: pl min
 #+date: <2013-01-11 11:43AM>
 
-* TODO [1/8] word wrap implementation                                 :ed004:
+* TODO [5/6] word wrap implementation                                 :ed004:
 :PROPERTIES:
 :TS: <2013-01-11 11:45AM>
 :ID: hnyjxqf0kzf0
@@ -32,51 +32,33 @@
   end;
 #+end_src
 
-** TODO { lines as lists implementation }
+** DONE { lines as lists implementation }
 :PROPERTIES:
 :TS: <2013-01-13 05:15AM>
 :ID: fjlidwt0mzf0
 :END:
 new =show_node= version: id:51l0hns0mzf0
 
-
-
-** TODO implement new ed/show/block with wrapping and dynamic height
+** DONE implement new ed/show/block with wrapping and dynamic height
 :PROPERTIES:
 :TS: <2013-01-13 04:52AM>
 :ID: w1i9ats0mzf0
 :END:
-#+name: ed/show/line
-#+begin_src pascal
-  token := li.strnode( line_cursor.value ).lis;
+** DONE break input lines down into tokens
+:PROPERTIES:
+:TS: <2013-01-11 03:17AM>
+:ID: cpvbjt61jzf0
+:END:
 
-  for token in cur.value.lines do
-    display
-  end;
-#+end_src
-
-** TODO show placeholder for line numbers on wrap
+** DONE show placeholder for line numbers on wrap
 :PROPERTIES:
 :TS: <2013-01-13 05:05AM>
 :ID: 2va21gt0mzf0
 :END:
-#+name: ed/show/wrap
-#+begin_src
-
-#+end_src
-
-
-
-** TODO implement
+** TODO resize and relocate the editor based on the cursor position
 :PROPERTIES:
-:TS: <2013-01-13 04:57AM>
-:ID: 8y3jb1t0mzf0
-:END:
-
-** TODO break input lines down into tokens
-:PROPERTIES:
-:TS: <2013-01-11 03:17AM>
-:ID: cpvbjt61jzf0
+:TS: <2013-01-13 07:16PM>
+:ID: 424359i0nzf0
 :END:
 ** TODO add an offset to the cursor type
 :PROPERTIES:
@@ -84,13 +66,6 @@ new =show_node= version: id:51l0hns0mzf0
 :ID: uzh4ta81izf0
 :END:
 
-** TODO generate display blocks from the line spans
-:PROPERTIES:
-:TS: <2013-01-10 09:38AM>
-:ID: xzn4eb81izf0
-:END:
-elements are sequences/strings with a 1-dimensional length
-blocks are rectangles with a 2-dimensional bounding box
 
 * TODO [0/2] block-based display plan                                 :ed007:
 :PROPERTIES:
@@ -159,6 +134,13 @@ and dialog widgets are all perfectly valid options.
 :TS: <2013-01-13 04:53AM>
 :ID: ozhfqus0mzf0
 :END:
+** TODO generate display blocks from the line spans
+:PROPERTIES:
+:TS: <2013-01-10 09:38AM>
+:ID: xzn4eb81izf0
+:END:
+elements are sequences/strings with a 1-dimensional length
+blocks are rectangles with a 2-dimensional bounding box
 * TODO [0/2] command interpreter plan                                   :cmd:
 :PROPERTIES:
 :TS: <2013-01-01 10:35PM>

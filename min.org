@@ -151,7 +151,7 @@ This was already done in cedit too. :)
 :TS: <2013-01-11 03:17AM>
 :ID: f0042s61jzf0
 :END:
-*** NOTE still stuck on wordwrap
+*** DEVLOG still stuck on wordwrap
 :PROPERTIES:
 :TS: <2013-01-11 02:15AM>
 :ID: v6zgxw31jzf0
@@ -162,7 +162,7 @@ Does zinput need to change?
 Suppose I leave zinput alone as a simple string editor, and I just use it to edit one token at a time. Every time I hit space or enter, I move the editor widget. This is nice, because it means I don't have to change zinput.
 
 It does mean I need to break the file into tokens. Right now, I'm using pascal's standard =ReadLn= function, which simply reads characters until it encounters a platform-specific newline marker.
-*** NOTE spans should not be the superclass for elements
+*** DEVLOG spans should not be the superclass for elements
 :PROPERTIES:
 :TS: <2013-01-12 02:49PM>
 :ID: jd1crc41lzf0
@@ -173,6 +173,18 @@ For a while, I thought it made sense to have a strictly linear text buffer, wher
 I think this was simply me over-applying the jumptree metaphor and picturing a rim - a single, linear list of tokens.
 
 But this data structure is un-necessary. Instead of two anchor nodes, I can just use a single element node.
+
+*** DEVLOG word-wrap semi-working
+:PROPERTIES:
+:TS: <2013-01-13 06:24PM>
+:ID: hk63ouf0nzf0
+:END:
+Lots of low-level fixes to stri.pas today... Org is kind of slowing me down, because now there's a disconnect between where I edit the code and what the line numbers say in the stack traces.
+
+I'm stripping out whitespace at the moment, which isn't the right thing to do, unless I'm trying to make a web browser. But: it builds a list of lines and (sorta) word-wraps.
+
+So: I need to restore whitespace (and also the last character of every line), and get the token editor / cursor stuff working again.
+
 
 * TODO <cleanup> support view (meta / tool stuff)                    :su:min:
 :PROPERTIES:

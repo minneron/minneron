@@ -116,7 +116,7 @@
       cur  : buffer.cursor;
       line : string = '';
     <<ed/show/curpos>>
-    <<ed/show/nums>>
+    <<ed/show/gutter>>
     <<ed/show/edit>>
     <<ed/show/node>>
   begin
@@ -140,20 +140,16 @@
     self.message := '';
   end;
 #+end_src
-*** «ed/show/nums»
+*** «ed/show/gutter»
 :PROPERTIES:
 :TS: <2013-01-13 04:34AM>
 :ID: dfe840s0mzf0
 :END:
-#+name: ed/show/nums
+#+name: ed/show/gutter
 #+begin_src pascal
-  procedure show_nums( wrap : boolean = false );
-  var s : string;
+  procedure show_gutter( s : string );
   begin
-    cwritexy( 1, ypos, '|k|!c' );
-    if wrap then s := '|C...' else s := n2s( cur.index );
-    cwrite( flushrt( s, 3, ' ' ));
-    cwrite( '|!k|w' );
+    cwritexy( 1, ypos, '|k|!c' + s + '|!k|w' );
   end;
 #+end_src
 *** «ed/show/edit»
@@ -191,7 +187,8 @@
     d2re : cardinal; { distance to right edge }
     node : li.node;
   begin
-    show_nums;
+    if cur.index = position.index then show_edit( '<TOSTRING>' );
+    show_gutter( flushrt( n2s( cur.index ), 3, ' ' ));
     for node in (cur.value as li.lisnode).lis do
     begin
       d2re := cw.scr.w - cw.cur.x;
@@ -201,12 +198,12 @@
       else begin
         cwrite( '|%' ); // clreol
         inc( ypos );
-        show_nums( false );
+        show_gutter( '   ' );
         { truncate, just in case token is wider than the whole editor }
         cwrite( stri.trunc( tok, d2re ));
       end
     end;
-    inc( ypos ) { set up for the next block }
+    inc( ypos )
   end;
 #+end_src
 
@@ -225,14 +222,16 @@
     cur := self.buf.make_cursor;
     cur.move_to( self.topline );
   
-    repeat show_node; cur.move_next
+    repeat
+      show_node;
+      cur.move_next
     until ( ypos >= self.h ) or ( cur.at_end );
     
     while ypos < self.h do begin
       cwritexy( 1, ypos, '|%' );
       inc( ypos )
     end;
-    // led.show
+    led.show;
   end;
 #+end_src
 ** cursor movement interface
