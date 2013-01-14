@@ -1,17 +1,13 @@
-* procedural view (current procedure/method definitions)             :pr:min:
-:PROPERTIES:
-:TS: <2013-01-11 11:07AM>
-:ID: v0ufazd0kzf0
-:ARCHIVE_TIME: 2013-01-13 Sun 09:20
-:ARCHIVE_FILE: ~/r/minneron/min.org
-:ARCHIVE_CATEGORY: min
-:END:
-** DONE editor routines                                                 :ed:
+#+title: procedural view (current procedure/method definitions)
+#+tags: pr min
+#+date: <2013-01-11 11:07AM>
+
+* CLASS Editor                                                           :ed:
 :PROPERTIES:
 :TS: <2013-01-11 08:46AM>
 :ID: sghf0g70kzf0
 :END:
-*** class methods
+** constructor
 :PROPERTIES:
 :TS: <2013-01-12 07:37AM>
 :ID: 7hd3ldk0lzf0
@@ -33,7 +29,32 @@
   end;
 #+end_src
 
-*** disk interface
+** «tokenizer» interface
+:PROPERTIES:
+:TS: <2013-01-11 05:05AM>
+:ID: er586tb1jzf0
+:END:
+#+name: @imp:ed
+#+begin_src pascal
+  procedure editor.parse( var txt : text ); 
+  var n : cardinal; line : string; words : li.nodelist;
+  begin
+    while not eof( txt ) do begin
+      readln( txt, line );
+      words :=  li.nodelist.create;
+      if length( line ) > 0 then
+        for n := 1 to stri.nwords( line ) do begin
+          writeln( 'word ', n, ' : ', stri.wordn( line, n ));
+          words.append( li.strnode.create( stri.wordn( line, n )));
+        end;
+      self.buf.append( li.lisnode.create( words ));
+      writeln( 'n: ', n, ' line: "' + line + '" length: ', + length( line ));
+    end;
+    li.print( lisnode.create( self.buf ));
+  end;
+#+end_src
+
+** disk interface
 :PROPERTIES:
 :TS: <2013-01-12 07:38AM>
 :ID: f41aqek0lzf0
@@ -48,10 +69,7 @@
       //  need to check for io errors in here
       assign( txt, path );
       reset( txt );
-      while not eof( txt ) do begin
-        readln( txt, line );
-        self.buf.append( <<ed.load:line->node>> );
-      end;
+      self.parse( txt );
       close( txt );
       self.filename := path;
     end;
@@ -80,12 +98,12 @@
   end;
 #+end_src
 
-*** display interface
+** display interface
 :PROPERTIES:
 :TS: <2013-01-12 07:39AM>
 :ID: 1oyksgk0lzf0
 :END:
-**** editor.show
+*** editor.show
 :PROPERTIES:
 :TS: <2013-01-13 04:33AM>
 :ID: l0l8ixr0mzf0
@@ -100,12 +118,12 @@
     <<ed/show/curpos>>
     <<ed/show/nums>>
     <<ed/show/edit>>
-    <<ed/show/line>>
+    <<ed/show/node>>
   begin
     <<ed/show:main>>
   end;
 #+end_src
-**** «ed/show/curpos»
+*** «ed/show/curpos»
 :PROPERTIES:
 :TS: <2013-01-13 04:34AM>
 :ID: j4k6vzr0mzf0
@@ -122,21 +140,23 @@
     self.message := '';
   end;
 #+end_src
-**** «ed/show/nums»
+*** «ed/show/nums»
 :PROPERTIES:
 :TS: <2013-01-13 04:34AM>
 :ID: dfe840s0mzf0
 :END:
 #+name: ed/show/nums
 #+begin_src pascal
-  procedure show_nums;
+  procedure show_nums( wrap : boolean = false );
+  var s : string;
   begin
     cwritexy( 1, ypos, '|k|!c' );
-    write( flushrt( n2s( cur.index ), 3, ' ' ));
+    if wrap then s := '|C...' else s := n2s( cur.index );
+    cwrite( flushrt( s, 3, ' ' ));
     cwrite( '|!k|w' );
   end;
 #+end_src
-**** «ed/show/edit»
+*** «ed/show/edit»
 :PROPERTIES:
 :TS: <2013-01-13 04:34AM>
 :ID: de5ca0s0mzf0
@@ -157,12 +177,40 @@
     led.show;
   end;
 #+end_src
-**** «ed/show/node»
+*** «ed/show/node» { lines as lists implementation }
 :PROPERTIES:
 :TS: <2013-01-13 04:48AM>
 :ID: 51l0hns0mzf0
 :END:
-**** «ed/show:main»
+#+name: ed/show/node
+#+begin_src pascal
+  procedure show_node;
+  var
+    tok  : string;
+    tcur : li.nodelist.cursor;
+    d2re : cardinal; { distance to right edge }
+    node : li.node;
+  begin
+    show_nums;
+    for node in (cur.value as li.lisnode).lis do
+    begin
+      d2re := cw.scr.w - cw.cur.x;
+      tok := (node as li.strnode).str + '|K.|w'; //  because tokenizer strips ws :(
+      {-- word wrapping --}
+      if length( tok ) < d2re then cwrite( tok )
+      else begin
+        cwrite( '|%' ); // clreol
+        inc( ypos );
+        show_nums( false );
+        { truncate, just in case token is wider than the whole editor }
+        cwrite( stri.trunc( tok, d2re ));
+      end
+    end;
+    inc( ypos ) { set up for the next block }
+  end;
+#+end_src
+
+*** «ed/show:main»
 :PROPERTIES:
 :TS: <2013-01-13 04:40AM>
 :ID: 9u9baas0mzf0
@@ -170,31 +218,31 @@
 #+name: ed/show:main
 #+begin_src pascal
   begin
-    // clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
+    clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
     show_curpos;
     ypos := 2;
-
+  
     cur := self.buf.make_cursor;
     cur.move_to( self.topline );
-    repeat
-
-    until ( ypos = self.h ) or ( not cur.move_next );
+  
+    repeat show_node; cur.move_next
+    until ( ypos >= self.h ) or ( cur.at_end );
+    
     while ypos < self.h do begin
       cwritexy( 1, ypos, '|%' );
       inc( ypos )
     end;
-    led.show
+    // led.show
   end;
 #+end_src
-
-*** cursor movement interface
+** cursor movement interface
 :PROPERTIES:
 :TS: <2013-01-12 07:41AM>
 :ID: 34ca2jk0lzf0
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-
+  
   procedure editor.home;
   begin
     if self.buf.first = nil then exit;
@@ -205,7 +253,7 @@
     else
       led.work := '<<marker>>';
   end;
-
+  
   procedure editor._end;
     var i : byte;
   begin
@@ -214,12 +262,12 @@
     for i := crt.windmaxy div 2 downto 1 do
       self.topline.move_prev;
   end;
-
+  
   procedure editor.pageup;
     var c : byte;
   begin for c := 1 to h do arrowup;
   end;
-
+  
   procedure editor.pagedown;
     var c : byte;
   begin for c := 1 to h do arrowdown;
@@ -261,7 +309,7 @@
   end;
 #+end_src
 
-*** modal interface
+** modal interface
 :PROPERTIES:
 :TS: <2013-01-12 07:41AM>
 :ID: lxfhwjk0lzf0
@@ -272,9 +320,12 @@
   procedure editor.run;
     var done : boolean = false; ch : char;
   begin
+    xpc.log.debug([ 'about to enter create' ]);
     self.led := ui.zinput.create;
+    xpc.log.debug([ 'about to go home' ]);
     self.home;
-      repeat
+    xpc.log.debug([ 'about to enter loop' ]);
+    repeat
       show;
       case kbd.readkey(ch) of
         ^C : done := true;
@@ -300,7 +351,7 @@
   end;
 #+end_src
 
-*** multi-line editor commands
+** multi-line editor commands
 :PROPERTIES:
 :TS: <2013-01-12 07:42AM>
 :ID: pn7bmlk0lzf0
@@ -332,14 +383,3 @@
     else led.del
   end;
 #+end_src
-** TODO «tokenizer»                                                    :tok:
-:PROPERTIES:
-:TS: <2013-01-11 05:05AM>
-:ID: er586tb1jzf0
-:END:
-#+name: ed.load:line->node
-#+begin_src pascal
-token.create( line )
-#+end_src
-
-

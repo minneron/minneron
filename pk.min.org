@@ -29,7 +29,7 @@
 #+begin_src pascal :tangle ".gen/mn.pas" :noweb tangle
   {$i xpc.inc}
   unit mn;
-  interface uses ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
+  interface uses xpc, ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
     <<type:editor>>
     <<type:span>>
   implementation
@@ -43,28 +43,28 @@
 :ID: 34nd9ah0lzf0
 :END:
 #+begin_src pascal :tangle ".gen/min.pas" :noweb tangle
-{ minneron
-----------------------------------------------------------------
-Copyright (c) 2012 Michal J Wallace. All rights reserved.
----------------------------------------------------------------}
-{$i xpc.inc}
-program min;
-  uses mn, crt, cw;
-  var ed : editor;
-begin
-  crt.clrscr;
-  ed := editor.create;
-  if paramcount = 0 then
-    writeln( 'usage : min <filename>' )
-  else if ed.load( paramstr( 1 )) then
+  { minneron
+  ----------------------------------------------------------------
+  Copyright (c) 2012 Michal J Wallace. All rights reserved.
+  ---------------------------------------------------------------}
+  {$i xpc.inc}
+  program min;
+  uses xpc, mn, crt, cw, cx;
+    var ed : editor;
   begin
-    ed.run;
-    ed.destroy;
-    cw.cwriteln( '|w|!k' );
     crt.clrscr;
-  end
-  else writeln( 'unable to load file: ', paramstr( 1 ));
-end.
+    ed := editor.create;
+    if paramcount = 0 then
+      writeln( 'usage : min <filename>' )
+    else if ed.load( paramstr( 1 )) then
+    begin
+      ed.run;
+      ed.destroy;
+      cw.cwriteln( '|w|!k' );
+      crt.clrscr;
+    end
+    else writeln( 'unable to load file: ', paramstr( 1 ));
+  end.
 #+end_src
 
 

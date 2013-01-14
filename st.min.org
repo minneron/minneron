@@ -26,8 +26,7 @@ The buffer is a simple, linear list of tokens, where tokens are either strings, 
 
 #+name: type:buffer
 #+begin_src pascal
-  type buffer = class( specialize ll.list <token> )
-  end;
+  type buffer = li.nodelist;
 #+end_src
 
 *** TYPE token
@@ -141,6 +140,7 @@ They are expected to display themselves, just like textual nodes.
     constructor create;
     function load( path : string ) : boolean;
     function save_as( path : string ) : boolean;
+    procedure parse( var txt : text );
     function save : boolean;
     procedure show;
     procedure run;
