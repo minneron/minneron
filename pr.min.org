@@ -36,19 +36,25 @@
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-  procedure editor.parse( var txt : text ); 
-  var n : cardinal; line : string; words : li.nodelist;
+
+  function editor.wrap( s : string ) : li.strnode;
+  begin
+    result := li.strnode( s )
+  end;
+
+  procedure editor.parse( var txt : text );
+  var n : cardinal; line : string; words : nodelist;
   begin
     while not eof( txt ) do begin
       readln( txt, line );
-      words :=  li.nodelist.create;
+      words := nodelist.create;
       if length( line ) > 0 then
         for n := 1 to stri.nwords( line ) do begin
-          writeln( 'word ', n, ' : ', stri.wordn( line, n ));
-          words.append( li.strnode.create( stri.wordn( line, n )));
+          //writeln( 'word ', n, ' : ', stri.wordn( line, n ));
+          words.append( wrap( stri.wordn( line, n )));
         end;
       self.buf.append( li.lisnode.create( words ));
-      writeln( 'n: ', n, ' line: "' + line + '" length: ', + length( line ));
+      // writeln( 'n: ', n, ' line: "' + line + '" length: ', + length( line ));
     end;
     li.print( lisnode.create( self.buf ));
   end;
@@ -62,7 +68,7 @@
 #+name: @imp:ed
 #+begin_src pascal
   function editor.load( path : string ) : boolean;
-    var txt : text; line : string;
+    var txt : text;
   begin
     result := fs.exists( path );
     if result then begin
@@ -114,7 +120,6 @@
     var
       ypos : cardinal;
       cur  : buffer.cursor;
-      line : string = '';
     <<ed/show/curpos>>
     <<ed/show/gutter>>
     <<ed/show/edit>>
@@ -134,7 +139,7 @@
   begin
     cwritexy( 1, 1,
               '|B[|C' + flushrt( n2s( self.position.index ), 6, '.' ) +
-              '|w/|c' + flushrt( n2s( self.buf.count ), 6, '.' ) +
+              '|w/|c' + flushrt( n2s( self.buf.length ), 6, '.' ) +
               '|B] |G' + self.message +
            '|%' );
     self.message := '';
@@ -183,7 +188,6 @@
   procedure show_node;
   var
     tok  : string;
-    tcur : li.nodelist.cursor;
     d2re : cardinal; { distance to right edge }
     node : li.node;
   begin
@@ -218,15 +222,15 @@
     clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
     show_curpos;
     ypos := 2;
-  
+
     cur := self.buf.make_cursor;
     cur.move_to( self.topline );
-  
+
     repeat
       show_node;
       cur.move_next
     until ( ypos >= self.h ) or ( cur.at_end );
-    
+
     while ypos < self.h do begin
       cwritexy( 1, ypos, '|%' );
       inc( ypos )
@@ -241,7 +245,7 @@
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-  
+
   procedure editor.home;
   begin
     if self.buf.first = nil then exit;
@@ -252,7 +256,7 @@
     else
       led.work := '<<marker>>';
   end;
-  
+
   procedure editor._end;
     var i : byte;
   begin
@@ -261,12 +265,12 @@
     for i := crt.windmaxy div 2 downto 1 do
       self.topline.move_prev;
   end;
-  
+
   procedure editor.pageup;
     var c : byte;
   begin for c := 1 to h do arrowup;
   end;
-  
+
   procedure editor.pagedown;
     var c : byte;
   begin for c := 1 to h do arrowdown;
@@ -275,37 +279,38 @@
 
 #+name: @imp:ed
 #+begin_src pascal
-  procedure editor.arrowup;
-  begin
-    li.strnode(self.position.value).str := led.value;
-    if self.position.move_prev then
+    procedure editor.arrowup;
     begin
-      if self.position.index - self.topline.index < 5 then
-          if self.topline.index > 1 then
-             self.topline.move_prev;
-      //  scrolldown1(1,80,y1,y2,nil);
-      //  scrolldown1(1,80,14,25,nil);
-    end
-    else self.position.move_next;
-    led.work := li.strnode(self.position.value).str;
-  end;
-
-  procedure editor.arrowdown;
-    var screenline : word;
-  begin
-    li.strnode(self.position.value).str := led.value;
-    if self.position.move_next then
+      self.position.value := wrap( led.value );
+      if self.position.move_prev then
       begin
-        assert( self.topline.index <= self.position.index );
-        screenline := self.position.index - self.topline.index;
-        if ( screenline > self.h - 5 ) and ( self.topline.index < self.buf.count ) then
-           self.topline.move_next
-          //  scrollup1(1,80,y1,y2,nil);
-          //  scrollup1(1,80,14,25,nil);
+        if self.position.index - self.topline.index < 5 then
+            if self.topline.index > 1 then
+               self.topline.move_prev;
+        //  scrolldown1(1,80,y1,y2,nil);
+        //  scrolldown1(1,80,14,25,nil);
       end
-    else self.position.to_end;
-    led.work := li.strnode(self.position.value).str;
-  end;
+      else self.position.move_next;
+      led.work := li.strnode(self.position.value).str;
+    end;
+
+    procedure editor.arrowdown;
+      var screenline : word;
+    begin
+      self.position.value := wrap( led.value );
+      if self.position.move_next then
+        begin
+          assert( self.topline.index <= self.position.index );
+          screenline := self.position.index - self.topline.index;
+          if ( screenline > self.h - 5 )
+            and ( self.topline.index < self.buf.length ) then
+             self.topline.move_next
+            //  scrollup1(1,80,y1,y2,nil);
+            //  scrollup1(1,80,14,25,nil);
+        end
+      else self.position.to_end;
+      led.work := li.strnode(self.position.value).str;
+    end;
 #+end_src
 
 ** modal interface

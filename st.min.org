@@ -140,6 +140,7 @@ They are expected to display themselves, just like textual nodes.
     constructor create;
     function load( path : string ) : boolean;
     function save_as( path : string ) : boolean;
+    function wrap( s : string ) : li.strnode;
     procedure parse( var txt : text );
     function save : boolean;
     procedure show;
@@ -164,6 +165,3 @@ They are expected to display themselves, just like textual nodes.
 :TS: <2013-01-11 11:21AM>
 :ID: ae267me0kzf0
 :END:
-
-
-
