@@ -10,7 +10,8 @@ ROOT      = ../
 
 # compiler paths
 FPC_PATH  = fpc
-FPC       = $(FPC_PATH) -gl -B -Fu$(GEN) -Fu$(XPL) -Fi$(XPL) -Fu./lib -FE$(GEN) -O-
+RTL       = -Fu~/f/rtl/units/x86_64-linux
+FPC       = $(FPC_PATH) $(RTL) -gl -B -Fu$(GEN) -Fu$(XPL) -Fi$(XPL) -Fu./lib -FE$(GEN) -O-
 FCL-PAS = $(FCL)/fcl-passrc
 TANGLE    = ./etc/tangle.el
 
