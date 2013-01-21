@@ -49,12 +49,12 @@
   ---------------------------------------------------------------}
   {$i xpc.inc}
   program min;
-  uses xpc, mn, crt, cw, cx;
+  uses xpc, mn, crt, cw, cx, cli;
     var ed : editor;
   begin
     crt.clrscr;
     ed := editor.create;
-    if paramcount = 0 then
+      if paramcount = 0 then
       writeln( 'usage : min <filename>' )
     else if ed.load( paramstr( 1 )) then
     begin

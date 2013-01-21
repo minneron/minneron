@@ -2,76 +2,17 @@
 #+tags: pl min
 #+date: <2013-01-11 11:43AM>
 
-* TODO [5/6] word wrap implementation                                 :ed004:
-:PROPERTIES:
-:TS: <2013-01-11 11:45AM>
-:ID: hnyjxqf0kzf0
-:END:
-** DONE remove old «ed/show/line» { line based version }
-:PROPERTIES:
-:TS: <2013-01-13 04:34AM>
-:ID: 8lf6f0s0mzf0
-:END:
-#+name: ed/show/node/0
-#+begin_src pascal
-  procedure show_line( line : string );
-  begin
-    cwrite( stri.trunc( line, cw.scr.w - cw.cur.x ));
-    cwrite( '|%' ); // clreol
-  end;
-  
-  procedure show_node;
-  {test against li.strnode to distinguish from anchors, which will no longer use }
-  if cur.value.inheritsfrom( li.strnode ) then
-  begin
-    show_nums;
-    line := li.strnode( cur.value ).str;
-    if cur.index = position.index then show_edit( line )
-    else show_line( line );
-    inc( ypos )
-  end;
-#+end_src
-
-** DONE { lines as lists implementation }
-:PROPERTIES:
-:TS: <2013-01-13 05:15AM>
-:ID: fjlidwt0mzf0
-:END:
-new =show_node= version: id:51l0hns0mzf0
-
-** DONE implement new ed/show/block with wrapping and dynamic height
-:PROPERTIES:
-:TS: <2013-01-13 04:52AM>
-:ID: w1i9ats0mzf0
-:END:
-** DONE break input lines down into tokens
-:PROPERTIES:
-:TS: <2013-01-11 03:17AM>
-:ID: cpvbjt61jzf0
-:END:
-
-** DONE show placeholder for line numbers on wrap
-:PROPERTIES:
-:TS: <2013-01-13 05:05AM>
-:ID: 2va21gt0mzf0
-:END:
-** TODO resize and relocate the editor based on the cursor position
-:PROPERTIES:
-:TS: <2013-01-13 07:16PM>
-:ID: 424359i0nzf0
-:END:
-** TODO add an offset to the cursor type
-:PROPERTIES:
-:TS: <2013-01-10 09:37AM>
-:ID: uzh4ta81izf0
-:END:
-
-
-* TODO [0/2] block-based display plan                                 :ed007:
+* TODO [0/8] block-based display plan                                 :ed007:
 :PROPERTIES:
 :TS: <2013-01-01 10:35PM>
 :ID: tm74ek017zf0
 :END:
+** TODO implement step
+:PROPERTIES:
+:TS: <2013-01-17 08:20AM>
+:ID: zwuf3p10szf0
+:END:
+
 ** TODO displaying documents                                            :ui:
 :PROPERTIES:
 :TS: <2013-01-03 04:13PM>
@@ -141,6 +82,80 @@ and dialog widgets are all perfectly valid options.
 :END:
 elements are sequences/strings with a 1-dimensional length
 blocks are rectangles with a 2-dimensional bounding box
+
+* TODO [5/6] word wrap implementation                                 :ed004:
+:PROPERTIES:
+:TS: <2013-01-11 11:45AM>
+:ID: hnyjxqf0kzf0
+:END:
+** DONE remove old «ed/show/line» { line based version }
+:PROPERTIES:
+:TS: <2013-01-13 04:34AM>
+:ID: 8lf6f0s0mzf0
+:END:
+#+name: ed/show/node/0
+#+begin_src pascal
+  procedure show_line( line : string );
+  begin
+    cwrite( stri.trunc( line, cw.scr.w - cw.cur.x ));
+    cwrite( '|%' ); // clreol
+  end;
+  
+  procedure show_node;
+  {test against li.strnode to distinguish from anchors, which will no longer use }
+  if cur.value.inheritsfrom( li.strnode ) then
+  begin
+    show_nums;
+    line := li.strnode( cur.value ).str;
+    if cur.index = position.index then show_edit( line )
+    else show_line( line );
+    inc( ypos )
+  end;
+#+end_src
+
+** DONE { lines as lists implementation }
+:PROPERTIES:
+:TS: <2013-01-13 05:15AM>
+:ID: fjlidwt0mzf0
+:END:
+new =show_node= version: id:51l0hns0mzf0
+
+** DONE implement new ed/show/block with wrapping and dynamic height
+:PROPERTIES:
+:TS: <2013-01-13 04:52AM>
+:ID: w1i9ats0mzf0
+:END:
+** DONE break input lines down into tokens
+:PROPERTIES:
+:TS: <2013-01-11 03:17AM>
+:ID: cpvbjt61jzf0
+:END:
+
+** DONE show placeholder for line numbers on wrap
+:PROPERTIES:
+:TS: <2013-01-13 05:05AM>
+:ID: 2va21gt0mzf0
+:END:
+** TODO resize and relocate the editor based on the cursor position
+:PROPERTIES:
+:TS: <2013-01-13 07:16PM>
+:ID: 424359i0nzf0
+:END:
+*** TODO track the x and y coordinates of the cursor
+:PROPERTIES:
+:TS: <2013-01-17 07:35AM>
+:ID: 4oec67e1rzf0
+:END:
+*** TODO divide each line's list of tokens into separate nodes for each virtual line
+:PROPERTIES:
+:TS: <2013-01-17 07:35AM>
+:ID: kf6aq7e1rzf0
+:END:
+** TODO add an offset to the cursor type
+:PROPERTIES:
+:TS: <2013-01-10 09:37AM>
+:ID: uzh4ta81izf0
+:END:
 * TODO [0/2] command interpreter plan                                   :cmd:
 :PROPERTIES:
 :TS: <2013-01-01 10:35PM>

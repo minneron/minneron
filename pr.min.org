@@ -39,7 +39,7 @@
 
   function editor.wrap( s : string ) : li.strnode;
   begin
-    result := li.strnode( s )
+    result := li.strnode.create( s )
   end;
 
   procedure editor.parse( var txt : text );
@@ -50,13 +50,13 @@
       words := nodelist.create;
       if length( line ) > 0 then
         for n := 1 to stri.nwords( line ) do begin
-          //writeln( 'word ', n, ' : ', stri.wordn( line, n ));
+          log.debug([ 'word ', n, ' : ', stri.wordn( line, n ) ]);
           words.append( wrap( stri.wordn( line, n )));
         end;
       self.buf.append( li.lisnode.create( words ));
-      // writeln( 'n: ', n, ' line: "' + line + '" length: ', + length( line ));
+      log.debug([ 'words: ', n, ' line: "' + line + '" length: ', length( line ) ]);
     end;
-    li.print( lisnode.create( self.buf ));
+    // li.print( lisnode.create( self.buf ));
   end;
 #+end_src
 
@@ -128,7 +128,7 @@
     <<ed/show:main>>
   end;
 #+end_src
-*** «ed/show/curpos»
+**** «ed/show/curpos»
 :PROPERTIES:
 :TS: <2013-01-13 04:34AM>
 :ID: j4k6vzr0mzf0
@@ -145,7 +145,7 @@
     self.message := '';
   end;
 #+end_src
-*** «ed/show/gutter»
+**** «ed/show/gutter»
 :PROPERTIES:
 :TS: <2013-01-13 04:34AM>
 :ID: dfe840s0mzf0
@@ -157,7 +157,7 @@
     cwritexy( 1, ypos, '|k|!c' + s + '|!k|w' );
   end;
 #+end_src
-*** «ed/show/edit»
+**** «ed/show/edit»
 :PROPERTIES:
 :TS: <2013-01-13 04:34AM>
 :ID: de5ca0s0mzf0
@@ -178,7 +178,7 @@
     led.show;
   end;
 #+end_src
-*** «ed/show/node» { lines as lists implementation }
+**** «ed/show/node» { lines as lists implementation }
 :PROPERTIES:
 :TS: <2013-01-13 04:48AM>
 :ID: 51l0hns0mzf0
@@ -196,7 +196,9 @@
     for node in (cur.value as li.lisnode).lis do
     begin
       d2re := cw.scr.w - cw.cur.x;
-      tok := (node as li.strnode).str + '|K.|w'; //  because tokenizer strips ws :(
+      if node is li.strnode then tok := (node as li.strnode).str
+      else tok := '|r<??>|w';
+      tok += '|b.|w'; //  b/c tokenizer strips ws
       {-- word wrapping --}
       if length( tok ) < d2re then cwrite( tok )
       else begin
@@ -211,7 +213,7 @@
   end;
 #+end_src
 
-*** «ed/show:main»
+**** «ed/show:main»
 :PROPERTIES:
 :TS: <2013-01-13 04:40AM>
 :ID: 9u9baas0mzf0
@@ -238,11 +240,50 @@
     led.show;
   end;
 #+end_src
+*** the 'camera'
+:PROPERTIES:
+:TS: <2013-01-17 07:42AM>
+:ID: 34mdyie1rzf0
+:END:
+**** «updateCamera»
+:PROPERTIES:
+:TS: <2013-01-17 07:42AM>
+:ID: 3j1bdje1rzf0
+:END:
+#+name: @imp:ed
+#+begin_src pascal
+  procedure editor.updatecamera;
+  var screenline : word;
+  begin
+    if self.position.index - self.topline.index < 5 then begin
+      if self.topline.index > 1 then
+        self.topline.move_prev;
+      //  scrolldown1(1,80,y1,y2,nil);
+      //  scrolldown1(1,80,14,25,nil);
+    end
+    else begin
+      assert(self.topline.index <= self.position.index );
+      screenline := self.position.index - self.topline.index;
+      if ( screenline > self.h - 5 )
+        and ( self.topline.index < self.buf.length ) then
+        self.topline.move_next;
+      //  scrollup1(1,80,y1,y2,nil);
+      //  scrollup1(1,80,14,25,nil);
+    end
+  end;
+#+end_src
+
 ** cursor movement interface
 :PROPERTIES:
 :TS: <2013-01-12 07:41AM>
 :ID: 34ca2jk0lzf0
 :END:
+*** home/end
+:PROPERTIES:
+:TS: <2013-01-17 07:32AM>
+:ID: spi8g1e1rzf0
+:END:
+
 #+name: @imp:ed
 #+begin_src pascal
 
@@ -265,53 +306,63 @@
     for i := crt.windmaxy div 2 downto 1 do
       self.topline.move_prev;
   end;
+#+end_src
+
+*** up/down motion
+:PROPERTIES:
+:TS: <2013-01-17 07:31AM>
+:ID: t7d7f0e1rzf0
+:END:
+#+name: @imp:ed
+#+begin_src pascal
+
+  procedure editor.arrowup;
+  begin
+    keepInput;
+    if self.position.move_prev then moveInput
+    else self.position.move_next // bounce back when hitting top
+  end;
+
+  procedure editor.arrowdown;
+  begin
+    keepInput;
+    if self.position.move_next then moveInput
+    else self.position.to_end // bounce back when hitting bottom
+  end;
 
   procedure editor.pageup;
-    var c : byte;
-  begin for c := 1 to h do arrowup;
+  var c : byte;
+  begin for c : = 1 to h do arrowup;
   end;
 
   procedure editor.pagedown;
-    var c : byte;
+  var c : byte;
   begin for c := 1 to h do arrowdown;
-  end; { editor.pagedown }
+  end;
+
 #+end_src
 
-#+name: @imp:ed
+** managing the zinput control
+:PROPERTIES:
+:TS: <2013-01-17 07:50AM>
+:ID: qcp4cc00szf0
+:END:
+
 #+begin_src pascal
-    procedure editor.arrowup;
-    begin
-      self.position.value := wrap( led.value );
-      if self.position.move_prev then
-      begin
-        if self.position.index - self.topline.index < 5 then
-            if self.topline.index > 1 then
-               self.topline.move_prev;
-        //  scrolldown1(1,80,y1,y2,nil);
-        //  scrolldown1(1,80,14,25,nil);
-      end
-      else self.position.move_next;
-      led.work := li.strnode(self.position.value).str;
-    end;
-
-    procedure editor.arrowdown;
-      var screenline : word;
-    begin
-      self.position.value := wrap( led.value );
-      if self.position.move_next then
-        begin
-          assert( self.topline.index <= self.position.index );
-          screenline := self.position.index - self.topline.index;
-          if ( screenline > self.h - 5 )
-            and ( self.topline.index < self.buf.length ) then
-             self.topline.move_next
-            //  scrollup1(1,80,y1,y2,nil);
-            //  scrollup1(1,80,14,25,nil);
-        end
-      else self.position.to_end;
-      led.work := li.strnode(self.position.value).str;
-    end;
+  procedure editor.keepInput;
+  begin
+    // update the edited token
+    self.position.value.update( led.value );
+  end;
 #+end_src
+
+#+begin_src pascal
+  procedure editor.moveInput;
+  begin
+    updateCamera;
+  end;
+#+end_src
+
 
 ** modal interface
 :PROPERTIES:

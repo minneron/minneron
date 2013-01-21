@@ -140,12 +140,10 @@ They are expected to display themselves, just like textual nodes.
     constructor create;
     function load( path : string ) : boolean;
     function save_as( path : string ) : boolean;
-    function wrap( s : string ) : li.strnode;
-    procedure parse( var txt : text );
     function save : boolean;
-    procedure show;
     procedure run;
-
+    procedure show;
+  
    protected { cursor movement commands }
     procedure arrowup;
     procedure arrowdown;
@@ -153,11 +151,19 @@ They are expected to display themselves, just like textual nodes.
     procedure _end;
     procedure pageup;
     procedure pagedown;
-
+  
    protected { line manipulation commands }
     procedure newline;
     procedure delete;
+  
+   private
+    procedure updateCamera;
+    procedure keepInput;
+    procedure moveInput;
+    function wrap( s : string ) : li.strnode;
+    procedure parse( var txt : text );
   end;
+  
 #+end_src
 
 ** TODO database                                                        :mr:
