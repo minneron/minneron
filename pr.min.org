@@ -19,8 +19,8 @@
     inherited;
     x := 1;
     y := 1;
-    w := crt.windMaxX;
-    h := crt.windMaxY;
+    w := vt.windMaxX;
+    h := vt.windMaxY;
     self.buf := buffer.create;
     topline := self.buf.make_cursor;
     position := self.buf.make_cursor;
@@ -168,10 +168,10 @@
   begin
     { This simply positions the input widget. }
     with self.led do begin
-      x := crt.wherex;
-      y := crt.wherey;
+      x := vt.wherex;
+      y := vt.wherey;
       tcol := $0E; // bright yellow
-      dlen := crt.windmaxx - crt.wherex;
+      dlen := vt.windmaxx - vt.wherex;
     end;
     // debug: clear to eol w/blue bg to show where control should be
     // cwrite( '|!b|%' );
@@ -221,7 +221,7 @@
 #+name: ed/show:main
 #+begin_src pascal
   begin
-    clrscr; //  fillbox( 1, 1, crt.windmaxx, crt.windmaxy, $0F20 );
+    vt.clrscr; //  fillbox( 1, 1, vt.windmaxx, vt.windmaxy, $0F20 );
     show_curpos;
     ypos := 2;
 
@@ -303,7 +303,7 @@
   begin
     self.position.to_end;
     self.topline.to_end;
-    for i := crt.windmaxy div 2 downto 1 do
+    for i := vt.windmaxy div 2 downto 1 do
       self.topline.move_prev;
   end;
 #+end_src
@@ -332,7 +332,7 @@
 
   procedure editor.pageup;
   var c : byte;
-  begin for c : = 1 to h do arrowup;
+  begin for c := 1 to h do arrowup;
   end;
 
   procedure editor.pagedown;
@@ -347,15 +347,16 @@
 :TS: <2013-01-17 07:50AM>
 :ID: qcp4cc00szf0
 :END:
-
+#+name: @imp:ed
 #+begin_src pascal
   procedure editor.keepInput;
   begin
     // update the edited token
-    self.position.value.update( led.value );
+    // TODO : self.position.value.update( led.value );
   end;
 #+end_src
 
+#+name: @imp:ed
 #+begin_src pascal
   procedure editor.moveInput;
   begin

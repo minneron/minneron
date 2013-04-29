@@ -29,7 +29,7 @@
 #+begin_src pascal :tangle ".gen/mn.pas" :noweb tangle
   {$i xpc.inc}
   unit mn;
-  interface uses xpc, ll, li, fs, stri, num, cw, crt, buf, ui, kbd, cli;
+  interface uses xpc, ll, li, fs, stri, num, cw, buf, ui, vt, kbd, cli;
     <<type:editor>>
     <<type:span>>
   implementation
@@ -49,10 +49,10 @@
   ---------------------------------------------------------------}
   {$i xpc.inc}
   program min;
-  uses xpc, mn, crt, cw, cx, cli;
+  uses xpc, mn, cw, cx, cli, vt;
     var ed : editor;
   begin
-    crt.clrscr;
+    vt.clrscr;
     ed := editor.create;
       if paramcount = 0 then
       writeln( 'usage : min <filename>' )
@@ -61,7 +61,7 @@
       ed.run;
       ed.destroy;
       cw.cwriteln( '|w|!k' );
-      crt.clrscr;
+      vt.clrscr;
     end
     else writeln( 'unable to load file: ', paramstr( 1 ));
   end.
