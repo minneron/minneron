@@ -17,8 +17,8 @@
   constructor editor.create;
   begin
     inherited;
-    x := 1;
-    y := 1;
+    x := 0;
+    y := 0;
     w := vt.windMaxX;
     h := vt.windMaxY;
     self.buf := buffer.create;
@@ -137,10 +137,11 @@
 #+begin_src pascal
   procedure show_curpos;
   begin
-    cwritexy( 1, 1,
+    cwritexy( 0, 0,
+              '|!b' +
               '|B[|C' + flushrt( n2s( self.position.index ), 6, '.' ) +
               '|w/|c' + flushrt( n2s( self.buf.length ), 6, '.' ) +
-              '|B] |G' + self.message +
+              '|B]|Y ' + self.message +
            '|%' );
     self.message := '';
   end;
@@ -153,8 +154,10 @@
 #+name: ed/show/gutter
 #+begin_src pascal
   procedure show_gutter( s : string );
+    var color : char = 'c';
   begin
-    cwritexy( 1, ypos, '|k|!c' + s + '|!k|w' );
+    if cur.index = position.index then color := 'C';
+    cwritexy( 0, ypos, '|k|!' + color + s + '|!k|w' );
   end;
 #+end_src
 **** «ed/show/edit»
@@ -164,17 +167,17 @@
 :END:
 #+name: ed/show/edit
 #+begin_src pascal
-  procedure show_edit( line : string );
+  procedure show_edit;
   begin
     { This simply positions the input widget. }
     with self.led do begin
-      x := vt.wherex;
-      y := vt.wherey;
-      tcol := $0E; // bright yellow
-      dlen := vt.windmaxx - vt.wherex;
+      x := cw.cur.x;
+      y := cw.cur.y;
+      tcol := $080f;
+      dlen := cw.max.x - cw.cur.x
     end;
     // debug: clear to eol w/blue bg to show where control should be
-    // cwrite( '|!b|%' );
+    // cwrite( '|!b|%' +  line + '|!k' );
     led.show;
   end;
 #+end_src
@@ -190,25 +193,28 @@
     tok  : string;
     d2re : cardinal; { distance to right edge }
     node : li.node;
+
   begin
-    if cur.index = position.index then show_edit( '<TOSTRING>' );
     show_gutter( flushrt( n2s( cur.index ), 3, ' ' ));
-    for node in (cur.value as li.lisnode).lis do
-    begin
-      d2re := cw.scr.w - cw.cur.x;
-      if node is li.strnode then tok := (node as li.strnode).str
-      else tok := '|r<??>|w';
-      tok += '|b.|w'; //  b/c tokenizer strips ws
-      {-- word wrapping --}
-      if length( tok ) < d2re then cwrite( tok )
-      else begin
-        cwrite( '|%' ); // clreol
-        inc( ypos );
-        show_gutter( '   ' );
-        { truncate, just in case token is wider than the whole editor }
-        cwrite( stri.trunc( tok, d2re ));
-      end
-    end;
+    if cur.index = position.index then show_edit
+    else if cur.value is li.lisnode then
+      for node in (cur.value as li.lisnode).lis do
+        begin
+          d2re := cw.scr.w - cw.cur.x;
+          if node is li.strnode
+            then tok := (node as li.strnode).str
+            else tok := '|r<??>|w';
+          tok += '|b.|w'; //  b/c tokenizer strips ws
+          {-- word wrapping --}
+          if length( tok ) < d2re then cwrite( tok )
+          else begin
+            cwrite( '|%' ); // clreol
+            inc( ypos );
+            show_gutter( '   ' );
+            { truncate, in case token is wider than the whole editor }
+            cwrite( stri.trunc( tok, d2re ));
+          end
+        end;
     inc( ypos )
   end;
 #+end_src
@@ -221,23 +227,22 @@
 #+name: ed/show:main
 #+begin_src pascal
   begin
-    vt.clrscr; //  fillbox( 1, 1, vt.windmaxx, vt.windmaxy, $0F20 );
+    cwrite('|w|!b|$'); // clrscr
+//todo  fillbox( 1, 1, vt.windmaxx, vt.windmaxy, $0F20 );
     show_curpos;
-    ypos := 2;
+    ypos := 1; // line 0 is for the status / cursor position
 
     cur := self.buf.make_cursor;
     cur.move_to( self.topline );
-
     repeat
       show_node;
       cur.move_next
-    until ( ypos >= self.h ) or ( cur.at_end );
-
+    until ( ypos >= self.h ) or ( cur.at_clasp );
     while ypos < self.h do begin
-      cwritexy( 1, ypos, '|%' );
+      cwritexy( 0, ypos, '|!K|%' );
       inc( ypos )
     end;
-    led.show;
+    cur.free;
   end;
 #+end_src
 *** the 'camera'
@@ -255,21 +260,21 @@
   procedure editor.updatecamera;
   var screenline : word;
   begin
-    if self.position.index - self.topline.index < 5 then begin
-      if self.topline.index > 1 then
+    assert(self.topline.index <= self.position.index );
+    screenline := self.position.index - self.topline.index;
+    if ( screenline < 5 ) and ( self.topline.index > 1 ) then
+      begin
         self.topline.move_prev;
-      //  scrolldown1(1,80,y1,y2,nil);
-      //  scrolldown1(1,80,14,25,nil);
-    end
-    else begin
-      assert(self.topline.index <= self.position.index );
-      screenline := self.position.index - self.topline.index;
-      if ( screenline > self.h - 5 )
-        and ( self.topline.index < self.buf.length ) then
+        //  scrolldown1(1,80,y1,y2,nil);
+        //  scrolldown1(1,80,14,25,nil);
+      end
+    else if ( screenline > self.h - 5 )
+      and ( self.topline.index < self.buf.length ) then
+      begin
         self.topline.move_next;
-      //  scrollup1(1,80,y1,y2,nil);
-      //  scrollup1(1,80,14,25,nil);
-    end
+        //  scrollup1(1,80,y1,y2,nil);
+        //  scrollup1(1,80,14,25,nil);
+      end
   end;
 #+end_src
 
@@ -316,18 +321,36 @@
 #+name: @imp:ed
 #+begin_src pascal
 
+  procedure editor.grabLine;
+    function to_string : string;
+      var first : boolean = true; var node : li.node;
+      begin
+        result := '';
+        for node in (self.position.value as li.lisnode).lis do
+        begin
+          if first then first := false
+          else result += ' ';
+          result += (node as li.strnode).str;
+        end
+      end;
+    begin
+      self.led.work := to_string
+    end;
+
   procedure editor.arrowup;
   begin
     keepInput;
     if self.position.move_prev then moveInput
-    else self.position.move_next // bounce back when hitting top
+    else self.position.move_next; // bounce back when hitting top
+    grabLine;
   end;
 
   procedure editor.arrowdown;
   begin
     keepInput;
     if self.position.move_next then moveInput
-    else self.position.to_end // bounce back when hitting bottom
+    else self.position.move_prev; // bounce back when hitting bottom
+    grabLine;
   end;
 
   procedure editor.pageup;
@@ -342,7 +365,7 @@
 
 #+end_src
 
-** managing the zinput control
+** TODO managing the zinput control
 :PROPERTIES:
 :TS: <2013-01-17 07:50AM>
 :ID: qcp4cc00szf0
@@ -363,7 +386,6 @@
     updateCamera;
   end;
 #+end_src
-
 
 ** modal interface
 :PROPERTIES:
@@ -392,6 +414,7 @@
         ^S : save;
         ^V : pagedown;
         ^U : pageup;
+        ^E : _end;
         #0 : case kbd.readkey(ch) of
                     #72 : arrowup; // when you press the UP arrow!
                     #80 : arrowdown; // when you press the DOWN arrow!

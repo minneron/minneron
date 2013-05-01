@@ -158,6 +158,7 @@ They are expected to display themselves, just like textual nodes.
   
    private
     procedure updateCamera;
+    procedure grabLine;
     procedure keepInput;
     procedure moveInput;
     function wrap( s : string ) : li.strnode;
