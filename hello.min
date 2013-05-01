@@ -6,7 +6,7 @@ the text editor, which is still quite primitive.
 
 The current keybindings are similar to those in emacs and bash:
 
-  |Wcursor movement
+  |!B|Wcursor movement
   ^N : next line
   ^P : previous line
   ^U : page up
@@ -16,12 +16,12 @@ The current keybindings are similar to those in emacs and bash:
   ^A : go to start of line
   ^E : go to end of line
 
-  |Wediting
+  |!B|Wediting
   ^K : delete to end of line
   ^H : backspace
   ^D : delete
 
-  |Wfile management
+  |!B|Wfile management
   ^S : save
   ^C : exit
 
