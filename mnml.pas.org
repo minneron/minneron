@@ -1,0 +1,239 @@
+* unit =mnml= : minneron main loop
+:PROPERTIES:
+:TS:       <2013-05-15 10:13AM>
+:ID:       k5kjxsw034g0
+:END:
+#+begin_src pascal :tangle ~/r/.gen/mnml.pas :noweb yes
+  { minneron main loop }
+  {$mode objfpc}
+  unit mnml;
+    <<interface>>
+    <<implementation>>
+    <<initialization>>
+    <<finalization>>
+  end.
+#+end_src
+
+* interface
+:PROPERTIES:
+:TS:       <2013-05-15 10:19AM>
+:ID:       ab9hx2x034g0
+:END:
+#+name: interface
+#+begin_src pascal
+interface
+uses sysutils;
+  type
+    TThunk = procedure;
+    TToken = string[31];
+    TCmdId = cardinal;
+  procedure define( var cmd : TCmdId; thunk : TThunk; token : TToken );
+  procedure launch( const cmd : TCmdId );
+  procedure launch( const cmd : TToken );
+  procedure step;
+  procedure loop;
+  function  done : boolean;
+#+end_src
+
+* implementation
+:PROPERTIES:
+:TS:       <2013-05-15 11:14AM>
+:ID:       y8n1knz034g0
+:END:
+** internal variables
+#+name: implementation
+#+begin_src pascal
+  implementation
+    var
+      queue  : array of TCmdId;
+      thunks : array of TThunk;
+      tokens : array of TToken;
+  #+end_src
+
+** =step=
+:PROPERTIES:
+:TS:       <2013-05-15 10:13AM>
+:ID:       uxv9rtw034g0
+:END:
+#+name: implementation
+#+begin_src pascal
+  procedure step;
+    var i, n : cardinal;
+    begin
+      n := length(queue);
+      if n > 0 then for i := 0 to n - 1 do thunks[queue[i]]();
+      if length(queue) > n then
+        { shift newly launched commands to start of the array }
+        for i := n to length(queue) - 1 do queue[i-n] := queue[i];
+      { now truncate the array so only the new items remain }
+      SetLength(queue, Length(queue)-n)
+    end;
+#+end_src
+
+** =loop=
+:PROPERTIES:
+:TS:       <2013-05-15 10:02AM>
+:ID:       vkn7ibw034g0
+:END:
+#+name: implementation
+#+begin_src pascal
+  procedure loop;
+    begin
+      repeat step until done
+    end;
+#+end_src
+** =done=
+:PROPERTIES:
+:TS:       <2013-05-15 11:46AM>
+:ID:       14ted41134g0
+:END:
+#+name: implementation
+#+begin_src pascal
+  function done : boolean; inline;
+    begin
+      done := length(queue) = 0;
+    end;
+#+end_src
+
+** =define=
+:PROPERTIES:
+:TS:       <2013-05-15 11:46AM>
+:ID:       hdeho31134g0
+:END:
+#+name: implementation
+#+begin_src pascal
+  procedure define( var cmd : TCmdId; thunk : TThunk; token : TToken );
+    begin
+      cmd := length(thunks);
+      setlength(thunks, cmd+1);
+      setlength(tokens, cmd+1);
+      thunks[cmd] := thunk;
+      tokens[cmd] := token;
+    end;
+#+end_src
+
+** =launch=
+:PROPERTIES:
+:TS:       <2013-05-15 11:46AM>
+:ID:       tey0a41134g0
+:END:
+#+name: implementation
+#+begin_src pascal
+  procedure launch( const cmd  : TCmdId );
+    begin
+      setlength(queue, length(queue)+1);
+      queue[cmd] := cmd;
+    end;
+  
+  procedure launch( const cmd  : TToken );
+    var i : cardinal; found : boolean = false;
+    begin
+      for i := 0 to length(queue)-1 do
+        if tokens[i]=cmd then 
+          begin
+            launch( i );
+            found := true;
+          end;
+      if not found then
+        raise Exception.Create('undefined: ' + cmd );
+    end;
+#+end_src
+
+* initialization
+:PROPERTIES:
+:TS:       <2013-05-15 11:43AM>
+:ID:       6a76cy0134g0
+:END:
+#+name: initialization
+#+begin_src pascal
+  initialization
+#+end_src
+
+* finalization
+:PROPERTIES:
+:TS:       <2013-05-15 11:44AM>
+:ID:       m2i8w01134g0
+:END:
+#+name: finalization
+#+begin_src pascal
+  finalization
+    SetLength(tokens, 0);
+    SetLength(thunks, 0);
+    SetLength(queue,  0);
+#+end_src
+
+* planned enhancements
+:PROPERTIES:
+:TS:       <2013-05-15 12:14PM>
+:ID:       m2k24e2134g0
+:END:
+** TODO create a module for scheduled tasks
+:PROPERTIES:
+:TS:       <2013-05-15 10:47AM>
+:ID:       ydr91ey034g0
+:END:
+#+begin_src recur
+  function  ( pcmd : callable; interval, times, priority : integer ) : TTaskId;
+  function  change( task : callable; interval, times, priority : integer ) : TTaskId;
+#+end_src
+
+** TODO create a unit to handle module definititions
+:PROPERTIES:
+:TS:       <2013-05-15 10:48AM>
+:ID:       zqc4pey034g0
+:END:
+function  module( name : TModName  ) : TModId;
+type TModId : cardinal;
+TModName : string[32];
+
+** TODO actor model for retro
+:PROPERTIES:
+:TS:       <2013-05-15 12:13PM>
+:ID:       d5s2oc2134g0
+:END:
+** TODO module system
+:PROPERTIES:
+:TS:       <2013-05-15 12:13PM>
+:ID:       8vdhed2134g0
+:END:
+** TODO message passing system
+:PROPERTIES:
+:TS:       <2013-05-15 12:14PM>
+:ID:       pqdase2134g0
+:END:
+TMessage : record end;
+TQueue   : record end;
+
+* example usage
+:PROPERTIES:
+:TS:       <2013-05-15 09:41AM>
+:ID:       oseegbv034g0
+:END:
+#+begin_src pascal :tangle ~/r/.gen/rnd.pas :noweb yes
+  program rnd;
+  uses crt, mnml;
+  
+    var cmd_rnd : TCmdId;
+  
+  procedure EmitRandomChars;
+    var x , y, c : byte;
+    begin
+      x := crt.WindMaxX div 2 + 1
+           + round((random-0.5) * (random( crt.WindMaxX + 1 )));
+      { random * random will give a strong bias to top of screen }
+      y := round(random * random * random( crt.WindMaxY+1));
+      crt.textcolor( random( 8 ));
+      if boolean(random( 2 )) then crt.highvideo else crt.lowvideo;
+      crt.gotoxy(x, y);
+      write(chr(random(128 - 32) + 32));
+      if crt.keypressed then crt.readkey else mnml.launch(cmd_rnd);
+    end;
+  
+  begin
+    mnml.define(cmd_rnd, @EmitRandomChars, 'rnd');
+    mnml.launch(cmd_rnd);
+    mnml.loop;
+    crt.normvideo;
+    crt.clrscr;
+  end.
+#+end_src
