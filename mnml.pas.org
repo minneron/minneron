@@ -211,29 +211,28 @@ TQueue   : record end;
 :END:
 #+begin_src pascal :tangle ~/r/.gen/rnd.pas :noweb yes
   program rnd;
-  uses crt, mnml;
+  uses kvm, kbd, mnml;
   
     var cmd_rnd : TCmdId;
   
   procedure EmitRandomChars;
-    var x , y, c : byte;
+    var x, y : byte;
     begin
-      x := crt.WindMaxX div 2 + 1
-           + round((random-0.5) * (random( crt.WindMaxX + 1 )));
+      x := kvm.maxX div 2 + 1
+           + round((random-0.5) * (random( kvm.Width )));
       { random * random will give a strong bias to top of screen }
-      y := round(random * random * random( crt.WindMaxY+1));
-      crt.textcolor( random( 8 ));
-      if boolean(random( 2 )) then crt.highvideo else crt.lowvideo;
-      crt.gotoxy(x, y);
-      write(chr(random(128 - 32) + 32));
-      if crt.keypressed then crt.readkey else mnml.launch(cmd_rnd);
+      y := round(random * random * random( kvm.Width ));
+      kvm.Fg( random( 16 ));
+      kvm.GotoXY( x, y );
+      write( chr( random( 128 - 32 ) + 32 ));
+      if kbd.KeyPressed then kbd.ReadKey else mnml.launch(cmd_rnd);
     end;
   
   begin
     mnml.define(cmd_rnd, @EmitRandomChars, 'rnd');
     mnml.launch(cmd_rnd);
     mnml.loop;
-    crt.normvideo;
-    crt.clrscr;
+    kvm.Fg( 'w' );
+    kvm.ClrScr;
   end.
 #+end_src
