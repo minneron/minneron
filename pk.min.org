@@ -10,7 +10,7 @@
 :END:
 
 #+begin_src pascal :tangle ".gen/buf.pas" :padline yes :noweb tangle
-  {$i xpc.inc}
+  {$mode objfpc}{$i xpc.inc}
   unit buf;
   interface uses xpc, ll, li;
     <<type:token>>
@@ -27,9 +27,9 @@
 :ID: fr5fryb1jzf0
 :END:
 #+begin_src pascal :tangle ".gen/mn.pas" :noweb tangle
-  {$i xpc.inc}
+  {$mode objfpc}{$i xpc.inc}
   unit mn;
-  interface uses xpc, ll, li, fs, stri, num, cw, buf, ui, vt, kbd, cli;
+  interface uses xpc, ll, li, fs, stri, num, cw, buf, ui, kvm, kbd, cli;
     <<type:editor>>
     <<type:span>>
   implementation
@@ -47,24 +47,23 @@
   ----------------------------------------------------------------
   Copyright (c) 2012 Michal J Wallace. All rights reserved.
   ---------------------------------------------------------------}
-  {$i xpc.inc}
+  {$mode objfpc}{$i xpc.inc}
   program min;
-  uses xpc, mn, cw, cx, cli, vt;
-    var ed : editor;
+  uses xpc, mn, cw, cx, cli, kvm;
+  
+  var ed : editor;
   begin
-    vt.clrscr;
-    ed := editor.create;
-      if paramcount = 0 then
-      writeln( 'usage : min <filename>' )
-    else if ed.load( paramstr( 1 )) then
-    begin
-      ed.run;
-      ed.destroy;
-      cw.cwriteln( '|w|!k' );
-      vt.clrscr;
-    end
-    else writeln( 'unable to load file: ', paramstr( 1 ));
+    kvm.ClrScr;
+    ed := editor.Create;
+    if ParamCount = 0 then
+      writeln( 'usage : min <filename> ')
+    else if ed.Load( ParamStr( 1 )) then
+      begin
+        ed.Run;
+        ed.Destroy;
+        cw.cwriteln( '|w|!k' );
+        kvm.ClrScr;
+      end
+    else writeln( 'unable to load file: ', paramstr( 1 ))
   end.
 #+end_src
-
-

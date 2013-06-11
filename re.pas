@@ -1,7 +1,7 @@
 {$mode objfpc}
 unit org;
 interface uses classes, regexpr;
-intere
+
   type
     priority = ( priA, priB, priC );
     date     = string; //  for now

@@ -19,8 +19,8 @@
     inherited;
     x := 0;
     y := 0;
-    w := vt.windMaxX;
-    h := vt.windMaxY;
+    w := kvm.width;
+    h := kvm.height;
     self.buf := buffer.create;
     topline := self.buf.make_cursor;
     position := self.buf.make_cursor;
@@ -67,19 +67,26 @@
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-  function editor.load( path : string ) : boolean;
+  function editor.Load( path : string ) : boolean;
     var txt : text;
   begin
     result := fs.exists( path );
-    if result then begin
-      //  need to check for io errors in here
-      assign( txt, path );
-      reset( txt );
-      self.parse( txt );
-      close( txt );
-      self.filename := path;
-    end;
+    if result then
+      begin
+        //  need to check for io errors in here
+        assign( txt, path );
+        reset( txt );
+        self.parse( txt );
+        close( txt );
+        self.filename := path;
+      end
+    else message := 'couldn''t load "' + path + '"';
   end; { editor.load }
+
+  procedure editor.NewBuffer;
+    begin
+      self.buf := buffer.Create;
+    end;
 
   function editor.save : boolean;
     var txt: text; node : li.node;
@@ -104,7 +111,7 @@
   end;
 #+end_src
 
-** display interface
+** display
 :PROPERTIES:
 :TS: <2013-01-12 07:39AM>
 :ID: 1oyksgk0lzf0
@@ -226,24 +233,25 @@
 :END:
 #+name: ed/show:main
 #+begin_src pascal
-  begin
-    cwrite('|w|!b|$'); // clrscr
-//todo  fillbox( 1, 1, vt.windmaxx, vt.windmaxy, $0F20 );
-    show_curpos;
-    ypos := 1; // line 0 is for the status / cursor position
+    begin
+      cwrite('|w|!b|$'); // clrscr
+  //todo  fillbox( 1, 1, kvm.maxX, kvm.maxY, $0F20 );
+      show_curpos;
+      ypos := 1; // line 0 is for the status / cursor position
 
-    cur := self.buf.make_cursor;
-    cur.move_to( self.topline );
-    repeat
-      show_node;
-      cur.move_next
-    until ( ypos >= self.h ) or ( cur.at_clasp );
-    while ypos < self.h do begin
-      cwritexy( 0, ypos, '|!K|%' );
-      inc( ypos )
+      cur := self.buf.make_cursor;
+      cur.move_to( self.topline );
+      repeat
+        show_node;
+        cur.move_next
+      until ( ypos >= self.h ) or ( cur.at_clasp );
+      { fill in extra space if the file is too short }
+      while ypos < self.h do begin
+        cwritexy( 0, ypos, '|!K|%' );
+        inc( ypos )
+      end;
+      cur.free;
     end;
-    cur.free;
-  end;
 #+end_src
 *** the 'camera'
 :PROPERTIES:
@@ -308,7 +316,7 @@
   begin
     self.position.to_end;
     self.topline.to_end;
-    for i := vt.windmaxy div 2 downto 1 do
+    for i := kvm.maxY div 2 downto 1 do
       self.topline.move_prev;
   end;
 #+end_src

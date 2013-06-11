@@ -136,13 +136,14 @@ They are expected to display themselves, just like textual nodes.
     message           : string;
     x, y, h, w        : integer;
     topline, position : buf.buffer.cursor;
-    led               : ui.zinput;  // led = Line EDitor
-    constructor create;
-    function load( path : string ) : boolean;
-    function save_as( path : string ) : boolean;
-    function save : boolean;
-    procedure run;
-    procedure show;
+    led               : ui.zinput;  // led = (L)ine (ED)itor
+    constructor Create;
+    procedure NewBuffer;
+    function Load( path : string ) : boolean;
+    function Save_as( path : string ) : boolean;
+    function Save : boolean;
+    procedure Run;
+    procedure Show;
   
    protected { cursor movement commands }
     procedure arrowup;
