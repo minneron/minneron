@@ -12,7 +12,7 @@
 #+begin_src pascal :tangle ".gen/buf.pas" :padline yes :noweb tangle
   {$mode objfpc}{$i xpc.inc}
   unit buf;
-  interface uses xpc, ll, li;
+  interface uses xpc, rings, li;
     <<type:token>>
     <<type:anchor>>
     <<type:buffer>>
@@ -29,7 +29,7 @@
 #+begin_src pascal :tangle ".gen/mn.pas" :noweb tangle
   {$mode objfpc}{$i xpc.inc}
   unit mn;
-  interface uses xpc, ll, li, fs, stri, num, cw, buf, ui, kvm, kbd, cli;
+  interface uses xpc, li, fs, stri, num, cw, buf, ui, kvm, kbd, cli;
     <<type:editor>>
     <<type:span>>
   implementation

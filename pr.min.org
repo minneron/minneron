@@ -328,7 +328,7 @@
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-
+  
   procedure editor.grabLine;
     function to_string : string;
       var first : boolean = true; var node : li.node;
@@ -344,7 +344,7 @@
     begin
       self.led.work := to_string
     end;
-
+  
   procedure editor.arrowup;
   begin
     keepInput;
@@ -352,7 +352,7 @@
     else self.position.move_next; // bounce back when hitting top
     grabLine;
   end;
-
+  
   procedure editor.arrowdown;
   begin
     keepInput;
@@ -360,17 +360,17 @@
     else self.position.move_prev; // bounce back when hitting bottom
     grabLine;
   end;
-
+  
   procedure editor.pageup;
   var c : byte;
   begin for c := 1 to h do arrowup;
   end;
-
+  
   procedure editor.pagedown;
   var c : byte;
   begin for c := 1 to h do arrowdown;
   end;
-
+  
 #+end_src
 
 ** TODO managing the zinput control
