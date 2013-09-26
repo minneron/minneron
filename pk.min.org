@@ -1,4 +1,4 @@
-* package view (module outlines)                                     :pk:min:
+* package view (module outlines)                                :pk:min:
 :PROPERTIES:
 :TS: <2013-01-11 09:40AM>
 :ID: 7vwjky90kzf0
@@ -21,7 +21,7 @@
   end.
 #+end_src
 
-*** MODULE =mn=                                                    :ed:ifc:
+*** MODULE =mn= : minneron object model                         :ed:ifc:
 :PROPERTIES:
 :TS: <2013-01-11 05:09AM>
 :ID: fr5fryb1jzf0
@@ -51,7 +51,7 @@
   program min;
   uses xpc, mn, cw, cx, cli, kvm;
   
-  var ed : editor;
+  var ed : mn.editor;
   begin
     kvm.ClrScr;
     ed := editor.Create;

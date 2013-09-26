@@ -1,15 +1,52 @@
-* requirements view (features/use cases)                             :rq:min:
+#+title: requirements view (features/use cases)
+
+* GOAL Phase I : internal model and console-mode user interface :rq:min:
 :PROPERTIES:
 :TS: <2013-01-11 11:41AM>
 :ID: q5gdnjf0kzf0
 :END:
+
 ** TODO [3/6] general purpose traditional text editor
-*** DONE [0/0] #ED001 bare bones text editor                        :ed001:
+*** DONE editor no longer edits                               :bug:
+:PROPERTIES:
+:TS:       <2013-09-25 09:48PM>
+:ID:       9n47apv0z8g0
+:END:
+**** problem:
+
+- The line editor /appears/ to work, but moving the cursor up or down discards all changes.
+
+- Pressing enter causes the program to lock up completely. (Maybe it's not being compiled with xpc.inc and thus lacks pointer checks?)
+
+**** NOTE . Looks like strnode has no way to update a value.
+:PROPERTIES:
+:TS:       <2013-09-25 10:15PM>
+:ID:       636hiyw0z8g0
+:END:
+
+**** NOTE . Untrue: it was just a casting issue with the 'tokens'.
+:PROPERTIES:
+:TS:       <2013-09-25 11:01PM>
+:ID:       mb3b62z0z8g0
+:END:
+
+I was treating each line as a list of tokens, instead of just rendering the whole line as a single string.
+
+I think this had to do with word wrapping and just preparing for a full tree-based outliner down the line, but in retrospect it doesn't seem like a big deal.
+
+**** NOTE . the freezup was an infinite loop in =zinput.del_to_end=
+:PROPERTIES:
+:TS:       <2013-09-25 11:03PM>
+:ID:       lmc386z0z8g0
+:END:
+Turns out I'd already implemented line splitting, and there was a bug in the part that cleared out the right side of the split when the cursor happened to be on the far left (which is the default).
+
+*** DONE [0/0] #ED001 bare bones text editor                  :ed001:
 :PROPERTIES:
 :TS: <2013-01-03 01:38PM>
 :ID: e526zw719zf0
 :END:
-*** DONE [4/6] #ED002 break / join lines in editor                  :ed002:
+*** DONE [4/6] #ED002 break / join lines in editor            :ed002:
 :PROPERTIES:
 :TS: <2013-01-03 01:40PM>
 :ID: 3kd48z719zf0
@@ -42,7 +79,6 @@ Breaking lines simply means that when the enter key is pressed:
 :TS: <2013-01-07 05:49PM>
 :ID: yux1esi0fzf0
 :END:
-
 Actually, when you delete the newline, the cursor stays in the same place.
 
 **** TODO also join lines when backspacing through newline
@@ -70,24 +106,24 @@ test case:
     chk.that( cur.index = 3, 'cursor index didn''t update after insertion' );
     chk.equal( cur.index, 3 );
 
-*** DONE [0/0] #ED003 save the updated file to disk                 :ed003:
+*** DONE [0/0] #ED003 save the updated file to disk           :ed003:
 :PROPERTIES:
 :TS: <2013-01-03 01:40PM>
 :ID: nfe6rz719zf0
 :END:
 
-*** TODO [0/0] #ED004 word wrap / virtual line mode                 :ed004:
+*** TODO [0/0] #ED004 word wrap / virtual line mode           :ed004:
 :PROPERTIES:
 :TS: <2013-01-03 01:41PM>
 :ID: qr35d0819zf0
 :END:
 
-*** TODO [0/0] #ED005 regions (selections, highlights, etc)         :ed005:
+*** TODO [0/0] #ED005 regions (selections, highlights, etc)   :ed005:
 :PROPERTIES:
 :TS: <2013-01-03 01:41PM>
 :ID: s36461819zf0
 :END:
-*** TODO [0/0] #ED006 cut, copy, paste                              :ed006:
+*** TODO [0/0] #ED006 cut, copy, paste                        :ed006:
 :PROPERTIES:
 :TS: <2013-01-03 01:42PM>
 :ID: xdmg02819zf0
@@ -122,7 +158,7 @@ test case:
 :TS: <2013-01-11 12:15PM>
 :ID: bj8bk5h0kzf0
 :END:
-*** TODO [0/0] #ED011 tabular blocks                                :ed011:
+*** TODO [0/0] #ED011 tabular blocks                          :ed011:
 :PROPERTIES:
 :TS: <2013-01-03 01:44PM>
 :ID: 0bbcs5819zf0
@@ -173,10 +209,44 @@ test case:
 :TS:       <2012-11-13 11:42AM>
 :ID:       n7z7sjq0exf0
 :END:
-** TODO [0/0] a document command language                              :cmd:
+** TODO [0/0] a document command language                      :cmd:
 :PROPERTIES:
 :TS: <2013-01-10 07:42AM>
 :ID: atnh8y21izf0
 :END:
 
 
+* GOAL Phase II : a /graphical/ ui for web/tablet/gui/etc (retroterm)
+** [1/1] implemented features --------
+*** DONE A way to load and save over HTTP                     :storage:
+**** for now : /amoeba/
+**** alternatives
+- InstaCRUD
+- blockstore device
+
+**** webdav notes
+***** backend : wsgidav (as pure file server for now)
+http://docs.wsgidav.googlecode.com/hg/html/index.html
+http://docs.wsgidav.googlecode.com/hg/html/run-configure.html
+There's also drupal and/or whatever solomon uses.
+
+***** frontend
+https://github.com/roothybrid7/xhrdavclient
+
+** [0/4] solved but not implemented --
+*** TODO A way to authenticate to the system for write access.
+Solution : http authentication + ajax / webdav
+*** TODO A way to mark items as being public or private.
+Solution : unix file properties do a good job of this already.
+
+*** TODO Morphic-style objects, using vm + svg/canvas
+**** TODO fix ngaro.js
+**** TODO next up, a multitasking virtual machine.
+Using retro would need some tweaks here.
+**** TODO a way to make the host environment self-modifying
+(livecoding the thing)
+
+*** TODO Serialize morphs by storing state data in a DOM.     :morphs:storage:
+**** HTML
+**** SVG content
+**** Rendering Instructions

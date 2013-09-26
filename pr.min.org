@@ -15,18 +15,18 @@
 #+name: @imp:ed
 #+begin_src pascal
   constructor editor.create;
-  begin
-    inherited;
-    x := 0;
-    y := 0;
-    w := kvm.width;
-    h := kvm.height;
-    self.buf := buffer.create;
-    topline := self.buf.make_cursor;
-    position := self.buf.make_cursor;
-    filename := '';
-    message  := 'welcome to minneron.';
-  end;
+    begin
+      inherited;
+      x := 0;
+      y := 0;
+      w := kvm.width;
+      h := kvm.height;
+      self.buf := buffer.create;
+      topline := self.buf.make_cursor;
+      position := self.buf.make_cursor;
+      filename := '';
+      message  := 'welcome to minneron.';
+    end;
 #+end_src
 
 ** «tokenizer» interface
@@ -38,26 +38,29 @@
 #+begin_src pascal
 
   function editor.wrap( s : string ) : li.strnode;
-  begin
-    result := li.strnode.create( s )
-  end;
+    begin
+      result := li.strnode.create( s )
+    end;
 
   procedure editor.parse( var txt : text );
-  var n : cardinal; line : string; words : nodelist;
-  begin
-    while not eof( txt ) do begin
-      readln( txt, line );
-      words := nodelist.create;
-      if length( line ) > 0 then
-        for n := 1 to stri.nwords( line ) do begin
-          log.debug([ 'word ', n, ' : ', stri.wordn( line, n ) ]);
-          words.append( wrap( stri.wordn( line, n )));
-        end;
-      self.buf.append( li.lisnode.create( words ));
-      log.debug([ 'words: ', n, ' line: "' + line + '" length: ', length( line ) ]);
+    var n : cardinal; line : string; words : nodelist;
+    begin
+      while not eof( txt ) do begin
+        readln( txt, line );
+        self.buf.append( li.strnode.create( line ));
+{
+        words := nodelist.create;
+        if length( line ) > 0 then
+          for n := 1 to stri.nwords( line ) do begin
+            log.debug([ 'word ', n, ' : ', stri.wordn( line, n ) ]);
+            words.append( wrap( stri.wordn( line, n )));
+          end;
+        self.buf.append( li.lisnode.create( words ));
+        log.debug([ 'words: ', n, ' line: "' + line + '" length: ', length( line ) ]);
+}
+      end;
+      // li.print( lisnode.create( self.buf ));
     end;
-    // li.print( lisnode.create( self.buf ));
-  end;
 #+end_src
 
 ** disk interface
@@ -68,47 +71,48 @@
 #+name: @imp:ed
 #+begin_src pascal
   function editor.Load( path : string ) : boolean;
-    var txt : text;
-  begin
-    result := fs.exists( path );
-    if result then
-      begin
-        //  need to check for io errors in here
-        assign( txt, path );
-        reset( txt );
-        self.parse( txt );
-        close( txt );
-        self.filename := path;
-      end
-    else message := 'couldn''t load "' + path + '"';
-  end; { editor.load }
+      var txt : text;
+    begin
+      result := fs.exists( path );
+      if result then
+        begin
+          //  need to check for io errors in here
+          assign( txt, path );
+          reset( txt );
+          self.parse( txt );
+          close( txt );
+          self.filename := path;
+        end
+      else message := 'couldn''t load "' + path + '"';
+    end; { editor.load }
 
   procedure editor.NewBuffer;
-    begin
-      self.buf := buffer.Create;
-    end;
+      begin
+        self.buf := buffer.Create;
+      end;
 
   function editor.save : boolean;
-    var txt: text; node : li.node;
-  begin
-    assign( txt, self.filename );
-    rewrite( txt );
-    for node in self.buf do begin
-      if node.kind = KSTR then writeln( txt, (node as strnode).str );
+      var txt: text; node : li.node;
+    begin
+      assign( txt, self.filename );
+      rewrite( txt );
+      for node in self.buf do begin
+        if node.kind = KSTR then writeln( txt, (node as strnode).str );
+      end;
+      close( txt );
+      result := true; // TODO error checking
+      message := filename + ' saved.';
     end;
-    close( txt );
-    result := true; // TODO error checking
-    message := filename + ' saved.';
-  end;
 
   function editor.save_as( path : string ) : boolean;
-    var oldname : string;
-  begin
-    oldname := self.filename;
-    self.filename := path;
-    result := self.save;
-    if not result then self.filename := oldname
-  end;
+      var oldname : string;
+    begin
+      oldname := self.filename;
+      self.filename := path;
+      result := self.save;
+      if not result then self.filename := oldname
+    end;
+
 #+end_src
 
 ** display
@@ -127,13 +131,13 @@
     var
       ypos : cardinal;
       cur  : buffer.cursor;
-    <<ed/show/curpos>>
-    <<ed/show/gutter>>
-    <<ed/show/edit>>
-    <<ed/show/node>>
-  begin
-    <<ed/show:main>>
-  end;
+      <<ed/show/curpos>>
+      <<ed/show/gutter>>
+      <<ed/show/edit>>
+      <<ed/show/node>>
+    begin
+      <<ed/show:main>>
+    end;
 #+end_src
 **** «ed/show/curpos»
 :PROPERTIES:
@@ -204,6 +208,10 @@
   begin
     show_gutter( flushrt( n2s( cur.index ), 3, ' ' ));
     if cur.index = position.index then show_edit
+    else if cur.value is li.strnode then
+      with cur.value as li.strnode do begin
+        cwrite(str)
+      end
     else if cur.value is li.lisnode then
       for node in (cur.value as li.lisnode).lis do
         begin
@@ -266,24 +274,24 @@
 #+name: @imp:ed
 #+begin_src pascal
   procedure editor.updatecamera;
-  var screenline : word;
-  begin
-    assert(self.topline.index <= self.position.index );
-    screenline := self.position.index - self.topline.index;
-    if ( screenline < 5 ) and ( self.topline.index > 1 ) then
-      begin
-        self.topline.move_prev;
-        //  scrolldown1(1,80,y1,y2,nil);
-        //  scrolldown1(1,80,14,25,nil);
-      end
-    else if ( screenline > self.h - 5 )
-      and ( self.topline.index < self.buf.length ) then
-      begin
-        self.topline.move_next;
-        //  scrollup1(1,80,y1,y2,nil);
-        //  scrollup1(1,80,14,25,nil);
-      end
-  end;
+    var screenline : word;
+    begin
+      assert(self.topline.index <= self.position.index );
+      screenline := self.position.index - self.topline.index;
+      if ( screenline < 5 ) and ( self.topline.index > 1 ) then
+        begin
+          self.topline.move_prev;
+          //  scrolldown1(1,80,y1,y2,nil);
+          //  scrolldown1(1,80,14,25,nil);
+        end
+      else if ( screenline > self.h - 5 )
+        and ( self.topline.index < self.buf.length ) then
+        begin
+          self.topline.move_next;
+          //  scrollup1(1,80,y1,y2,nil);
+          //  scrollup1(1,80,14,25,nil);
+        end
+    end;
 #+end_src
 
 ** cursor movement interface
@@ -328,49 +336,58 @@
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-  
+
   procedure editor.grabLine;
     function to_string : string;
-      var first : boolean = true; var node : li.node;
+      var first : boolean = true; var this, node : li.node;
       begin
         result := '';
-        for node in (self.position.value as li.lisnode).lis do
-        begin
-          if first then first := false
-          else result += ' ';
-          result += (node as li.strnode).str;
+        this := self.position.value;
+        case this.kind of
+          KSTR :
+             result := (this as li.strnode).str;
+          KLIS :
+            for node in (this as li.lisnode).lis do
+              begin
+                if first then first := false
+                else result += ' ';
+                result += (node as li.strnode).str;
+              end
+          else pass
         end
       end;
     begin
       self.led.work := to_string
     end;
-  
+
   procedure editor.arrowup;
-  begin
-    keepInput;
-    if self.position.move_prev then moveInput
-    else self.position.move_next; // bounce back when hitting top
-    grabLine;
-  end;
-  
+    begin
+      keepInput;
+      if self.position.move_prev then moveInput
+      else self.position.move_next; // bounce back when hitting top
+      grabLine;
+    end;
+
   procedure editor.arrowdown;
-  begin
-    keepInput;
-    if self.position.move_next then moveInput
-    else self.position.move_prev; // bounce back when hitting bottom
-    grabLine;
-  end;
-  
+    begin
+      keepInput;
+      if self.position.move_next then moveInput
+      else self.position.move_prev; // bounce when hitting bottom
+      grabLine;
+    end;
+
   procedure editor.pageup;
-  var c : byte;
-  begin for c := 1 to h do arrowup;
-  end;
-  
+    var c : byte;
+    begin
+      for c := 1 to h do arrowup;
+    end;
+
   procedure editor.pagedown;
-  var c : byte;
-  begin for c := 1 to h do arrowdown;
-  end;
-  
+    var c : byte;
+    begin
+      for c := 1 to h do arrowdown;
+    end;
+
 #+end_src
 
 ** TODO managing the zinput control
@@ -380,11 +397,16 @@
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-  procedure editor.keepInput;
-  begin
-    // update the edited token
-    // TODO : self.position.value.update( led.value );
-  end;
+   procedure editor.keepInput;
+   begin
+     // update the edited token
+     if self.position.value is strnode then
+     with self.position.value as strnode do str := led.value
+     else begin
+       message := '|!k|R|%cursor is looking at a: ' +
+                  self.position.value.classname;
+     end
+   end;
 #+end_src
 
 #+name: @imp:ed
@@ -405,37 +427,39 @@
 #+begin_src pascal
   procedure editor.run;
     var done : boolean = false; ch : char;
-  begin
-    xpc.log.debug([ 'about to enter create' ]);
-    self.led := ui.zinput.create;
-    xpc.log.debug([ 'about to go home' ]);
-    self.home;
-    xpc.log.debug([ 'about to enter loop' ]);
-    repeat
-      show;
-      case kbd.readkey(ch) of
-        ^C : done := true;
-        ^N : arrowdown;
-        ^P : arrowup;
-        ^M : newline;
-        ^D : delete;
-        ^S : save;
-        ^V : pagedown;
-        ^U : pageup;
-        ^E : _end;
-        #0 : case kbd.readkey(ch) of
-                    #72 : arrowup; // when you press the UP arrow!
-                    #80 : arrowdown; // when you press the DOWN arrow!
-                    #71 : home;
-                    #79 : _end;
-                    #73 : pageup;
-                    #81 : pagedown;
-                    else led.handlestripped( ch ); led.show;
-                  end;
-        else led.handle( ch ); led.show;
-      end
-    until done;
-  end;
+    begin
+      xpc.log.debug([ 'about to enter create' ]);
+      self.led := ui.zinput.create;
+      xpc.log.debug([ 'about to go home' ]);
+      self.home;
+      xpc.log.debug([ 'about to enter loop' ]);
+      repeat
+        show;
+        case kbd.readkey(ch) of
+          ^C : done := true;
+          ^N : arrowdown;
+          ^P : arrowup;
+          ^M : newline;
+          ^D : delete;
+          ^S : save;
+          ^V : pagedown;
+          ^U : pageup;
+          ^E : _end;
+          #0 : case kbd.readkey(ch) of
+                      #72 : arrowup; // when you press the UP arrow!
+                      #80 : arrowdown; // when you press the DOWN arrow!
+                      #71 : home;
+                      #79 : _end;
+                      #73 : pageup;
+                      #81 : pagedown;
+                      ^M  : newline;
+                      else led.handlestripped( ch ); led.show;
+                    end;
+          else led.handle( ch ); led.show;
+        end;
+        led.isdone := false; // TODO: split lines on ^M/^J
+      until done;
+    end;
 #+end_src
 
 ** multi-line editor commands
@@ -447,26 +471,25 @@
 #+name: @imp:ed
 #+begin_src pascal
   procedure editor.newline;
-  begin
-    position.inject_next( strnode.create( led.str_to_end ));
-    led.del_to_end;
-    arrowdown;
-    led.to_start
-  end; { editor.newline }
+    begin
+      position.inject_next( strnode.create( led.str_to_end ));
+      led.del_to_end;
+      arrowdown;
+      led.to_start;
+    end; { editor.newline }
 
   procedure editor.delete;
     var cur : buffer.cursor;
-  begin
-    if led.at_end then begin
-      if not position.at_end then begin
-        cur := buf.make_cursor;
-        cur.move_to(position);
-        cur.move_next;
-        led.work += li.strnode( cur.value ).str;
-        position.delete_next;
-        cur.free;
-      end
-    end
-    else led.del
-  end;
+    begin
+      if led.at_end then begin
+        if not position.at_end then begin
+          cur := buf.make_cursor;
+          cur.move_to(position);
+          cur.move_next;
+          led.work += li.strnode( cur.value ).str;
+          position.delete_next;
+          cur.free;
+        end
+      end else led.del
+    end;
 #+end_src

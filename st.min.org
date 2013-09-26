@@ -128,6 +128,7 @@ They are expected to display themselves, just like textual nodes.
 :TS: <2013-01-11 11:09AM>
 :ID: zy54y2e0kzf0
 :END:
+**** editor > the basics
 #+name: type:editor
 #+begin_src pascal
   type editor = class
@@ -144,7 +145,11 @@ They are expected to display themselves, just like textual nodes.
     function Save : boolean;
     procedure Run;
     procedure Show;
-  
+#+end_src
+
+**** editor > cursor movement
+#+name: type:editor
+#+begin_src pascal
    protected { cursor movement commands }
     procedure arrowup;
     procedure arrowdown;
@@ -152,11 +157,19 @@ They are expected to display themselves, just like textual nodes.
     procedure _end;
     procedure pageup;
     procedure pagedown;
-  
+#+end_src
+
+**** editor > line manipulation
+#+name: type:editor
+#+begin_src pascal
    protected { line manipulation commands }
     procedure newline;
     procedure delete;
-  
+#+end_src
+
+**** editor > misc private methods
+#+name: type:editor
+#+begin_src pascal
    private
     procedure updateCamera;
     procedure grabLine;
