@@ -11,7 +11,8 @@ ROOT      = ../
 # compiler paths
 FPC_PATH  = fpc
 RTL       = -Fu~/f/rtl/units/x86_64-linux
-FPC       = $(FPC_PATH) $(RTL) -gl -B -Fu$(GEN) -Fu$(XPL) -Fi$(XPL) -Fu./lib -FE$(GEN) -O-
+FPC       = $(FPC_PATH) $(RTL) -gl -B -Fu$(GEN) -Fi$(GEN) \
+            -Fu$(XPL) -Fi$(XPL) -Fu./lib -FE$(GEN) -O-
 FCL-PAS = $(FCL)/fcl-passrc
 TANGLE    = ./etc/tangle.el
 
@@ -40,9 +41,13 @@ clean:
 	delp $(GEN)
 	rm -f min .tangled
 
-test: #clean .tangled
-	@echo 'no tests yet'
+$(GEN)/run-tests.pas:
+	cd $(GEN); ln -F -s $(XPL)/../test/run-tests.pas
 
+test: always
+	@cd test; python $(XPL)/../test/gen-tests.py ../$(GEN)
+	$(FPC) -Mobjfpc -vn $(GEN)/run-tests.pas -Fu./test -otest-min
+	$(GEN)/test-min
 
 build : init
 
@@ -61,3 +66,4 @@ lib/xpl/Makefile:
 #obtangle:
 #	@$(FPC) obtangle.pas
 
+always: .PHONY
