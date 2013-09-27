@@ -133,7 +133,7 @@
       cur  : buffer.cursor;
       <<ed/show/curpos>>
       <<ed/show/gutter>>
-      <<ed/show/edit>>
+      <<ed/show/PlaceEditor>>
       <<ed/show/node>>
     begin
       <<ed/show:main>>
@@ -176,9 +176,9 @@
 :TS: <2013-01-13 04:34AM>
 :ID: de5ca0s0mzf0
 :END:
-#+name: ed/show/edit
+#+name: ed/show/PlaceEditor
 #+begin_src pascal
-  procedure show_edit;
+  procedure PlaceEditor;
   begin
     { This simply positions the input widget. }
     with self.led do begin
@@ -187,9 +187,6 @@
       tcol := $080f;
       dlen := cw.max.x - cw.cur.x
     end;
-    // debug: clear to eol w/blue bg to show where control should be
-    // cwrite( '|!b|%' +  line + '|!k' );
-    led.show;
   end;
 #+end_src
 **** «ed/show/node» { lines as lists implementation }
@@ -207,10 +204,11 @@
 
   begin
     show_gutter( flushrt( n2s( cur.index ), 3, ' ' ));
-    if cur.index = position.index then show_edit
+    if cur.index = position.index then PlaceEditor
     else if cur.value is li.strnode then
       with cur.value as li.strnode do begin
-        cwrite(str)
+        cwrite(str);
+        cwrite( '|!k|%' ); // clreol
       end
     else if cur.value is li.lisnode then
       for node in (cur.value as li.lisnode).lis do
@@ -223,7 +221,7 @@
           {-- word wrapping --}
           if length( tok ) < d2re then cwrite( tok )
           else begin
-            cwrite( '|%' ); // clreol
+            cwrite( '|!k|%' ); // clreol
             inc( ypos );
             show_gutter( '   ' );
             { truncate, in case token is wider than the whole editor }
@@ -242,7 +240,8 @@
 #+name: ed/show:main
 #+begin_src pascal
     begin
-      cwrite('|w|!b|$'); // clrscr
+      HideCursor;
+      cwrite('|w|!b');
   //todo  fillbox( 1, 1, kvm.maxX, kvm.maxY, $0F20 );
       show_curpos;
       ypos := 1; // line 0 is for the status / cursor position
@@ -259,6 +258,8 @@
         inc( ypos )
       end;
       cur.free;
+      led.show;
+      // ShowCursor;
     end;
 #+end_src
 *** the 'camera'
@@ -444,7 +445,6 @@
           ^S : save;
           ^V : pagedown;
           ^U : pageup;
-          ^E : _end;
           #0 : case kbd.readkey(ch) of
                       #72 : arrowup; // when you press the UP arrow!
                       #80 : arrowdown; // when you press the DOWN arrow!
