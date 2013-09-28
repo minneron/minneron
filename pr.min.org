@@ -10,9 +10,9 @@
 #+name: @imp:TBuffer
 #+begin_src pascal
 
-  constructor TBuffer.Create;
+  constructor TBuffer.Create( w, h : cardinal );
     begin
-      inherited Create;
+      inherited Create( w, h );
       nodes := li.nodelist.Create;
     end;
 
@@ -89,7 +89,7 @@
       y := 0;
       w := kvm.width;
       h := kvm.height;
-      self.buf := TBuffer.create;
+      self.buf := TBuffer.create(w, h - 1);
       topline := 0;
       position := 0;
       filename := '';

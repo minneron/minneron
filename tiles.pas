@@ -20,10 +20,18 @@ type
   // a 2d rectangle made of strings
   ITextTile = interface (ITile)
     function GetColorString( i : cardinal ) : string;
-    function GetPlainString( i : cardinal ) : string;
-    procedure SetPlainString( i : cardinal; s : string );
-    property plainStrings[ i : cardinal ] : string
-      read GetPlainString write SetPlainString;
+    function  GetLine( i : cardinal ) : string;
+    procedure SetLine( i : cardinal; s : string );
+    procedure InsLine( i : cardinal; s : string );
+    procedure DelLine( i :  cardinal );
+    procedure AddLine( s : string );
+    // the length is the total number of lines, regardless of
+    // how many are visible at the moment.
+    // !! this probably needs tobe broken into a sub-interface
+    function GetLength : cardinal;
+    property length : cardinal read GetLength;
+    property lines[ i : cardinal ] : string
+      read GetLine write SetLine; default;
     property colorStrings[ i : cardinal ] : string
       read GetColorString;
   end;
@@ -42,14 +50,16 @@ type
     end;
 
   // Abstract TextTile with a GetColorString that
-  // delegates to GetPlainString
+  // delegates to GetLine
   TTextTile = class (TTile, ITextTile)
     public { ITextTile }
       function GetColorString( i : cardinal ) : string; virtual;
-      function GetPlainString( i : cardinal ) : string;
-        virtual; abstract;
-      procedure SetPlainString( i : cardinal; s : string );
-        virtual; abstract;
+      function GetLine( i : cardinal ) : string; virtual; abstract;
+      function GetLength : cardinal; virtual; abstract;
+      procedure SetLine( i : cardinal; s : string ); virtual; abstract;
+      procedure InsLine( i : cardinal; s : string ); virtual; abstract;
+      procedure DelLine( i :  cardinal ); virtual; abstract;
+      procedure AddLine( s : string ); virtual; abstract;
     end;
 
 implementation
@@ -87,7 +97,7 @@ procedure TTile.SetH( value : cardinal );
 
 function TTextTile.GetColorString( i : cardinal ) : string;
   begin
-    result := GetPlainString(i)
+    result := GetLine(i)
   end;
 
 initialization

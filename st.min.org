@@ -27,18 +27,18 @@ A =TBuffer= is essentially a composite version of =ITextTile=.
 #+name: type:TBuffer
 #+begin_src pascal
   type
-    TBuffer = class
+    TBuffer = class (TTextTile)
       private
         nodes : li.nodelist;
         type cursor = li.nodelist.cursor;
       public
-        constructor Create;
-        function  GetLength : cardinal;
-        function  GetLine(i:cardinal) : string;
-        procedure SetLine(i:cardinal; s:string);
-        procedure InsLine(i:cardinal; s:string);
-        procedure AddLine(s:string);
-        procedure DelLine(i:cardinal);
+        constructor Create( w, h : cardinal );
+        function  GetLength : cardinal; override;
+        function  GetLine(i:cardinal) : string; override;
+        procedure SetLine(i:cardinal; s:string); override;
+        procedure InsLine(i:cardinal; s:string); override;
+        procedure AddLine(s:string); override;
+        procedure DelLine(i:cardinal); override;
         property length : cardinal read GetLength;
         property lines[i:cardinal]:string
           read GetLine write SetLine; default;
@@ -148,7 +148,7 @@ They are expected to display themselves, just like textual nodes.
 #+name: type:editor
 #+begin_src pascal
   type editor = class
-    buf               : buf.TBuffer;
+    buf               : ITextTile;
     filename          : string;
     message           : string;
     x, y, h, w        : integer;

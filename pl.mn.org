@@ -54,7 +54,7 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-09-28 01:08PM>
 :ID:       68x2qc5039g0
 :END:
-*** TODO have =TBuffer= implement =ITextTile=
+*** DONE have =TBuffer= implement =ITextTile=
 :PROPERTIES:
 :TS:       <2013-09-28 12:40PM>
 :ID:       z0g3a24039g0

@@ -8,7 +8,7 @@ var
 procedure setup;
   begin
     if assigned(b) then b.Free;
-    b := TBuffer.Create;
+    b := TBuffer.Create(64, 32);
   end;
   
 procedure test_arraylike;
