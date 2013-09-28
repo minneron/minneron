@@ -44,9 +44,9 @@ clean:
 $(GEN)/run-tests.pas:
 	cd $(GEN); ln -F -s $(XPL)/../test/run-tests.pas
 
-test: always
+test: always min $(GEN)/run-tests.pas
 	@cd test; python $(XPL)/../test/gen-tests.py ../$(GEN)
-	$(FPC) -Mobjfpc -vn $(GEN)/run-tests.pas -Fu./test -otest-min
+	$(FPC) -Mobjfpc -vn -gl -B $(GEN)/run-tests.pas -Fu./test -otest-min
 	$(GEN)/test-min
 
 build : init
