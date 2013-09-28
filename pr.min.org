@@ -21,18 +21,16 @@
       result := nodes.Length;
     end;
 
-  function TBuffer.make_cursor : cursor;
-    begin
-      result := nodes.make_cursor;
-    end;
-
   function TBuffer.GetLine(i:cardinal) : string;
     var n : cardinal; c : cursor;
     begin
       c := nodes.make_cursor; c.to_top;
       for n := 1 to i do c.movenext;
       result := (c.current as li.strnode).str
-    end;
+   end;
+
+  { cutting and pasting here but i'm about to switch over
+    to rings that already has this cursor stuff, so i don't care }
 
   procedure TBuffer.SetLine(i:cardinal; s:string);
     var n : cardinal; c : cursor;
@@ -48,11 +46,26 @@
     end;
 
   procedure TBuffer.InsLine(i:cardinal; s:string);
+    var n : cardinal; c : cursor;
     begin
+      c := nodes.make_cursor; c.to_top;
+      for n := 1 to i do c.movenext;
+      c.inject_next(li.strnode.create(s))
     end;
 
   procedure TBuffer.DelLine(i:cardinal);
+    var n : cardinal; c : cursor;
     begin
+      c := nodes.make_cursor;
+      if i = 0 then
+        c.delete_next
+      else
+        begin
+          c.to_top;
+          for n := 1 to i do c.movenext;
+          c.move_prev;
+          c.delete_next;
+        end;
     end;
 
 #+end_src
@@ -76,9 +89,9 @@
       y := 0;
       w := kvm.width;
       h := kvm.height;
-    self.buf := TBuffer.create;
-      topline := self.buf.make_cursor;
-      position := self.buf.make_cursor;
+      self.buf := TBuffer.create;
+      topline := 0;
+      position := 0;
       filename := '';
       message  := 'welcome to minneron.';
     end;
@@ -140,20 +153,18 @@
         end
       else message := 'couldn''t load "' + path + '"';
     end; { editor.load }
-
+  
   function editor.save : boolean;
-      var txt: text; node : li.node;
+      var txt: text; i : cardinal;
     begin
       assign( txt, self.filename );
       rewrite( txt );
-      for node in self.buf do begin
-        if node.kind = KSTR then writeln( txt, (node as strnode).str );
-      end;
+      for i := 0 to self.buf.length -1 do writeln(txt, buf[i]);
       close( txt );
       result := true; // TODO error checking
       message := filename + ' saved.';
     end;
-
+  
   function editor.save_as( path : string ) : boolean;
       var oldname : string;
     begin
@@ -162,7 +173,7 @@
       result := self.save;
       if not result then self.filename := oldname
     end;
-
+  
 #+end_src
 
 ** display
@@ -180,10 +191,11 @@
   procedure editor.show;
     var
       ypos : cardinal;
-      cur  : TBuffer.cursor;
+      line : cardinal;
       <<ed/show/curpos>>
       <<ed/show/gutter>>
       <<ed/show/PlaceEditor>>
+      <<ed/show/line>>
       <<ed/show/node>>
     begin
       <<ed/show:main>>
@@ -200,7 +212,7 @@
   begin
     cwritexy( 0, 0,
               '|!b' +
-              '|B[|C' + flushrt( n2s( self.position.index ), 6, '.' ) +
+              '|B[|C' + flushrt( n2s( self.position ), 6, '.' ) +
               '|w/|c' + flushrt( n2s( self.buf.length ), 6, '.' ) +
               '|B]|Y ' + self.message +
            '|%' );
@@ -217,7 +229,7 @@
   procedure show_gutter( s : string );
     var color : char = 'c';
   begin
-    if cur.index = position.index then color := 'C';
+    if line = position then color := 'C';
     cwritexy( 0, ypos, '|k|!' + color + s + '|!k|w' );
   end;
 #+end_src
@@ -239,7 +251,15 @@
     end;
   end;
 #+end_src
-**** «ed/show/node» { lines as lists implementation }
+**** «ed/show/line»
+#+name: ed/show/line
+#+begin_src pascal
+  procedure show_line(s:string);
+    begin
+      cwrite(s + '|!k|%' );
+    end;
+#+end_src
+**** TODO «ed/show/node» { move =show_node= logic to =TBuffer= }
 :PROPERTIES:
 :TS: <2013-01-13 04:48AM>
 :ID: 51l0hns0mzf0
@@ -249,8 +269,7 @@
 
   procedure show_string(node:li.strnode);
     begin
-      cwrite(node.str);
-      cwrite( '|!k|%' ); // clreol
+      show_line(node.str)
     end;
 
   procedure show_list(node:li.lisnode);
@@ -283,7 +302,6 @@
       if node is li.strnode then show_string(node as li.strnode)
       else if node is li.lisnode then show_list(node as li.lisnode)
     end;
-
 #+end_src
 
 **** «ed/show:main»
@@ -296,24 +314,22 @@
     begin
       HideCursor;
       cwrite('|w|!b');
-  //todo  fillbox( 1, 1, kvm.maxX, kvm.maxY, $0F20 );
+      //todo  fillbox( 1, 1, kvm.maxX, kvm.maxY, $0F20 );
       show_curpos;
       ypos := 1; // line 0 is for the status / cursor position
 
-      cur := self.buf.make_cursor;
-      cur.move_to( self.topline );
+      line := topline;
       repeat
-        show_gutter( flushrt( n2s( cur.index ), 3, ' ' ));
-        if cur.index = position.index then PlaceEditor
-        else show_node(cur.value);
-        inc( ypos ); cur.move_next;
-      until ( ypos >= self.h ) or ( cur.at_clasp );
+        show_gutter( flushrt( n2s( line ), 3, ' ' ));
+        if line = position then PlaceEditor
+        else show_line(buf[line]);
+        inc( ypos ); inc(line)
+      until ( ypos >= self.h ) or ( line = buf.length );
       { fill in extra space if the file is too short }
       while ypos < self.h do begin
         cwritexy( 0, ypos, '|!K|%' );
         inc( ypos )
       end;
-      cur.free;
       led.show;
       // ShowCursor;
     end;
@@ -333,18 +349,18 @@
   procedure editor.updatecamera;
     var screenline : word;
     begin
-      assert(self.topline.index <= self.position.index );
-      screenline := self.position.index - self.topline.index;
-      if ( screenline < 5 ) and ( self.topline.index > 1 ) then
+      assert(topline <= position );
+      screenline := position - topline;
+      if ( screenline < 5 ) and ( topline > 1 ) then
         begin
-          self.topline.move_prev;
+          dec(topline)
           //  scrolldown1(1,80,y1,y2,nil);
           //  scrolldown1(1,80,14,25,nil);
         end
       else if ( screenline > self.h - 5 )
-        and ( self.topline.index < self.buf.length ) then
+        and ( self.topline < self.buf.length ) then
         begin
-          self.topline.move_next;
+          inc( topline );
           //  scrollup1(1,80,y1,y2,nil);
           //  scrollup1(1,80,14,25,nil);
         end
@@ -368,21 +384,17 @@
   procedure editor.home;
   begin
     if self.buf.length = 0 then exit;
-    position.to_top;
-    topline.to_top;
-    if position.value.inheritsfrom( li.strnode ) then
-      led.work := li.strnode( position.value ).str
-    else
-      led.work := '<<marker>>';
+    position := 0;
+    topline := 0;
+    led.work := buf[ 0 ];
   end;
 
   procedure editor._end;
     var i : byte;
   begin
-    self.position.to_end;
-    self.topline.to_end;
-    for i := kvm.maxY div 2 downto 1 do
-      self.topline.move_prev;
+    position := self.buf.length - 1;
+    topline := position;
+    for i := kvm.maxY div 2 downto 1 do dec(topline);
   end;
 #+end_src
 
@@ -395,6 +407,7 @@
 #+begin_src pascal
 
   procedure editor.grabLine;
+   { TODO: see if this code belongs in TBuffer. Else delete it.
     function to_string : string;
       var first : boolean = true; var this, node : li.node;
       begin
@@ -413,23 +426,30 @@
           else pass
         end
       end;
+     }
     begin
-      self.led.work := to_string
+      self.led.work := self.buf[self.position]
     end;
 
   procedure editor.arrowup;
     begin
       keepInput;
-      if self.position.move_prev then moveInput
-      else self.position.move_next; // bounce back when hitting top
+      if self.position > 0 then
+        begin
+          dec(self.position);
+          moveInput;
+        end;
       grabLine;
     end;
 
   procedure editor.arrowdown;
     begin
       keepInput;
-      if self.position.move_next then moveInput
-      else self.position.move_prev; // bounce when hitting bottom
+      if self.position + 1 < self.buf.length then
+        begin
+          inc(self.position);
+          moveInput;
+        end;
       grabLine;
     end;
 
@@ -454,16 +474,10 @@
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-   procedure editor.keepInput;
-   begin
-     // update the edited token
-     if self.position.value is strnode then
-     with self.position.value as strnode do str := led.value
-     else begin
-       message := '|!k|R|%cursor is looking at a: ' +
-                  self.position.value.classname;
-     end
-   end;
+  procedure editor.keepInput;
+  begin
+    buf[position] := led.value
+  end;
 #+end_src
 
 #+name: @imp:ed
@@ -528,24 +542,20 @@
 #+begin_src pascal
   procedure editor.newline;
     begin
-      position.inject_next( strnode.create( led.str_to_end ));
+      buf.InsLine(position, led.str_to_end );
       led.del_to_end;
       arrowdown;
       led.to_start;
-    end; { editor.newline }
+    end;
 
   procedure editor.delete;
-    var cur : TBuffer.cursor;
     begin
-      if led.at_end then begin
-        if not position.at_end then begin
-          cur := buf.make_cursor;
-          cur.move_to(position);
-          cur.move_next;
-          led.work += li.strnode( cur.value ).str;
-          position.delete_next;
-          cur.free;
+      if led.at_end and (position + 1 < buf.length) then
+        begin
+          led.work += buf.GetLine(position+1);
+          buf.DelLine(position+1);
         end
-      end else led.del
+      else led.del
     end;
+
 #+end_src

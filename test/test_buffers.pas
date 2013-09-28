@@ -19,6 +19,17 @@ procedure test_arraylike;
     chk.equal('abc', b[0]);
   end;
 
+procedure test_delete;
+  begin
+    b.AddLine('abc');
+    b.AddLine('efg');
+    b.AddLine('hig');
+    b.DelLine(1);
+    chk.equal(2, b.length);
+    chk.equal('abc', b[0]);
+    chk.equal('hig', b[1]);
+  end;
+
 finalization
   if assigned(b) then b.Free;
 end.
