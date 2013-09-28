@@ -27,8 +27,24 @@ A =TBuffer= is essentially a composite version of =ITextTile=.
 #+name: type:TBuffer
 #+begin_src pascal
   type
-    TBuffer = class(li.nodelist)
+    TBuffer = class ( li.nodelist )
+    // type cursor = li.nodelist.cursor;
+    protected
+      nodes : li.nodelist;
+    public
       constructor Create;
+
+      function make_cursor : cursor; reintroduce; deprecated;
+
+      function  GetLength : cardinal;
+      function  GetLine(i:cardinal) : string;
+      procedure SetLine(i:cardinal; s:string);
+      procedure InsLine(i:cardinal; s:string);
+      procedure AddLine(s:string);
+      procedure DelLine(i:cardinal);
+      property length : cardinal read GetLength;
+      property lines[i:cardinal]:string
+        read GetLine write SetLine; default;
     end;
 #+end_src
 

@@ -9,10 +9,52 @@
 :END:
 #+name: @imp:TBuffer
 #+begin_src pascal
+
   constructor TBuffer.Create;
     begin
       inherited Create;
+      nodes := li.nodelist.Create;
     end;
+
+  function TBuffer.GetLength : cardinal;
+    begin
+      result := nodes.Length;
+    end;
+
+  function TBuffer.make_cursor : cursor;
+    begin
+      result := nodes.make_cursor;
+    end;
+
+  function TBuffer.GetLine(i:cardinal) : string;
+    var n : cardinal; c : cursor;
+    begin
+      c := nodes.make_cursor; c.to_top;
+      for n := 1 to i do c.movenext;
+      result := (c.current as li.strnode).str
+    end;
+
+  procedure TBuffer.SetLine(i:cardinal; s:string);
+    var n : cardinal; c : cursor;
+    begin
+      c := nodes.make_cursor; c.to_top;
+      for n := 1 to i do c.movenext;
+      (c.current as li.strnode).str:= s
+    end;
+
+  procedure TBuffer.AddLine(s:string);
+    begin
+      nodes.append(li.strnode.create(s))
+    end;
+
+  procedure TBuffer.InsLine(i:cardinal; s:string);
+    begin
+    end;
+
+  procedure TBuffer.DelLine(i:cardinal);
+    begin
+    end;
+
 #+end_src
 
 * CLASS Editor                                                           :ed:
@@ -60,7 +102,7 @@
     begin
       while not eof( txt ) do begin
         readln( txt, line );
-        self.buf.append( li.strnode.create( line ));
+        self.buf.AddLine( line );
 {
         words := nodelist.create;
         if length( line ) > 0 then
@@ -325,7 +367,7 @@
 
   procedure editor.home;
   begin
-    if self.buf.first = nil then exit;
+    if self.buf.length = 0 then exit;
     position.to_top;
     topline.to_top;
     if position.value.inheritsfrom( li.strnode ) then
