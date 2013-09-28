@@ -2,11 +2,38 @@
 #+tags: pl min
 #+date: <2013-01-11 11:43AM>
 
-* TODO [0/8] block-based display plan                                 :ed007:
+* TODO [1/11] block-based display plan                          :ed007:
 :PROPERTIES:
 :TS: <2013-01-01 10:35PM>
 :ID: tm74ek017zf0
 :END:
+
+** DONE create =ITextTile= to give the text cursor a nice flat list.
+:PROPERTIES:
+:TS:       <2013-09-26 05:12PM>
+:ID:       hl6740z009g0
+:END:
+The idea here is that =ITextTile= provides an arbitrary interface for creating widgets that /look/ like editable lines of text, so the text cursor can move up and down in what appears to be a flat list of lines.
+
+** TODO [1/2] Refactor the current editor/cursor behavior to use =ITextTile=
+:PROPERTIES:
+:TS:       <2013-09-26 05:20PM>
+:ID:       fuzehdz009g0
+:END
+
+*** DONE =show_node= should take node as parameter and not touch =cur=
+:PROPERTIES:
+:TS:       <2013-09-27 03:52PM>
+:ID:       wf9dafb119g0
+:END:
+
+*** TODO =show_node= should dispatch to other functions, based on type
+:PROPERTIES:
+:TS:       <2013-09-27 03:53PM>
+:ID:       ak2ddhb119g0
+:END:
+
+
 ** TODO implement step
 :PROPERTIES:
 :TS: <2013-01-17 08:20AM>
@@ -38,8 +65,7 @@ So it's likely that each node would have a corresponding display object, which u
 
 In particular, two clones of the same node would have different geometries and coordinates.
 
-Note also that display nodes may not be textual: raster images, vector shapes,
-and dialog widgets are all perfectly valid options.
+Note also that display nodes may not be textual: raster images, vector shapes, and dialog widgets are all perfectly valid options.
 ** TODO SECTION crawler concept (cursor+stack machine)                 :cur:
 :PROPERTIES:
 :TS: <2013-01-10 07:43AM>
@@ -50,7 +76,7 @@ and dialog widgets are all perfectly valid options.
 :TS: <2013-01-10 08:17AM>
 :ID: 9s66sl41izf0
 :END:
-*** TODO add hook as a node type with left, right, and down pointers.  :ll:
+*** TODO add hook as a node type with left, right, and down pointers. :ll:
 :PROPERTIES:
 :TS: <2013-01-10 08:19AM>
 :ID: rq33yn41izf0
