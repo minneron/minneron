@@ -15,9 +15,10 @@
   interface uses xpc, rings, li;
     <<type:token>>
     <<type:anchor>>
-    <<type:buffer>>
+    <<type:TBuffer>>
     <<type:span>>
   implementation
+    <<@imp:TBuffer>>
   end.
 #+end_src
 

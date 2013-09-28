@@ -16,17 +16,20 @@
 :TS: <2013-01-03 04:13PM>
 :ID: v971ih00azf0
 :END:
-*** TYPE buffer
+*** TYPE =TBuffer=
 :PROPERTIES:
 :TS: <2013-01-04 02:51AM>
 :ID: o6e3l1u0azf0
 :END:
 
-The buffer is a simple, linear list of tokens, where tokens are either strings, or invisible markers pointing to document nodes.
+A =TBuffer= is essentially a composite version of =ITextTile=.
 
-#+name: type:buffer
+#+name: type:TBuffer
 #+begin_src pascal
-  type buffer = li.nodelist;
+  type
+    TBuffer = class(li.nodelist)
+      constructor Create;
+    end;
 #+end_src
 
 *** TYPE token
@@ -132,14 +135,13 @@ They are expected to display themselves, just like textual nodes.
 #+name: type:editor
 #+begin_src pascal
   type editor = class
-    buf               : buf.buffer;
+    buf               : buf.TBuffer;
     filename          : string;
     message           : string;
     x, y, h, w        : integer;
-    topline, position : buf.buffer.cursor;
+    topline, position : buf.TBuffer.cursor;
     led               : ui.zinput;  // led = (L)ine (ED)itor
     constructor Create;
-    procedure NewBuffer;
     function Load( path : string ) : boolean;
     function Save_as( path : string ) : boolean;
     function Save : boolean;

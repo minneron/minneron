@@ -15,12 +15,11 @@
 :END:
 The idea here is that =ITextTile= provides an arbitrary interface for creating widgets that /look/ like editable lines of text, so the text cursor can move up and down in what appears to be a flat list of lines.
 
-** TODO [2/2] Refactor the current editor/cursor behavior to use =ITextTile=
+** TODO [3/9] Refactor the current editor/cursor behavior to use =ITextTile=
 :PROPERTIES:
 :TS:       <2013-09-26 05:20PM>
 :ID:       fuzehdz009g0
-:END
-
+:END:
 *** DONE =show_node= should take node as parameter and not touch =cur=
 :PROPERTIES:
 :TS:       <2013-09-27 03:52PM>
@@ -31,6 +30,56 @@ The idea here is that =ITextTile= provides an arbitrary interface for creating w
 :PROPERTIES:
 :TS:       <2013-09-27 03:53PM>
 :ID:       ak2ddhb119g0
+:END:
+*** DONE wrap the buffer as a =TBuffer= but expose currently used methods.
+:PROPERTIES:
+:TS:       <2013-09-28 12:29PM>
+:ID:       ptog1k3039g0
+:END:
+Well, I accomplished this by making it a subclass of =li.node=.
+The problem is that several parts of the editor use the object's =cursor= directly.
+
+*** TODO Refactor =editor= and =TBuffer= so the cursor isn't used directly.
+:PROPERTIES:
+:TS:       <2013-09-28 01:06PM>
+:ID:       il78a95039g0
+:END:
+**** TODO Replace the =top= and =position= cursors with simple integers.
+:PROPERTIES:
+:TS:       <2013-09-28 01:07PM>
+:ID:       bkhh3b5039g0
+:END:
+**** TODO Add =InsLine= and =DelLine= methods to =TBuffer= (and =ITextTile=?)
+:PROPERTIES:
+:TS:       <2013-09-28 01:08PM>
+:ID:       68x2qc5039g0
+:END:
+*** TODO have =TBuffer= implement =ITextTile=
+:PROPERTIES:
+:TS:       <2013-09-28 12:40PM>
+:ID:       z0g3a24039g0
+:END:
+
+*** TODO implement something like =make_cursor= to walk =ITextTile= objects
+:PROPERTIES:
+:TS:       <2013-09-28 12:13PM>
+:ID:       t3b3ws2039g0
+:END:
+
+*** TODO move line wrapping logic from =ed.show_list= to =TBuffer=
+:PROPERTIES:
+:TS:       <2013-09-28 12:15PM>
+:ID:       wdwh7w2039g0
+:END:
+*** TODO move =editor.parse= to =TBuffer=
+:PROPERTIES:
+:TS:       <2013-09-28 12:18PM>
+:ID:       vbo8713039g0
+:END:
+*** TODO move =editor.load= to =TBuffer=
+:PROPERTIES:
+:TS:       <2013-09-28 12:23PM>
+:ID:       9df95a3039g0
 :END:
 
 

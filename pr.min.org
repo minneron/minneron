@@ -2,6 +2,19 @@
 #+tags: pr min
 #+date: <2013-01-11 11:07AM>
 
+* CLASS TBuffer
+:PROPERTIES:
+:TS:       <2013-09-28 12:22PM>
+:ID:       yzpkt73039g0
+:END:
+#+name: @imp:TBuffer
+#+begin_src pascal
+  constructor TBuffer.Create;
+    begin
+      inherited Create;
+    end;
+#+end_src
+
 * CLASS Editor                                                           :ed:
 :PROPERTIES:
 :TS: <2013-01-11 08:46AM>
@@ -21,7 +34,7 @@
       y := 0;
       w := kvm.width;
       h := kvm.height;
-      self.buf := buffer.create;
+    self.buf := TBuffer.create;
       topline := self.buf.make_cursor;
       position := self.buf.make_cursor;
       filename := '';
@@ -86,11 +99,6 @@
       else message := 'couldn''t load "' + path + '"';
     end; { editor.load }
 
-  procedure editor.NewBuffer;
-      begin
-        self.buf := buffer.Create;
-      end;
-
   function editor.save : boolean;
       var txt: text; node : li.node;
     begin
@@ -130,7 +138,7 @@
   procedure editor.show;
     var
       ypos : cardinal;
-      cur  : buffer.cursor;
+      cur  : TBuffer.cursor;
       <<ed/show/curpos>>
       <<ed/show/gutter>>
       <<ed/show/PlaceEditor>>
@@ -485,7 +493,7 @@
     end; { editor.newline }
 
   procedure editor.delete;
-    var cur : buffer.cursor;
+    var cur : TBuffer.cursor;
     begin
       if led.at_end then begin
         if not position.at_end then begin
