@@ -15,7 +15,7 @@
 :END:
 The idea here is that =ITextTile= provides an arbitrary interface for creating widgets that /look/ like editable lines of text, so the text cursor can move up and down in what appears to be a flat list of lines.
 
-** TODO [1/2] Refactor the current editor/cursor behavior to use =ITextTile=
+** TODO [2/2] Refactor the current editor/cursor behavior to use =ITextTile=
 :PROPERTIES:
 :TS:       <2013-09-26 05:20PM>
 :ID:       fuzehdz009g0
@@ -27,7 +27,7 @@ The idea here is that =ITextTile= provides an arbitrary interface for creating w
 :ID:       wf9dafb119g0
 :END:
 
-*** TODO =show_node= should dispatch to other functions, based on type
+*** DONE =show_node= should dispatch to other functions, based on type
 :PROPERTIES:
 :TS:       <2013-09-27 03:53PM>
 :ID:       ak2ddhb119g0

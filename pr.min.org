@@ -196,20 +196,20 @@
 :END:
 #+name: ed/show/node
 #+begin_src pascal
-  procedure show_node(node:li.node);
-  var
-    tok  : string;
-    d2re : cardinal; { distance to right edge }
-    child : li.node;
 
-  begin
-    if node is li.strnode then
-      with node as li.strnode do begin
-        cwrite(str);
-        cwrite( '|!k|%' ); // clreol
-      end
-    else if node is li.lisnode then
-      for child in (node as li.lisnode).lis do
+  procedure show_string(node:li.strnode);
+    begin
+      cwrite(node.str);
+      cwrite( '|!k|%' ); // clreol
+    end;
+
+  procedure show_list(node:li.lisnode);
+    var
+      tok   : string;
+      d2re  : cardinal; { distance to right edge }
+      child : li.node;
+    begin
+      for child in node.lis do
         begin
           d2re := cw.scr.w - cw.cur.x;
           if child is li.strnode
@@ -226,7 +226,14 @@
             cwrite( stri.trunc( tok, d2re ));
           end
         end;
-  end;
+    end;
+
+  procedure show_node(node:li.node);
+    begin
+      if node is li.strnode then show_string(node as li.strnode)
+      else if node is li.lisnode then show_list(node as li.lisnode)
+    end;
+
 #+end_src
 
 **** «ed/show:main»
