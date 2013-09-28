@@ -196,26 +196,24 @@
 :END:
 #+name: ed/show/node
 #+begin_src pascal
-  procedure show_node;
+  procedure show_node(node:li.node);
   var
     tok  : string;
     d2re : cardinal; { distance to right edge }
-    node : li.node;
+    child : li.node;
 
   begin
-    show_gutter( flushrt( n2s( cur.index ), 3, ' ' ));
-    if cur.index = position.index then PlaceEditor
-    else if cur.value is li.strnode then
-      with cur.value as li.strnode do begin
+    if node is li.strnode then
+      with node as li.strnode do begin
         cwrite(str);
         cwrite( '|!k|%' ); // clreol
       end
-    else if cur.value is li.lisnode then
-      for node in (cur.value as li.lisnode).lis do
+    else if node is li.lisnode then
+      for child in (node as li.lisnode).lis do
         begin
           d2re := cw.scr.w - cw.cur.x;
-          if node is li.strnode
-            then tok := (node as li.strnode).str
+          if child is li.strnode
+            then tok := (child as li.strnode).str
             else tok := '|r<??>|w';
           tok += '|b.|w'; //  b/c tokenizer strips ws
           {-- word wrapping --}
@@ -228,7 +226,6 @@
             cwrite( stri.trunc( tok, d2re ));
           end
         end;
-    inc( ypos )
   end;
 #+end_src
 
@@ -249,8 +246,10 @@
       cur := self.buf.make_cursor;
       cur.move_to( self.topline );
       repeat
-        show_node;
-        cur.move_next
+        show_gutter( flushrt( n2s( cur.index ), 3, ' ' ));
+        if cur.index = position.index then PlaceEditor
+        else show_node(cur.value);
+        inc( ypos ); cur.move_next;
       until ( ypos >= self.h ) or ( cur.at_clasp );
       { fill in extra space if the file is too short }
       while ypos < self.h do begin
