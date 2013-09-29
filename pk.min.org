@@ -10,7 +10,7 @@
 :END:
 
 #+begin_src pascal :tangle ".gen/buf.pas" :padline yes :noweb tangle
-  {$mode objfpc}{$i xpc.inc}
+  {$mode delphi}{$i xpc.inc}{$H+}
   unit buf;
   interface uses xpc, rings, tiles, li;
     <<type:token>>
@@ -28,7 +28,7 @@
 :ID: fr5fryb1jzf0
 :END:
 #+begin_src pascal :tangle ".gen/mn.pas" :noweb tangle
-  {$mode objfpc}{$i xpc.inc}
+  {$mode delphi}{$i xpc.inc}{$H+}
   unit mn;
   interface uses xpc, fs, stri, num, cw, buf, ui, kvm, kbd, cli, tiles;
     <<type:editor>>
@@ -48,7 +48,7 @@
   ----------------------------------------------------------------
   Copyright (c) 2012 Michal J Wallace. All rights reserved.
   ---------------------------------------------------------------}
-  {$mode objfpc}{$i xpc.inc}
+  {$mode delphi}{$i xpc.inc}{$H+}
   program min;
   uses xpc, mn, cw, cx, cli, kvm;
   

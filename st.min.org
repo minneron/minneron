@@ -28,9 +28,10 @@ A =TBuffer= is essentially a composite version of =ITextTile=.
 #+begin_src pascal
   type
     TBuffer = class (TTextTile)
+      private type
+        cursor = li.nodelist.cursor;
       private
         nodes : li.nodelist;
-        type cursor = li.nodelist.cursor;
       public
         constructor Create( w, h : cardinal );
         function  GetLength : cardinal; override;
@@ -94,7 +95,7 @@ Blocks are spans that act like xml elements, in that they are nestable but non-o
 
 Aside from these fields, blocks can be of any type, and may or may not conform to any particular schema.
 
-Most likely they would be implemented as =type generic block<t>=.
+Most likely they would be implemented as =type block<t>=.
 
 These can be used to indicate parsed structures such as lines of text, tokens (for syntax highlighting), etc.
 
@@ -106,11 +107,11 @@ These can be used to indicate parsed structures such as lines of text, tokens (f
 #+name: type:span
 #+begin_src pascal
   { used for selections }
-  type generic span<t> = class
+  type GSpan<t> = class
   public
     type tag = class( anchor )
       is_start, is_end : boolean;
-      span             : specialize span<t>;
+      span             : GSpan<T>;
     end;
   public
     start_tag, end_tag : tag;
