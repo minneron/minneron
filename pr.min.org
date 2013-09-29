@@ -13,7 +13,7 @@
   constructor TBuffer.Create( w, h : cardinal );
     begin
       inherited Create( w, h );
-      nodes := li.nodelist.Create;
+      nodes := TTextNodes.Create;
     end;
 
   function TBuffer.GetLength : cardinal;
@@ -22,49 +22,37 @@
     end;
 
   function TBuffer.GetLine(i:cardinal) : string;
-    var n : cardinal; c : cursor;
     begin
-      c := nodes.make_cursor; c.to_top;
-      for n := 1 to i do c.movenext;
-      result := (c.current as li.strnode).str
-   end;
-
-  { cutting and pasting here but i'm about to switch over
-    to rings that already has this cursor stuff, so i don't care }
+      result := nodes[i];
+    end;
 
   procedure TBuffer.SetLine(i:cardinal; s:string);
-    var n : cardinal; c : cursor;
     begin
-      c := nodes.make_cursor; c.to_top;
-      for n := 1 to i do c.movenext;
-      (c.current as li.strnode).str:= s
+      nodes[i] := s;
     end;
 
   procedure TBuffer.AddLine(s:string);
     begin
-      nodes.append(li.strnode.create(s))
+      nodes.append(s)
     end;
 
   procedure TBuffer.InsLine(i:cardinal; s:string);
-    var n : cardinal; c : cursor;
     begin
-      c := nodes.make_cursor; c.to_top;
-      for n := 1 to i do c.movenext;
-      c.inject_next(li.strnode.create(s))
+      nodes.InsertAt(s, i) //  TODO: swap these parameters!
     end;
 
-  procedure TBuffer.DelLine(i:cardinal);
+  procedure TBuffer.DelLine(i:cardinal);  //  TODO: move to GRing
     var n : cardinal; c : cursor;
     begin
-      c := nodes.make_cursor;
+      c := nodes.MakeCursor;
       if i = 0 then
-        c.delete_next
+        c.DeleteNext
       else
         begin
-          c.to_top;
-          for n := 1 to i do c.movenext;
-          c.move_prev;
-          c.delete_next;
+          c.ToTop;
+          for n := 1 to i do c.MoveNext;
+          c.MovePrev;
+          c.DeleteNext;
         end;
     end;
 
@@ -148,7 +136,7 @@
         end
       else message := 'couldn''t load "' + path + '"';
     end; { editor.load }
-  
+
   function editor.save : boolean;
       var txt: text; i : cardinal;
     begin
@@ -159,7 +147,7 @@
       result := true; // TODO error checking
       message := filename + ' saved.';
     end;
-  
+
   function editor.save_as( path : string ) : boolean;
       var oldname : string;
     begin
@@ -168,7 +156,7 @@
       result := self.save;
       if not result then self.filename := oldname
     end;
-  
+
 #+end_src
 
 ** display

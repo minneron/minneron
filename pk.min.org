@@ -12,7 +12,7 @@
 #+begin_src pascal :tangle ".gen/buf.pas" :padline yes :noweb tangle
   {$mode delphi}{$i xpc.inc}{$H+}
   unit buf;
-  interface uses xpc, rings, tiles, li;
+  interface uses xpc, rings, tiles;
     <<type:token>>
     <<type:anchor>>
     <<type:TBuffer>>
