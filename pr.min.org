@@ -62,11 +62,6 @@
     end;
 
 #+end_src
-** NOTE .
-:PROPERTIES:
-:TS:       <2013-09-28 08:21PM>
-:ID:       s9hi8fp039g0
-:END:
 
 * CLASS Editor                                                           :ed:
 :PROPERTIES:
