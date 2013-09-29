@@ -15,7 +15,7 @@
 :END:
 The idea here is that =ITextTile= provides an arbitrary interface for creating widgets that /look/ like editable lines of text, so the text cursor can move up and down in what appears to be a flat list of lines.
 
-** TODO [4/9] Refactor the current editor/cursor behavior to use =ITextTile=
+** TODO [5/10] Refactor the current editor/cursor behavior to use =ITextTile=
 :PROPERTIES:
 :TS:       <2013-09-26 05:20PM>
 :ID:       fuzehdz009g0
@@ -59,11 +59,10 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-09-28 12:40PM>
 :ID:       z0g3a24039g0
 :END:
-
-*** TODO implement something like =make_cursor= to walk =ITextTile= objects
+*** TODO have buffer.nodelist use the =rings= unit instead of =li=
 :PROPERTIES:
-:TS:       <2013-09-28 12:13PM>
-:ID:       t3b3ws2039g0
+:TS:       <2013-09-28 07:35PM>
+:ID:       iek529n039g0
 :END:
 
 *** TODO move line wrapping logic from =ed.show_list= to =TBuffer=
@@ -81,6 +80,13 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-09-28 12:23PM>
 :ID:       9df95a3039g0
 :END:
+
+*** TODO implement something like =make_cursor= to walk =ITextTile= objects
+:PROPERTIES:
+:TS:       <2013-09-28 12:13PM>
+:ID:       t3b3ws2039g0
+:END:
+
 ** TODO fix delete behavior at end of line (bug in =at_end= for input ctrl?)
 :PROPERTIES:
 :TS:       <2013-09-28 02:47PM>

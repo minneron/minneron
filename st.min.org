@@ -190,7 +190,6 @@ They are expected to display themselves, just like textual nodes.
     procedure grabLine;
     procedure keepInput;
     procedure moveInput;
-    function wrap( s : string ) : li.strnode;
     procedure parse( var txt : text );
   end;
   

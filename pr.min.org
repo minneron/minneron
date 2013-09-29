@@ -97,7 +97,7 @@
     end;
 #+end_src
 
-** «tokenizer» interface
+** TODO «tokenizer» interface { extract tokenizer stuff }
 :PROPERTIES:
 :TS: <2013-01-11 05:05AM>
 :ID: er586tb1jzf0
@@ -105,13 +105,8 @@
 #+name: @imp:ed
 #+begin_src pascal
 
-  function editor.wrap( s : string ) : li.strnode;
-    begin
-      result := li.strnode.create( s )
-    end;
-
   procedure editor.parse( var txt : text );
-    var n : cardinal; line : string; words : nodelist;
+    var n : cardinal; line : string;
     begin
       while not eof( txt ) do begin
         readln( txt, line );
@@ -196,7 +191,6 @@
       <<ed/show/gutter>>
       <<ed/show/PlaceEditor>>
       <<ed/show/line>>
-      <<ed/show/node>>
     begin
       <<ed/show:main>>
     end;
@@ -264,7 +258,7 @@
 :TS: <2013-01-13 04:48AM>
 :ID: 51l0hns0mzf0
 :END:
-#+name: ed/show/node
+#+name: show_node
 #+begin_src pascal
 
   procedure show_string(node:li.strnode);
