@@ -1,4 +1,4 @@
-* structural view (interface declaraions)                            :st:min:
+* structural view (interface declaraions)                       :st:min:
 :PROPERTIES:
 :TS: <2013-01-11 11:21AM>
 :ID: 02li6ne0kzf0
@@ -6,12 +6,12 @@
 :ARCHIVE_FILE: ~/r/minneron/min.org
 :ARCHIVE_CATEGORY: min
 :END:
-** TODO ngaro virtual machine <done but need defs here>                 :vm:
+** TODO ngaro virtual machine <done but need defs here>        :vm:
 :PROPERTIES:
 :TS: <2013-01-11 03:35AM>
 :ID: la310m71jzf0
 :END:
-*** [0/5] document model (spanning tree into the graph)         :doc:
+*** [0/5] document model (spanning tree into the graph)       :doc:
 :PROPERTIES:
 :TS: <2013-01-03 04:13PM>
 :ID: v971ih00azf0
@@ -26,7 +26,7 @@ A =TBuffer= is essentially a composite version of =ITextTile=.
 
 [[code://mnbuf:TBuffer]]
 
-**** TODO TYPE token                                            :unused:
+**** TODO TYPE token                                         :unused:
 :PROPERTIES:
 :TS: <2013-01-12 06:41AM>
 :ID: x4i08sh0lzf0
@@ -66,7 +66,6 @@ These can be used to indicate parsed structures such as lines of text, tokens (f
 :END:
 [[code://mnbuf:span]]
 
-
 **** TODO other embedded objects
 :PROPERTIES:
 :TS: <2013-01-03 04:06PM>
@@ -94,6 +93,8 @@ They are expected to display themselves, just like textual nodes.
 :ID: zy54y2e0kzf0
 :END:
 ***** TEditor > the basics
+[[code://mned:TEditor]]
+
 #+name: type:TEditor
 #+begin_src pascal
   type TEditor = class (TVorTask)

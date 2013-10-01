@@ -4,9 +4,9 @@ Copyright (c) 2012 Michal J Wallace. All rights reserved.
 ---------------------------------------------------------------}
 {$mode delphi}{$i xpc.inc}{$H+}
 program min;
-uses xpc, mnml, mn, cw, cx, kvm, sysutils, kbd;
+uses xpc, mnml, mned, cw, cx, kvm, sysutils, kbd;
 
-var ed : mn.TEditor;
+var ed : mned.TEditor;
 begin
   ed := TEditor.Create;
   kvm.ClrScr;

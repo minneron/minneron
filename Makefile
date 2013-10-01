@@ -28,7 +28,7 @@ targets:
 	@echo 'make run   -> build and run'
 	@echo
 
-min: .tangled
+min:
 	$(FPC) -Mobjfpc min.pas
 	mv $(GEN)/min .$
 
