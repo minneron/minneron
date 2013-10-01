@@ -2,12 +2,31 @@
 #+tags: pl min
 #+date: <2013-01-11 11:43AM>
 
-* TODO [1/11] block-based display plan                          :ed007:
+* TODO [2/9] block-based display plan (single column)           :ed007:
 :PROPERTIES:
 :TS: <2013-01-01 10:35PM>
 :ID: tm74ek017zf0
 :END:
+** displaying documents                                         :ui:
+:PROPERTIES:
+:TS: <2013-01-03 04:13PM>
+:ID: qbighi00azf0
+:END:
+*** the scene graph                                           :later:
+:PROPERTIES:
+:TS: <2013-01-03 04:16PM>
+:ID: iza8lm00azf0
+:END:
 
+The block objects serve a secondary purpose, in that they can recursively display themselves (just like widgets in gamesketchlib or whatever).
+
+However, document structure and display structure needn't coincide: nodes might be hidden, or show up at arbitrary coordinates, etc.
+
+So it's likely that each node would have a corresponding display object, which understood coordinates, geometry, etc.
+
+In particular, two clones of the same node would have different geometries and coordinates.
+
+Note also that display nodes may not be textual: raster images, vector shapes, and dialog widgets are all perfectly valid options.
 ** DONE create =ITextTile= to give the text cursor a nice flat list.
 :PROPERTIES:
 :TS:       <2013-09-26 05:12PM>
@@ -15,7 +34,7 @@
 :END:
 The idea here is that =ITextTile= provides an arbitrary interface for creating widgets that /look/ like editable lines of text, so the text cursor can move up and down in what appears to be a flat list of lines.
 
-** TODO [6/10] Refactor the current editor/cursor behavior to use =ITextTile=
+** DONE [7/7] Refactor the current editor/cursor behavior to use =ITextTile=
 :PROPERTIES:
 :TS:       <2013-09-26 05:20PM>
 :ID:       fuzehdz009g0
@@ -31,6 +50,7 @@ The idea here is that =ITextTile= provides an arbitrary interface for creating w
 :TS:       <2013-09-27 03:53PM>
 :ID:       ak2ddhb119g0
 :END:
+
 *** DONE wrap the buffer as a =TBuffer= but expose currently used methods.
 :PROPERTIES:
 :TS:       <2013-09-28 12:29PM>
@@ -49,118 +69,108 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-09-28 01:07PM>
 :ID:       bkhh3b5039g0
 :END:
+
 **** DONE Add =InsLine= and =DelLine= methods to =TBuffer= (and =ITextTile=?)
 :PROPERTIES:
 :TS:       <2013-09-28 01:08PM>
 :ID:       68x2qc5039g0
 :END:
+
 *** DONE have =TBuffer= implement =ITextTile=
 :PROPERTIES:
 :TS:       <2013-09-28 12:40PM>
 :ID:       z0g3a24039g0
 :END:
+
 *** DONE have buffer.nodelist use the =rings= unit instead of =li=
 :PROPERTIES:
 :TS:       <2013-09-28 07:35PM>
 :ID:       iek529n039g0
 :END:
 
-*** TODO move line wrapping logic from =ed.show_list= to =TBuffer=
-:PROPERTIES:
-:TS:       <2013-09-28 12:15PM>
-:ID:       wdwh7w2039g0
-:END:
-*** TODO move =editor.parse= to =TBuffer=
-:PROPERTIES:
-:TS:       <2013-09-28 12:18PM>
-:ID:       vbo8713039g0
-:END:
-*** TODO move =editor.load= to =TBuffer=
-:PROPERTIES:
-:TS:       <2013-09-28 12:23PM>
-:ID:       9df95a3039g0
-:END:
-
-*** TODO implement something like =make_cursor= to walk =ITextTile= objects
+*** DONE implement something like =make_cursor= to walk =ITextTile= objects
 :PROPERTIES:
 :TS:       <2013-09-28 12:13PM>
 :ID:       t3b3ws2039g0
 :END:
-
-** TODO fix delete behavior at end of line (bug in =at_end= for input ctrl?)
+**** NOTE that something is a simple for loop. :)
 :PROPERTIES:
-:TS:       <2013-09-28 02:47PM>
-:ID:       eye89x9039g0
+:TS:       <2013-09-28 10:09PM>
+:ID:       wuihoeu039g0
 :END:
-
-** TODO implement step
+** TODO break the display down into =impworld= morphs
+:PROPERTIES:
+:TS:       <2013-09-30 12:16AM>
+:ID:       9ad5js1059g0
+:END:
+*** TODO implement =step= (task system / mnml / impworld )
 :PROPERTIES:
 :TS: <2013-01-17 08:20AM>
 :ID: zwuf3p10szf0
 :END:
-
-** TODO displaying documents                                            :ui:
+** TODO create a simple interactive grammar builder
 :PROPERTIES:
-:TS: <2013-01-03 04:13PM>
-:ID: qbighi00azf0
+:TS:       <2013-09-30 12:22AM>
+:ID:       v10jy22059g0
 :END:
-*** straightforward linear flow display
+*** TODO port the =pasout= logic so I have a simple tree editor
 :PROPERTIES:
-:TS: <2013-01-04 04:30AM>
-:ID: yb55yly0azf0
-:END:
-
-*** the scene graph                                                 :later:
-:PROPERTIES:
-:TS: <2013-01-03 04:16PM>
-:ID: iza8lm00azf0
+:TS:       <2013-09-30 12:19AM>
+:ID:       wvuesy1059g0
 :END:
 
-The block objects serve a secondary purpose, in that they can recursively display themselves (just like widgets in gamesketchlib or whatever).
-
-However, document structure and display structure needn't coincide: nodes might be hidden, or show up at arbitrary coordinates, etc.
-
-So it's likely that each node would have a corresponding display object, which understood coordinates, geometry, etc.
-
-In particular, two clones of the same node would have different geometries and coordinates.
-
-Note also that display nodes may not be textual: raster images, vector shapes, and dialog widgets are all perfectly valid options.
-** TODO SECTION crawler concept (cursor+stack machine)                 :cur:
+*** TODO introduce the token type (tagged string span)
 :PROPERTIES:
-:TS: <2013-01-10 07:43AM>
-:ID: vfbhc031izf0
+:TS:       <2013-09-30 12:34AM>
+:ID:       83p89n2059g0
 :END:
-*** TODO add clasp as an actual node type, with left,right, and up pointers. :ll:
+
+*** TODO using =pre= or =imprex=, build a tokenizer interactively
 :PROPERTIES:
-:TS: <2013-01-10 08:17AM>
-:ID: 9s66sl41izf0
+:TS:       <2013-09-30 12:35AM>
+:ID:       8cfgnp2059g0
 :END:
-*** TODO add hook as a node type with left, right, and down pointers. :ll:
+
+*** TODO using the tokenizer, apply syntax-highlighting to the buffer
 :PROPERTIES:
-:TS: <2013-01-10 08:19AM>
-:ID: rq33yn41izf0
+:TS:       <2013-09-30 12:36AM>
+:ID:       icbieq2059g0
 :END:
-** TODO make a stack for offsets, so the document can be a tree
-:PROPERTIES:
-:TS: <2013-01-10 09:43AM>
-:ID: r2bl0k81izf0
-:END:
-** TODO introduce the block type (nested span)
+
+*** TODO introduce the element type (nested span)
 :PROPERTIES:
 :TS: <2013-01-12 02:50PM>
 :ID: 3xyfre41lzf0
 :END:
-** TODO break the input text into tokens grouped by element nodes
+*** TODO modify =pre= or =imprex= so that matching builds an element tree
+:PROPERTIES:
+:TS:       <2013-09-30 12:24AM>
+:ID:       noyae62059g0
+:END:
+*** TODO render the parse tree in a second, read only tree window
+:PROPERTIES:
+:TS:       <2013-09-30 12:25AM>
+:ID:       kb1jz72059g0
+:END:
+
+*** TODO use the grammar tree buffer + a cursor to drive a parser
+:PROPERTIES:
+:TS:       <2013-09-30 12:26AM>
+:ID:       h1k7h92059g0
+:END:
+
+*** TODO using =pre= / =imprex=, lex and parse the source buffer
 :PROPERTIES:
 :TS: <2013-01-10 09:37AM>
 :ID: uwf83b81izf0
 :END:
-** TODO generalize wrap algorithm from ed004 to arbitrary blocks
+*** TODO automatically update the parse tree when grammar changes
 :PROPERTIES:
-:TS: <2013-01-13 04:53AM>
-:ID: ozhfqus0mzf0
+:TS:       <2013-09-30 12:23AM>
+:ID:       46w8l42059g0
 :END:
-** TODO generate display blocks from the line spans
+
+*** TODO display blocks corresponding to the parsed inner nodes
 :PROPERTIES:
 :TS: <2013-01-10 09:38AM>
 :ID: xzn4eb81izf0
@@ -168,7 +178,7 @@ Note also that display nodes may not be textual: raster images, vector shapes, a
 elements are sequences/strings with a 1-dimensional length
 blocks are rectangles with a 2-dimensional bounding box
 
-* TODO [5/6] word wrap implementation                                 :ed004:
+* TODO [5/9] word wrap implementation                           :ed004:
 :PROPERTIES:
 :TS: <2013-01-11 11:45AM>
 :ID: hnyjxqf0kzf0
@@ -241,7 +251,27 @@ new =show_node= version: id:51l0hns0mzf0
 :TS: <2013-01-10 09:37AM>
 :ID: uzh4ta81izf0
 :END:
-* TODO [0/2] command interpreter plan                                   :cmd:
+** TODO move line wrapping logic from =ed.show_list= to =TBuffer=
+:PROPERTIES:
+:TS:       <2013-09-28 12:15PM>
+:ID:       wdwh7w2039g0
+:END:
+** TODO move tokenization logic from =editor.parse= to =TBuffer=
+:PROPERTIES:
+:TS:       <2013-09-28 12:18PM>
+:ID:       vbo8713039g0
+:END:
+* TODO generalized 2d layout
+:PROPERTIES:
+:TS:       <2013-09-28 10:22PM>
+:ID:       89s9fzu039g0
+:END:
+** TODO generalize wrap algorithm from ed004 to arbitrary blocks
+:PROPERTIES:
+:TS: <2013-01-13 04:53AM>
+:ID: ozhfqus0mzf0
+:END:
+* TODO [0/2] command interpreter plan                           :cmd:
 :PROPERTIES:
 :TS: <2013-01-01 10:35PM>
 :ID: 6v09mj017zf0
@@ -256,7 +286,7 @@ new =show_node= version: id:51l0hns0mzf0
 :TS: <2013-01-10 07:46AM>
 :ID: if8k2631izf0
 :END:
-* TODO [0/0] table editor implementation                              :ed011:
+* TODO [0/1] table editor implementation                        :ed011:
 :PROPERTIES:
 :TS:       <2012-11-10 02:30PM>
 :ID:       uhv4ml01axf0

@@ -1,0 +1,17 @@
+#+title: minneron : quality assurance view (bugs, etc)
+#+date: <2013-09-28 Sat>
+#+tags: pl min
+
+* TODO fix delete behavior at end of line (bug in =at_end= for input ctrl?) :bug:
+:PROPERTIES:
+:TS:       <2013-09-28 02:47PM>
+:ID:       eye89x9039g0
+:END:
+
+* TODO move =editor.load= to =TBuffer= (or =TLoader=, maybe?)         :refactor:
+:PROPERTIES:
+:TS:       <2013-09-28 12:23PM>
+:ID:       9df95a3039g0
+:END:
+
+
