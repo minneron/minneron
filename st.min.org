@@ -11,12 +11,37 @@
 :TS: <2013-01-11 03:35AM>
 :ID: la310m71jzf0
 :END:
-** [1/6] document model (spanning tree into the graph)          :doc:
+** interface for unit =mnml=
+:PROPERTIES:
+:TS:       <2013-05-15 10:19AM>
+:ID:       ab9hx2x034g0
+:END:
+#+name: mnml:interface
+#+begin_src pascal
+interface
+uses sysutils, vorunati;
+  type
+    TVoRun = function : vor of object;
+    TThunk = procedure;
+    TToken = string[31];
+    TCmdId = cardinal;
+  
+  procedure define( out cmd : TCmdId; thunk : TThunk; token : TToken );
+  procedure launch( const cmd : TCmdId );
+  procedure launch( const cmd : TToken );
+  procedure step;
+  function  done : boolean;
+  procedure loop;
+#+end_src
+
+
+
+*** [1/6] document model (spanning tree into the graph)       :doc:
 :PROPERTIES:
 :TS: <2013-01-03 04:13PM>
 :ID: v971ih00azf0
 :END:
-*** TYPE =TBuffer=
+**** TYPE =TBuffer=
 :PROPERTIES:
 :TS: <2013-01-04 02:51AM>
 :ID: o6e3l1u0azf0
@@ -48,7 +73,7 @@ A =TBuffer= is essentially a composite version of =ITextTile=.
       end;
 #+end_src
 
-*** TODO TYPE token                                           :unused:
+**** TODO TYPE token                                         :unused:
 :PROPERTIES:
 :TS: <2013-01-12 06:41AM>
 :ID: x4i08sh0lzf0
@@ -61,7 +86,7 @@ A =TBuffer= is essentially a composite version of =ITextTile=.
 
 Just plain old string nodes for now.
 
-*** TODO TYPE anchor                                          :unused:
+**** TODO TYPE anchor                                        :unused:
 :PROPERTIES:
 :TS: <2013-01-04 02:09AM>
 :ID: 2mxaf3s0azf0
@@ -76,7 +101,7 @@ Anchors are non-textual, and may hold any kind of data. They correspond roughly 
 
 Unlike the generic list cursors, which are pointers to link objects in the linked list, anchors are data objects that are actually part of the buffer. This is so programs that traverse the list are able to see and make use of them.
 
-*** TODO TYPE element                                         :unused:
+**** TODO TYPE element                                       :unused:
 :PROPERTIES:
 :TS: <2013-01-12 03:20PM>
 :ID: 8br01s51lzf0
@@ -87,7 +112,7 @@ Unlike the generic list cursors, which are pointers to link objects in the linke
 //  type element = li.lisnode;
 #+end_src
 
-*** TODO blocks
+**** TODO blocks
 :PROPERTIES:
 :TS: <2013-01-03 03:53PM>
 :ID: s5pjy4e19zf0
@@ -101,7 +126,7 @@ Most likely they would be implemented as =type block<t>=.
 
 These can be used to indicate parsed structures such as lines of text, tokens (for syntax highlighting), etc.
 
-*** DONE TYPE span
+**** DONE TYPE span
 :PROPERTIES:
 :TS: <2013-01-03 03:57PM>
 :ID: f4x29ce19zf0
@@ -121,7 +146,7 @@ These can be used to indicate parsed structures such as lines of text, tokens (f
   end;
 #+end_src
 
-*** TODO other embedded objects
+**** TODO other embedded objects
 :PROPERTIES:
 :TS: <2013-01-03 04:06PM>
 :ID: nrrkq600azf0
@@ -131,23 +156,23 @@ Arbitrary objects can be embedded in the text. These may contain "clones" of tex
 
 They are expected to display themselves, just like textual nodes.
 
-** TODO user interface                                                  :ui:
+*** TODO editor user interface                                :ui:
 :PROPERTIES:
 :TS: <2013-01-11 11:07AM>
 :ID: lb6auzd0kzf0
 :END:
-*** TODO line editor
+**** TODO line editor
 :PROPERTIES:
 :TS: <2013-01-11 11:22AM>
 :ID: 2cxcdoe0kzf0
 :END:
 
-*** DONE TEditor type                                                   :ed:
+**** DONE TEditor type                                       :ed:
 :PROPERTIES:
 :TS: <2013-01-11 11:09AM>
 :ID: zy54y2e0kzf0
 :END:
-**** TEditor > the basics
+***** TEditor > the basics
 #+name: type:TEditor
 #+begin_src pascal
   type TEditor = class
@@ -157,19 +182,19 @@ They are expected to display themselves, just like textual nodes.
     x, y, h, w        : integer;
     topline, position : cardinal;
     led               : ui.zinput;  // led = (L)ine (ED)itor
+    state             : vor;
     constructor Create;
     function Load( path : string ) : boolean;
     function Save_as( path : string ) : boolean;
     function Save : boolean;
     procedure Loop;
     procedure Init;
-    function Step : vor;
-    procedure Show;
-    procedure Done;
-
+    procedure OnKeyPress;
+    procedure Draw;
+    function Done : boolean;
 #+end_src
 
-**** TEditor > cursor movement
+***** TEditor > cursor movement
 #+name: type:TEditor
 #+begin_src pascal
    protected { cursor movement commands }
@@ -181,7 +206,7 @@ They are expected to display themselves, just like textual nodes.
     procedure pagedown;
 #+end_src
 
-**** TEditor > line manipulation
+***** TEditor > line manipulation
 #+name: type:TEditor
 #+begin_src pascal
    protected { line manipulation commands }
@@ -189,7 +214,7 @@ They are expected to display themselves, just like textual nodes.
     procedure delete;
 #+end_src
 
-**** TEditor > misc private methods
+***** TEditor > misc private methods
 #+name: type:TEditor
 #+begin_src pascal
    private
@@ -202,7 +227,7 @@ They are expected to display themselves, just like textual nodes.
   
 #+end_src
 
-** TODO database                                                        :mr:
+*** TODO database                                             :mr:
 :PROPERTIES:
 :TS: <2013-01-11 11:21AM>
 :ID: ae267me0kzf0

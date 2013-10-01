@@ -14,4 +14,8 @@
 :ID:       9df95a3039g0
 :END:
 
-
+* TODO replace readkey loop with cmd tables and keymaps
+:PROPERTIES:
+:TS:       <2013-10-01 12:14AM>
+:ID:       2qdboth069g0
+:END:

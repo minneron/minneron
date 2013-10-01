@@ -30,16 +30,76 @@
 #+begin_src pascal :tangle ".gen/mn.pas" :noweb tangle
   {$mode delphi}{$i xpc.inc}{$H+}
   unit mn;
-  interface uses xpc, fs, stri, num, cw, buf, ui, kvm, kbd, cli, tiles, vorunati;
+  interface uses xpc, fs, stri, num, cw, buf, ui, kvm, kbd, cli, tiles,
+    vorunati, sysutils, mnml;
+
+  var cmd_rnd : TCmdId;
+
     <<type:TEditor>>
     <<type:span>>
   implementation
+  
+  procedure EmitRandomChars;
+    var x, y : byte;
+    begin
+      x := kvm.maxX div 2 + 1
+           + round((random-0.5) * (random( kvm.Width )));
+      { random * random will give a strong bias to top of screen }
+      y := round(random * random * random( kvm.Width ));
+      kvm.Fg( random( 16 ));
+      kvm.GotoXY( x, y );
+      write( chr( random( 128 - 32 ) + 32 ));
+      if kbd.KeyPressed then kbd.ReadKey else mnml.launch(cmd_rnd);
+    end;
+
     <<@imp:ed>>
     <<@imp:span>>
+
+  begin
+    mnml.define(cmd_rnd, @EmitRandomChars, 'rnd');
   end.
 #+end_src
 
-*** PROGRAM =min=
+*** unit =mnml= : minneron main loop
+:PROPERTIES:
+:TS:       <2013-05-15 10:13AM>
+:ID:       k5kjxsw034g0
+:END:
+#+begin_src pascal :tangle ".gen/mnml.pas" :noweb tangle
+  { minneron main loop }
+  {$mode objfpc}
+  unit mnml;
+    <<mnml:interface>>
+    <<mnml:implementation>>
+    <<mnml:initialization>>
+    <<mnml:finalization>>
+  end.
+#+end_src
+**** initialization
+:PROPERTIES:
+:TS:       <2013-05-15 11:43AM>
+:ID:       6a76cy0134g0
+:END:
+#+name: initialization
+#+begin_src pascal
+  initialization
+#+end_src
+
+**** finalization
+:PROPERTIES:
+:TS:       <2013-05-15 11:44AM>
+:ID:       m2i8w01134g0
+:END:
+#+name: mnml:finalization
+#+begin_src pascal
+  finalization
+    SetLength(tokens, 0);
+    SetLength(thunks, 0);
+    SetLength(queue,  0);
+#+end_src
+
+
+** PROGRAM =min=
 :PROPERTIES:
 :TS: <2013-01-12 06:30AM>
 :ID: 34nd9ah0lzf0
@@ -51,20 +111,33 @@
   ---------------------------------------------------------------}
   {$mode delphi}{$i xpc.inc}{$H+}
   program min;
-  uses xpc, mn, cw, cx, kvm;
+    uses xpc, mnml, mn, cw, cx, kvm, sysutils, kbd;
+  
+  
   
   var ed : mn.TEditor;
   begin
+  
     ed := TEditor.Create;
     kvm.ClrScr;
     if ParamCount = 0 then
       writeln( 'usage : min <filename> ')
     else if ed.Load( ParamStr( 1 )) then
       begin
-        ed.Loop;
-        ed.Destroy;
+        ed.init;
+        ed.draw;
+        repeat
+          if not keypressed then sleep(5);
+          if keypressed then
+            begin
+              ed.onkeypress;
+              ed.draw;
+            end;
+          mnml.step;
+        until ed.done;
         cw.cwriteln( '|w|!k' );
         kvm.ClrScr;
+        ed.Destroy;
       end
     else writeln( 'unable to load file: ', paramstr( 1 ))
   end.

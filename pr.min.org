@@ -2,6 +2,114 @@
 #+tags: pr min
 #+date: <2013-01-11 11:07AM>
 
+* implementation for =mnml=
+:PROPERTIES:
+:TS:       <2013-05-15 11:14AM>
+:ID:       y8n1knz034g0
+:END:
+** internal variables
+#+name: mnml:implementation
+#+begin_src pascal
+  implementation
+    var
+      queue  : array of TCmdId;
+      thunks : array of TThunk;
+      tokens : array of TToken;
+  #+end_src
+
+** =step=
+:PROPERTIES:
+:TS:       <2013-05-15 10:13AM>
+:ID:       uxv9rtw034g0
+:END:
+#+name: mnml:implementation
+#+begin_src pascal
+  procedure step;
+    var i, n : cardinal;
+    begin
+      n := length(queue);
+      if n > 0 then for i := 0 to n - 1 do thunks[queue[i]]();
+      if length(queue) > n then
+        { shift newly launched commands to start of the array }
+        for i := n to length(queue) - 1 do queue[i-n] := queue[i];
+      { now truncate the array so only the new items remain }
+      SetLength(queue, Length(queue)-n)
+    end;
+#+end_src
+
+** =loop=
+:PROPERTIES:
+:TS:       <2013-05-15 10:02AM>
+:ID:       vkn7ibw034g0
+:END:
+#+name: mnml:implementation
+#+begin_src pascal
+  procedure loop;
+    begin
+      repeat step until done
+    end;
+#+end_src
+** =done=
+:PROPERTIES:
+:TS:       <2013-05-15 11:46AM>
+:ID:       14ted41134g0
+:END:
+#+name: mnml:implementation
+#+begin_src pascal
+  function done : boolean; inline;
+    begin
+      done := length(queue) = 0;
+    end;
+#+end_src
+
+** =define=
+:PROPERTIES:
+:TS:       <2013-05-15 11:46AM>
+:ID:       hdeho31134g0
+:END:
+#+name: mnml:implementation
+#+begin_src pascal
+  procedure define( out cmd : TCmdId; thunk : TThunk; token : TToken );
+    begin
+      cmd := length(thunks);
+      setlength(thunks, cmd+1);
+      setlength(tokens, cmd+1);
+      thunks[cmd] := thunk;
+      tokens[cmd] := token;
+    end;
+#+end_src
+
+** =launch=
+:PROPERTIES:
+:TS:       <2013-05-15 11:46AM>
+:ID:       tey0a41134g0
+:END:
+#+name: mnml:implementation
+#+begin_src pascal
+  procedure launch( const cmd  : TCmdId );
+    begin
+      setlength(queue, length(queue)+1);
+      queue[cmd] := cmd;
+    end;
+  
+  procedure launch( const cmd  : TToken );
+    var i : cardinal; found : boolean = false;
+    begin
+      for i := 0 to length(queue)-1 do
+        if tokens[i]=cmd then 
+          begin
+            launch( i );
+            found := true;
+          end;
+      if not found then
+        raise Exception.Create('undefined: ' + cmd );
+    end;
+#+end_src
+
+
+
+
+
 * CLASS =TBuffer=
 :PROPERTIES:
 :TS:       <2013-09-28 12:22PM>
@@ -170,33 +278,33 @@
 :TS: <2013-01-12 07:39AM>
 :ID: 1oyksgk0lzf0
 :END:
-*** TEditor.show
+*** TEditor.draw
 :PROPERTIES:
 :TS: <2013-01-13 04:33AM>
 :ID: l0l8ixr0mzf0
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-  procedure TEditor.show;
+  procedure TEditor.draw;
     var
       ypos : cardinal;
       line : cardinal;
-      <<ed/show/curpos>>
-      <<ed/show/gutter>>
-      <<ed/show/PlaceEditor>>
-      <<ed/show/line>>
+      <<ed/draw/curpos>>
+      <<ed/draw/gutter>>
+      <<ed/draw/PlaceEditor>>
+      <<ed/draw/line>>
     begin
-      <<ed/show:main>>
+      <<ed/draw:main>>
     end;
 #+end_src
-**** «ed/show/curpos»
+**** «ed/draw/curpos»
 :PROPERTIES:
 :TS: <2013-01-13 04:34AM>
 :ID: j4k6vzr0mzf0
 :END:
-#+name: ed/show/curpos
+#+name: ed/draw/curpos
 #+begin_src pascal
-  procedure show_curpos;
+  procedure draw_curpos;
   begin
     cwritexy( 0, 0,
               '|!b' +
@@ -207,26 +315,26 @@
     self.message := '';
   end;
 #+end_src
-**** «ed/show/gutter»
+**** «ed/draw/gutter»
 :PROPERTIES:
 :TS: <2013-01-13 04:34AM>
 :ID: dfe840s0mzf0
 :END:
-#+name: ed/show/gutter
+#+name: ed/draw/gutter
 #+begin_src pascal
-  procedure show_gutter( s : string );
+  procedure draw_gutter( s : string );
     var color : char = 'c';
   begin
     if line = position then color := 'C';
     cwritexy( 0, ypos, '|k|!' + color + s + '|!k|w' );
   end;
 #+end_src
-**** «ed/show/edit»
+**** «ed/draw/edit»
 :PROPERTIES:
 :TS: <2013-01-13 04:34AM>
 :ID: de5ca0s0mzf0
 :END:
-#+name: ed/show/PlaceEditor
+#+name: ed/draw/PlaceEditor
 #+begin_src pascal
   procedure PlaceEditor;
   begin
@@ -239,23 +347,23 @@
     end;
   end;
 #+end_src
-**** «ed/show/line»
-#+name: ed/show/line
+**** «ed/draw/line»
+#+name: ed/draw/line
 #+begin_src pascal
-  procedure show_line(s:string);
+  procedure draw_line(s:string);
     begin
       cwrite(s + '|!k|%' );
     end;
 #+end_src
-**** TODO «ed/show/node» { move =show_node= logic to =TBuffer= }
+**** TODO «ed/draw/node» { move =draw_node= logic to =TBuffer= }
 :PROPERTIES:
 :TS: <2013-01-13 04:48AM>
 :ID: 51l0hns0mzf0
 :END:
-#+name: show_node
+#+name: draw_node
 #+begin_src pascal
 
-  procedure show_list(node:li.lisnode);
+  procedure draw_list(node:li.lisnode);
     var
       tok   : string;
       d2re  : cardinal; { distance to right edge }
@@ -273,7 +381,7 @@
           else begin
             cwrite( '|!k|%' ); // clreol
             inc( ypos );
-            show_gutter( '   ' );
+            draw_gutter( '   ' );
             { truncate, in case token is wider than the whole editor }
             cwrite( stri.trunc( tok, d2re ));
           end
@@ -282,25 +390,25 @@
 
 #+end_src
 
-**** «ed/show:main»
+**** «ed/draw:main»
 :PROPERTIES:
 :TS: <2013-01-13 04:40AM>
 :ID: 9u9baas0mzf0
 :END:
-#+name: ed/show:main
+#+name: ed/draw:main
 #+begin_src pascal
     begin
       HideCursor;
       cwrite('|w|!b');
       //todo  fillbox( 1, 1, kvm.maxX, kvm.maxY, $0F20 );
-      show_curpos;
+      draw_curpos;
       ypos := 1; // line 0 is for the status / cursor position
 
       line := topline;
       repeat
-        show_gutter( flushrt( n2s( line ), 3, ' ' ));
+        draw_gutter( flushrt( n2s( line ), 3, ' ' ));
         if line = position then PlaceEditor
-        else show_line(buf[line]);
+        else draw_line(buf[line]);
         inc( ypos ); inc(line)
       until ( ypos >= self.h ) or ( line = buf.length );
       { fill in extra space if the file is too short }
@@ -474,26 +582,32 @@
 
 #+name: @imp:ed
 #+begin_src pascal
-
+  
   procedure TEditor.Loop;
     begin
       init;
-      repeat show until step = TI;
+      repeat
+        draw;
+        repeat 
+          if not keypressed then sleep(50);
+        until keypressed;
+        onKeyPress;
+      until state = TI;
       done;
     end;
-
+  
   procedure TEditor.Init;
     begin
       self.led := ui.zinput.create;
       self.home;
     end;
-
-  function TEditor.Step : vor;
-    var ch : char;
+  
+  procedure TEditor.onKeyPress;
+    var ch: char;
     begin
-      result := VO;
       case kbd.readkey(ch) of
-        ^C : result := TI;
+        ^C : self.state := TI;
+        ^R : mnml.launch(cmd_rnd);
         ^N : arrowdown;
         ^P : arrowup;
         ^M : newline;
@@ -515,11 +629,12 @@
       end;
       led.isdone := false;
     end;
-
-  procedure TEditor.Done;
+  
+  function TEditor.Done : boolean;
     begin
+      result := self.state = TI
     end;
-
+  
 #+end_src
 
 ** multi-line editor commands

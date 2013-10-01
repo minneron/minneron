@@ -98,16 +98,39 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-09-28 10:09PM>
 :ID:       wuihoeu039g0
 :END:
-** TODO break the display down into =impworld= morphs
+** TODO [0/1] break the display down into =impworld= morphs
 :PROPERTIES:
 :TS:       <2013-09-30 12:16AM>
 :ID:       9ad5js1059g0
 :END:
-*** TODO implement =step= (task system / mnml / impworld )
+*** TODO [1/4] implement =step= (task system / mnml / impworld )
 :PROPERTIES:
 :TS: <2013-01-17 08:20AM>
 :ID: zwuf3p10szf0
 :END:
+**** DONE break =editor.run= into =.loop= and =.step=
+:PROPERTIES:
+:TS:       <2013-10-01 12:02AM>
+:ID:       u80as8h069g0
+:END:
+**** TODO merge mnml into the main minneron code
+:PROPERTIES:
+:TS:       <2013-10-01 03:34AM>
+:ID:       ojmk32r069g0
+:END:
+**** TODO merge impworld code for adding multiple objects to the scene
+:PROPERTIES:
+:TS:       <2013-10-01 02:40AM>
+:ID:       nj157lo069g0
+:END:
+**** TODO implement simple tiling
+:PROPERTIES:
+:TS:       <2013-10-01 02:41AM>
+:ID:       3qk0olo069g0
+:END:
+
+
+
 ** TODO create a simple interactive grammar builder
 :PROPERTIES:
 :TS:       <2013-09-30 12:22AM>
@@ -307,4 +330,46 @@ new =show_node= version: id:51l0hns0mzf0
 :ID: xob8dhg0kzf0
 :END:
 
+
+* TODO planned enhancements for =mnml=
+:PROPERTIES:
+:TS:       <2013-05-15 12:14PM>
+:ID:       m2k24e2134g0
+:END:
+** TODO create a module for scheduled tasks
+:PROPERTIES:
+:TS:       <2013-05-15 10:47AM>
+:ID:       ydr91ey034g0
+:END:
+#+begin_src recur
+  function  ( pcmd : callable; interval, times, priority : integer ) : TTaskId;
+  function  change( task : callable; interval, times, priority : integer ) : TTaskId;
+#+end_src
+
+** TODO create a unit to handle module definititions
+:PROPERTIES:
+:TS:       <2013-05-15 10:48AM>
+:ID:       zqc4pey034g0
+:END:
+function  module( name : TModName  ) : TModId;
+type TModId : cardinal;
+TModName : string[32];
+
+** TODO actor model for retro
+:PROPERTIES:
+:TS:       <2013-05-15 12:13PM>
+:ID:       d5s2oc2134g0
+:END:
+** TODO module system
+:PROPERTIES:
+:TS:       <2013-05-15 12:13PM>
+:ID:       8vdhed2134g0
+:END:
+** TODO message passing system
+:PROPERTIES:
+:TS:       <2013-05-15 12:14PM>
+:ID:       pqdase2134g0
+:END:
+TMessage : record end;
+TQueue   : record end;
 
