@@ -46,10 +46,15 @@
            + round((random-0.5) * (random( kvm.Width )));
       { random * random will give a strong bias to top of screen }
       y := round(random * random * random( kvm.Width ));
-      kvm.Fg( random( 16 ));
+      kvm.Fg( random( 16 )); kvm.Bg( 0 );
       kvm.GotoXY( x, y );
       write( chr( random( 128 - 32 ) + 32 ));
-      if kbd.KeyPressed then kbd.ReadKey else mnml.launch(cmd_rnd);
+      if kbd.KeyPressed then
+         begin
+          kbd.ReadKey;
+          ShowCursor;
+         end
+      else mnml.launch(cmd_rnd);
     end;
 
     <<@imp:ed>>
@@ -127,7 +132,7 @@
         ed.init;
         ed.draw;
         repeat
-          if not keypressed then sleep(5);
+          if not keypressed then sleep(1);
           if keypressed then
             begin
               ed.onkeypress;

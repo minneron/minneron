@@ -607,7 +607,7 @@
     begin
       case kbd.readkey(ch) of
         ^C : self.state := TI;
-        ^R : mnml.launch(cmd_rnd);
+        ^R : begin HideCursor; mnml.launch(cmd_rnd); end;
         ^N : arrowdown;
         ^P : arrowup;
         ^M : newline;
