@@ -1,5 +1,6 @@
 # directory paths, relative to this directory:
 XPL       = ~/x/code
+IMP       = ~/i
 GEN	  = ./.gen
 PPU	  = $(GEN)
 EXE	  = $(GEN)
@@ -12,6 +13,7 @@ ROOT      = ../
 FPC_PATH  = fpc
 RTL       = -Fu~/f/rtl/units/x86_64-linux
 FPC       = $(FPC_PATH) $(RTL) -gl -B -Fu$(GEN) -Fi$(GEN) \
+            -Fu$(IMP) \
             -Fu$(XPL) -Fi$(XPL) -Fu./lib -FE$(GEN) -O-
 FCL-PAS = $(FCL)/fcl-passrc
 TANGLE    = ./etc/tangle.el
