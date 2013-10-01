@@ -65,47 +65,6 @@
   end.
 #+end_src
 
-*** unit =mnml= : minneron main loop
-:PROPERTIES:
-:TS:       <2013-05-15 10:13AM>
-:ID:       k5kjxsw034g0
-:END:
-#+begin_src pascal :tangle ".gen/mnml.pas" :noweb tangle
-  { minneron main loop }
-  {$mode delphi}
-  unit mnml;
-  interface uses sysutils, vorunati, arrays;
-    <<mnml:interface>>
-  implementation
-    <<mnml:implementation>>
-  initialization
-    <<mnml:initialization>>
-  finalization
-    <<mnml:finalization>>
-  end.
-#+end_src
-**** initialization
-:PROPERTIES:
-:TS:       <2013-05-15 11:43AM>
-:ID:       6a76cy0134g0
-:END:
-#+name: initialization
-#+begin_src pascal
-#+end_src
-
-**** finalization
-:PROPERTIES:
-:TS:       <2013-05-15 11:44AM>
-:ID:       m2i8w01134g0
-:END:
-#+name: mnml:finalization
-#+begin_src pascal
-    SetLength(tokens, 0);
-    SetLength(thunks, 0);
-    SetLength(queue,  0);
-#+end_src
-
-
 ** PROGRAM =min=
 :PROPERTIES:
 :TS: <2013-01-12 06:30AM>

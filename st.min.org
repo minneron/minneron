@@ -11,33 +11,7 @@
 :TS: <2013-01-11 03:35AM>
 :ID: la310m71jzf0
 :END:
-** interface for unit =mnml=
-:PROPERTIES:
-:TS:       <2013-05-15 10:19AM>
-:ID:       ab9hx2x034g0
-:END:
-#+name: mnml:interface
-#+begin_src pascal
-  type
-    TVoRun = function : vor of object;
-    TThunk = procedure;
-    TToken = string[31];
-    TCmdId = cardinal;
-  
-  procedure define( out cmd : TCmdId; thunk : TThunk; token : TToken );
-  procedure init; overload;
-  procedure init(shell : IVorTask); overload;
-  procedure launch( const cmd : TCmdId ); overload;
-  procedure launch( const cmd : TToken ); overload;
-  procedure launch( task : IVorTask ); overload;
-  procedure step;
-  function  done : boolean;
-  procedure loop;
-#+end_src
-
-
-
-*** [1/6] document model (spanning tree into the graph)       :doc:
+*** [1/6] document model (spanning tree into the graph)         :doc:
 :PROPERTIES:
 :TS: <2013-01-03 04:13PM>
 :ID: v971ih00azf0
