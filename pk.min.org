@@ -3,26 +3,7 @@
 :TS: <2013-01-11 09:40AM>
 :ID: 7vwjky90kzf0
 :END:
-*** TODO MODULE =buf= -> rename to docs or texts
-:PROPERTIES:
-:TS: <2013-01-04 04:31AM>
-:ID: u6chgny0azf0
-:END:
-
-#+begin_src pascal :tangle ".gen/buf.pas" :padline yes :noweb tangle
-  {$mode delphi}{$i xpc.inc}{$H+}
-  unit buf;
-  interface uses xpc, rings, tiles;
-    <<type:token>>
-    <<type:anchor>>
-    <<type:TBuffer>>
-    <<type:span>>
-  implementation
-    <<@imp:TBuffer>>
-  end.
-#+end_src
-
-*** MODULE =mn= : minneron object model                         :ed:ifc:
+*** MODULE =mn= : minneron object model                           :ed:ifc:
 :PROPERTIES:
 :TS: <2013-01-11 05:09AM>
 :ID: fr5fryb1jzf0
@@ -30,8 +11,8 @@
 #+begin_src pascal :tangle ".gen/mn.pas" :noweb tangle
   {$mode delphi}{$i xpc.inc}{$H+}
   unit mn;
-  interface uses xpc, fs, stri, num, cw, buf, ui, kvm, kbd, cli, tiles,
-    vorunati, sysutils, mnml;
+  interface uses xpc, fs, stri, num, cw, ui, kvm, kbd, cli, tiles,
+    vorunati, sysutils, mnml, mnbuf;
 
   var cmd_rnd : TCmdId;
 

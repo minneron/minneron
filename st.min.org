@@ -11,7 +11,7 @@
 :TS: <2013-01-11 03:35AM>
 :ID: la310m71jzf0
 :END:
-*** [1/6] document model (spanning tree into the graph)         :doc:
+*** [0/5] document model (spanning tree into the graph)         :doc:
 :PROPERTIES:
 :TS: <2013-01-03 04:13PM>
 :ID: v971ih00azf0
@@ -24,41 +24,14 @@
 
 A =TBuffer= is essentially a composite version of =ITextTile=.
 
-#+name: type:TBuffer
-#+begin_src pascal
-  type
-    TBuffer = class (TTextTile)
-      private type
-        TTextNodes = GRing<string>;
-        ITextCursor = IRingCursor<string>;
-        cursor = ITextCursor;
-      private
-        nodes : TTextNodes;
-      public
-        constructor Create( w, h : cardinal );
-        function  GetLength : cardinal; override;
-        function  GetLine(i:cardinal) : string; override;
-        procedure SetLine(i:cardinal; s:string); override;
-        procedure InsLine(i:cardinal; s:string); override;
-        procedure AddLine(s:string); override;
-        procedure DelLine(i:cardinal); override;
-        property length : cardinal read GetLength;
-        property lines[i:cardinal]:string
-          read GetLine write SetLine; default;
-      end;
-#+end_src
+[[code://mnbuf:TBuffer]]
 
-**** TODO TYPE token                                         :unused:
+**** TODO TYPE token                                            :unused:
 :PROPERTIES:
 :TS: <2013-01-12 06:41AM>
 :ID: x4i08sh0lzf0
 :END:
-
-#+name: type:token
-#+begin_src pascal
-  type token = string;
-#+end_src
-
+[[code://mnbuf:token]]
 Just plain old string nodes for now.
 
 **** TODO TYPE anchor                                        :unused:
@@ -66,26 +39,11 @@ Just plain old string nodes for now.
 :TS: <2013-01-04 02:09AM>
 :ID: 2mxaf3s0azf0
 :END:
-
-#+name: type:anchor
-#+begin_src pascal
-  type anchor = TObject;
-#+end_src
+[[code://mnbuf:anchor]]
 
 Anchors are non-textual, and may hold any kind of data. They correspond roughly to <A> tags in html.
 
 Unlike the generic list cursors, which are pointers to link objects in the linked list, anchors are data objects that are actually part of the buffer. This is so programs that traverse the list are able to see and make use of them.
-
-**** TODO TYPE element                                       :unused:
-:PROPERTIES:
-:TS: <2013-01-12 03:20PM>
-:ID: 8br01s51lzf0
-:END:
-
-#+name: type:element
-#+begin_src pascal
-//  type element = li.lisnode;
-#+end_src
 
 **** TODO blocks
 :PROPERTIES:
@@ -101,25 +59,13 @@ Most likely they would be implemented as =type block<t>=.
 
 These can be used to indicate parsed structures such as lines of text, tokens (for syntax highlighting), etc.
 
-**** DONE TYPE span
+**** TODO TYPE span { describe }
 :PROPERTIES:
 :TS: <2013-01-03 03:57PM>
 :ID: f4x29ce19zf0
 :END:
-#+name: type:span
-#+begin_src pascal
-  { used for selections }
-  type GSpan<t> = class
-  public
-    type tag = class( anchor )
-      is_start, is_end : boolean;
-      span             : GSpan<T>;
-    end;
-  public
-    start_tag, end_tag : tag;
-    obj : t;
-  end;
-#+end_src
+[[code://mnbuf:span]]
+
 
 **** TODO other embedded objects
 :PROPERTIES:

@@ -19,3 +19,16 @@
 :TS:       <2013-10-01 12:14AM>
 :ID:       2qdboth069g0
 :END:
+
+* TODO =launch(TToken)=  { should probably just be =string= }
+:PROPERTIES:
+:TS:       <2013-10-01 02:10PM>
+:ID:       st9k5z5079g0
+:END:
+
+* TODO MODULE =buf= -> rename to docs or texts
+:PROPERTIES:
+:TS: <2013-01-04 04:31AM>
+:ID: u6chgny0azf0
+:END:
+

@@ -1,6 +1,6 @@
 {$mode delphi}{$H+}
 {$i test_buffers.def }
-implementation uses buf;
+implementation uses mnbuf;
 
 var
   b : TBuffer;
