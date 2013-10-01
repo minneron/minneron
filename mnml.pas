@@ -9,8 +9,6 @@ interface uses sysutils, vorunati, arrays;
     TCmdId = cardinal;
 
   procedure define( out cmd : TCmdId; thunk : TThunk; token : TToken );
-  procedure init; overload;
-  procedure init(shell : IVorTask); overload;
   procedure launch( const cmd : TCmdId ); overload;
   procedure launch( const cmd : TToken ); overload;
   procedure launch( task : IVorTask ); overload;
@@ -24,20 +22,8 @@ var
   tasks	 : GArray<IVorTask>;
   thunks : array of TThunk;
   tokens : array of TToken;
-  
-  
-procedure init;
-  begin
-    tasks := (GArray<IVorTask>).Create;
-  end;
-  
-procedure init(shell : IVorTask);
-  begin
-    init;
-    launch(shell);
-  end;
+
 
-  
 procedure define( out cmd : TCmdId; thunk : TThunk; token : TToken );
   begin
     cmd := length(thunks);
@@ -53,7 +39,7 @@ procedure launch( const cmd  : TCmdId );
     setlength(queue, length(queue)+1);
     queue[cmd] := cmd;
   end;
-  
+
 procedure launch( const cmd  : TToken );
   var i : cardinal; found : boolean = false;
   begin
@@ -66,12 +52,12 @@ procedure launch( const cmd  : TToken );
     if not found then
       raise Exception.Create('undefined: ' + cmd );
   end;
-  
+
 procedure launch( task : IVorTask );
   begin
     tasks.Append( task );
   end;
-  
+
 procedure step;
   var i, n : cardinal;
   begin
@@ -95,7 +81,7 @@ function done : boolean; inline;
   end;
 
 initialization
-
+  tasks := (GArray<IVorTask>).Create;
 finalization
   SetLength(tokens, 0);
   SetLength(thunks, 0);
