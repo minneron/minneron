@@ -1,6 +1,6 @@
 {$i xpc.inc}{$mode objfpc}{$h+}
-unit world;
-uses
+unit impworld;
+interface uses
   xpc,      // pass, general compatability
   sysutils, // AppendStr, FormatDateTime
   kvm,      // fg, gotoxy, clreol
@@ -8,6 +8,13 @@ uses
   num,      // n2s
   kbd;      // keypressed/readkey
 
+  procedure init;
+  procedure step;
+  procedure draw;
+  procedure exit;
+  function done : boolean;
+
+implementation
 
 {-- dynamic types -----------------}
 type
@@ -601,7 +608,7 @@ destructor ShellObj.Destroy;
 var
   focus : Morph;
 
-procedure Create;
+procedure Init;
   begin
     kvm.ClrScr;
     numActors := 0; numTokens := 0;
@@ -610,7 +617,7 @@ procedure Create;
   end;
 
 
-procedure Update;
+procedure Step;
   var i : byte; ch : char; a : Actor; msg:Event;
   begin
 
@@ -645,7 +652,7 @@ procedure Update;
       end;
   end;
 
-procedure Render;
+procedure Draw;
   var i : byte;
   begin
     if numActors > 0 then
@@ -653,16 +660,21 @@ procedure Render;
         if actors[ i ]^.Visible then actors[ i ]^.Render
   end;
 
-procedure Destroy;
+procedure Exit;
   begin
     clrscr; writeln('terminated cleanly.');
   end;
 
-begin
-  Create;
-  repeat
-    Update;
-    Render;
-  until numActors = 0;
-  Destroy;
+function Done : Boolean;
+  begin
+    result := numActors = 0;
+  end;
+
+procedure Run;
+  begin
+    init;
+    repeat step; draw until done;
+    exit;
+  end;
+
 end.
