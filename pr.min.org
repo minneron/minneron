@@ -64,7 +64,7 @@
 #+end_src
 
 
-* CLASS Editor                                                           :ed:
+* CLASS TEditor                                                  :ed:
 :PROPERTIES:
 :TS: <2013-01-11 08:46AM>
 :ID: sghf0g70kzf0
@@ -76,7 +76,7 @@
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-  constructor editor.create;
+  constructor TEditor.create;
     begin
       inherited;
       x := 0;
@@ -99,7 +99,7 @@
 #+name: @imp:ed
 #+begin_src pascal
 
-  procedure editor.parse( var txt : text );
+  procedure TEditor.parse( var txt : text );
     var n : cardinal; line : string;
     begin
       while not eof( txt ) do begin
@@ -127,7 +127,7 @@
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-  function editor.Load( path : string ) : boolean;
+  function TEditor.Load( path : string ) : boolean;
       var txt : text;
     begin
       result := fs.exists( path );
@@ -141,9 +141,9 @@
           self.filename := path;
         end
       else message := 'couldn''t load "' + path + '"';
-    end; { editor.load }
+    end; { TEditor.load }
 
-  function editor.save : boolean;
+  function TEditor.save : boolean;
       var txt: text; i : cardinal;
     begin
       assign( txt, self.filename );
@@ -154,7 +154,7 @@
       message := filename + ' saved.';
     end;
 
-  function editor.save_as( path : string ) : boolean;
+  function TEditor.save_as( path : string ) : boolean;
       var oldname : string;
     begin
       oldname := self.filename;
@@ -170,14 +170,14 @@
 :TS: <2013-01-12 07:39AM>
 :ID: 1oyksgk0lzf0
 :END:
-*** editor.show
+*** TEditor.show
 :PROPERTIES:
 :TS: <2013-01-13 04:33AM>
 :ID: l0l8ixr0mzf0
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-  procedure editor.show;
+  procedure TEditor.show;
     var
       ypos : cardinal;
       line : cardinal;
@@ -324,7 +324,7 @@
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-  procedure editor.updatecamera;
+  procedure TEditor.updatecamera;
     var screenline : word;
     begin
       assert(topline <= position );
@@ -359,7 +359,7 @@
 #+name: @imp:ed
 #+begin_src pascal
 
-  procedure editor.home;
+  procedure TEditor.home;
   begin
     if self.buf.length = 0 then exit;
     position := 0;
@@ -367,7 +367,7 @@
     led.work := buf[ 0 ];
   end;
 
-  procedure editor._end;
+  procedure TEditor._end;
     var i : byte;
   begin
     position := self.buf.length - 1;
@@ -384,7 +384,7 @@
 #+name: @imp:ed
 #+begin_src pascal
 
-  procedure editor.grabLine;
+  procedure TEditor.grabLine;
    { TODO: see if this code belongs in TBuffer. Else delete it.
     function to_string : string;
       var first : boolean = true; var this, node : li.node;
@@ -409,7 +409,7 @@
       self.led.work := self.buf[self.position]
     end;
 
-  procedure editor.arrowup;
+  procedure TEditor.arrowup;
     begin
       keepInput;
       if self.position > 0 then
@@ -420,7 +420,7 @@
       grabLine;
     end;
 
-  procedure editor.arrowdown;
+  procedure TEditor.arrowdown;
     begin
       keepInput;
       if self.position + 1 < self.buf.length then
@@ -431,13 +431,13 @@
       grabLine;
     end;
 
-  procedure editor.pageup;
+  procedure TEditor.pageup;
     var c : byte;
     begin
       for c := 1 to h do arrowup;
     end;
 
-  procedure editor.pagedown;
+  procedure TEditor.pagedown;
     var c : byte;
     begin
       for c := 1 to h do arrowdown;
@@ -452,7 +452,7 @@
 :END:
 #+name: @imp:ed
 #+begin_src pascal
-  procedure editor.keepInput;
+  procedure TEditor.keepInput;
   begin
     buf[position] := led.value
   end;
@@ -460,13 +460,13 @@
 
 #+name: @imp:ed
 #+begin_src pascal
-  procedure editor.moveInput;
+  procedure TEditor.moveInput;
   begin
     updateCamera;
   end;
 #+end_src
 
-** modal interface
+** =loop= and =step=
 :PROPERTIES:
 :TS: <2013-01-12 07:41AM>
 :ID: lxfhwjk0lzf0
@@ -474,40 +474,52 @@
 
 #+name: @imp:ed
 #+begin_src pascal
-  procedure editor.run;
-    var done : boolean = false; ch : char;
+
+  procedure TEditor.Loop;
     begin
-      xpc.log.debug([ 'about to enter create' ]);
-      self.led := ui.zinput.create;
-      xpc.log.debug([ 'about to go home' ]);
-      self.home;
-      xpc.log.debug([ 'about to enter loop' ]);
-      repeat
-        show;
-        case kbd.readkey(ch) of
-          ^C : done := true;
-          ^N : arrowdown;
-          ^P : arrowup;
-          ^M : newline;
-          ^D : delete;
-          ^S : save;
-          ^V : pagedown;
-          ^U : pageup;
-          #0 : case kbd.readkey(ch) of
-                      #72 : arrowup; // when you press the UP arrow!
-                      #80 : arrowdown; // when you press the DOWN arrow!
-                      #71 : home;
-                      #79 : _end;
-                      #73 : pageup;
-                      #81 : pagedown;
-                      ^M  : newline;
-                      else led.handlestripped( ch ); led.show;
-                    end;
-          else led.handle( ch ); led.show;
-        end;
-        led.isdone := false; // TODO: split lines on ^M/^J
-      until done;
+      init;
+      repeat show until step = TI;
+      done;
     end;
+
+  procedure TEditor.Init;
+    begin
+      self.led := ui.zinput.create;
+      self.home;
+    end;
+
+  function TEditor.Step : vor;
+    var ch : char;
+    begin
+      result := VO;
+      case kbd.readkey(ch) of
+        ^C : result := TI;
+        ^N : arrowdown;
+        ^P : arrowup;
+        ^M : newline;
+        ^D : delete;
+        ^S : save;
+        ^V : pagedown;
+        ^U : pageup;
+        #0 : case kbd.readkey(ch) of
+               #72 : arrowup; // when you press the UP arrow!
+               #80 : arrowdown; // when you press the DOWN arrow!
+               #71 : home;
+               #79 : _end;
+               #73 : pageup;
+               #81 : pagedown;
+               ^M  : newline;
+               else led.handlestripped( ch ); led.show;
+             end;
+        else led.handle( ch ); led.show;
+      end;
+      led.isdone := false;
+    end;
+
+  procedure TEditor.Done;
+    begin
+    end;
+
 #+end_src
 
 ** multi-line editor commands
@@ -518,7 +530,7 @@
 
 #+name: @imp:ed
 #+begin_src pascal
-  procedure editor.newline;
+  procedure TEditor.newline;
     begin
       buf.InsLine(position, led.str_to_end );
       led.del_to_end;
@@ -526,7 +538,7 @@
       led.to_start;
     end;
 
-  procedure editor.delete;
+  procedure TEditor.delete;
     begin
       if led.at_end and (position + 1 < buf.length) then
         begin

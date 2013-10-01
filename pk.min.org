@@ -30,14 +30,15 @@
 #+begin_src pascal :tangle ".gen/mn.pas" :noweb tangle
   {$mode delphi}{$i xpc.inc}{$H+}
   unit mn;
-  interface uses xpc, fs, stri, num, cw, buf, ui, kvm, kbd, cli, tiles;
-    <<type:editor>>
+  interface uses xpc, fs, stri, num, cw, buf, ui, kvm, kbd, cli, tiles, vorunati;
+    <<type:TEditor>>
     <<type:span>>
   implementation
     <<@imp:ed>>
     <<@imp:span>>
   end.
 #+end_src
+
 *** PROGRAM =min=
 :PROPERTIES:
 :TS: <2013-01-12 06:30AM>
@@ -50,17 +51,17 @@
   ---------------------------------------------------------------}
   {$mode delphi}{$i xpc.inc}{$H+}
   program min;
-  uses xpc, mn, cw, cx, cli, kvm;
+  uses xpc, mn, cw, cx, kvm;
   
-  var ed : mn.editor;
+  var ed : mn.TEditor;
   begin
+    ed := TEditor.Create;
     kvm.ClrScr;
-    ed := editor.Create;
     if ParamCount = 0 then
       writeln( 'usage : min <filename> ')
     else if ed.Load( ParamStr( 1 )) then
       begin
-        ed.Run;
+        ed.Loop;
         ed.Destroy;
         cw.cwriteln( '|w|!k' );
         kvm.ClrScr;

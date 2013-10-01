@@ -142,15 +142,15 @@ They are expected to display themselves, just like textual nodes.
 :ID: 2cxcdoe0kzf0
 :END:
 
-*** DONE editor type                                                   :ed:
+*** DONE TEditor type                                                   :ed:
 :PROPERTIES:
 :TS: <2013-01-11 11:09AM>
 :ID: zy54y2e0kzf0
 :END:
-**** editor > the basics
-#+name: type:editor
+**** TEditor > the basics
+#+name: type:TEditor
 #+begin_src pascal
-  type editor = class
+  type TEditor = class
     buf               : ITextTile;
     filename          : string;
     message           : string;
@@ -161,12 +161,16 @@ They are expected to display themselves, just like textual nodes.
     function Load( path : string ) : boolean;
     function Save_as( path : string ) : boolean;
     function Save : boolean;
-    procedure Run;
+    procedure Loop;
+    procedure Init;
+    function Step : vor;
     procedure Show;
+    procedure Done;
+
 #+end_src
 
-**** editor > cursor movement
-#+name: type:editor
+**** TEditor > cursor movement
+#+name: type:TEditor
 #+begin_src pascal
    protected { cursor movement commands }
     procedure arrowup;
@@ -177,16 +181,16 @@ They are expected to display themselves, just like textual nodes.
     procedure pagedown;
 #+end_src
 
-**** editor > line manipulation
-#+name: type:editor
+**** TEditor > line manipulation
+#+name: type:TEditor
 #+begin_src pascal
    protected { line manipulation commands }
     procedure newline;
     procedure delete;
 #+end_src
 
-**** editor > misc private methods
-#+name: type:editor
+**** TEditor > misc private methods
+#+name: type:TEditor
 #+begin_src pascal
    private
     procedure updateCamera;
