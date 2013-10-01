@@ -18,8 +18,6 @@
 :END:
 #+name: mnml:interface
 #+begin_src pascal
-interface
-uses sysutils, vorunati;
   type
     TVoRun = function : vor of object;
     TThunk = procedure;
@@ -27,8 +25,11 @@ uses sysutils, vorunati;
     TCmdId = cardinal;
   
   procedure define( out cmd : TCmdId; thunk : TThunk; token : TToken );
-  procedure launch( const cmd : TCmdId );
-  procedure launch( const cmd : TToken );
+  procedure init; overload;
+  procedure init(shell : IVorTask); overload;
+  procedure launch( const cmd : TCmdId ); overload;
+  procedure launch( const cmd : TToken ); overload;
+  procedure launch( task : IVorTask ); overload;
   procedure step;
   function  done : boolean;
   procedure loop;
@@ -175,7 +176,7 @@ They are expected to display themselves, just like textual nodes.
 ***** TEditor > the basics
 #+name: type:TEditor
 #+begin_src pascal
-  type TEditor = class
+  type TEditor = class (TVorTask)
     buf               : ITextTile;
     filename          : string;
     message           : string;

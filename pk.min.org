@@ -72,11 +72,15 @@
 :END:
 #+begin_src pascal :tangle ".gen/mnml.pas" :noweb tangle
   { minneron main loop }
-  {$mode objfpc}
+  {$mode delphi}
   unit mnml;
+  interface uses sysutils, vorunati, arrays;
     <<mnml:interface>>
+  implementation
     <<mnml:implementation>>
+  initialization
     <<mnml:initialization>>
+  finalization
     <<mnml:finalization>>
   end.
 #+end_src
@@ -87,7 +91,6 @@
 :END:
 #+name: initialization
 #+begin_src pascal
-  initialization
 #+end_src
 
 **** finalization
@@ -97,7 +100,6 @@
 :END:
 #+name: mnml:finalization
 #+begin_src pascal
-  finalization
     SetLength(tokens, 0);
     SetLength(thunks, 0);
     SetLength(queue,  0);

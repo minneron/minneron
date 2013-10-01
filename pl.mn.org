@@ -103,26 +103,32 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-09-30 12:16AM>
 :ID:       9ad5js1059g0
 :END:
-*** TODO [1/4] implement =step= (task system / mnml / impworld )
+*** TODO [2/5] implement =step= (task system / mnml / impworld )
 :PROPERTIES:
 :TS: <2013-01-17 08:20AM>
 :ID: zwuf3p10szf0
 :END:
-**** DONE break =editor.run= into =.loop= and =.step=
+**** DONE break =TEditor.run= into =.loop= and =.step=
 :PROPERTIES:
 :TS:       <2013-10-01 12:02AM>
 :ID:       u80as8h069g0
 :END:
-**** TODO merge mnml into the main minneron code
+**** DONE merge =mnml= into the main minneron code
 :PROPERTIES:
 :TS:       <2013-10-01 03:34AM>
 :ID:       ojmk32r069g0
 :END:
-**** TODO merge impworld code for adding multiple objects to the scene
+**** TODO merge =impworld= and =vorunati= to add multiple objects to the scene
 :PROPERTIES:
 :TS:       <2013-10-01 02:40AM>
 :ID:       nj157lo069g0
 :END:
+**** TODO let the combined loop handle =TEditor='s lifecycle.
+:PROPERTIES:
+:TS:       <2013-10-01 01:46PM>
+:ID:       orvbiu4079g0
+:END:
+
 **** TODO implement simple tiling
 :PROPERTIES:
 :TS:       <2013-10-01 02:41AM>

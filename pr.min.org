@@ -10,12 +10,84 @@
 ** internal variables
 #+name: mnml:implementation
 #+begin_src pascal
-  implementation
     var
       queue  : array of TCmdId;
+      tasks  : GArray<IVorTask>;
       thunks : array of TThunk;
       tokens : array of TToken;
   #+end_src
+
+** =init= and =init(IVorTask)=
+:PROPERTIES:
+:TS:       <2013-10-01 01:49PM>
+:ID:       vweiqy4079g0
+:END:
+#+name: mnml:implementation
+#+begin_src pascal
+  procedure init;
+    begin
+      tasks := (GArray<IVorTask>).Create;
+    end;
+
+  procedure init(shell : IVorTask);
+    begin
+      init;
+      launch(shell);
+    end;
+#+end_src
+
+** =launch=
+:PROPERTIES:
+:TS:       <2013-05-15 11:46AM>
+:ID:       tey0a41134g0
+:END:
+*** =launch(TCmdID)=
+:PROPERTIES:
+:TS:       <2013-10-01 02:10PM>
+:ID:       oqr7ly5079g0
+:END:
+#+name: mnml:implementation
+#+begin_src pascal
+  procedure launch( const cmd  : TCmdId );
+    begin
+      setlength(queue, length(queue)+1);
+      queue[cmd] := cmd;
+    end;
+#+end_src
+
+*** TODO =launch(TToken)=  { should probably just be =string= }
+:PROPERTIES:
+:TS:       <2013-10-01 02:10PM>
+:ID:       st9k5z5079g0
+:END:
+#+name: mnml:implementation
+#+begin_src pascal
+  procedure launch( const cmd  : TToken );
+    var i : cardinal; found : boolean = false;
+    begin
+      for i := 0 to length(queue)-1 do
+        if tokens[i]=cmd then
+          begin
+            launch( i );
+            found := true;
+          end;
+      if not found then
+        raise Exception.Create('undefined: ' + cmd );
+    end;
+#+end_src
+
+*** =launch(IVorTask)=
+:PROPERTIES:
+:TS:       <2013-10-01 01:57PM>
+:ID:       vytblc5079g0
+:END:
+#+name: mnml:implementation
+#+begin_src pascal
+  procedure launch( task : IVorTask );
+    begin
+      tasks.Append( task );
+    end;
+#+end_src
 
 ** =step=
 :PROPERTIES:
@@ -49,6 +121,7 @@
       repeat step until done
     end;
 #+end_src
+
 ** =done=
 :PROPERTIES:
 :TS:       <2013-05-15 11:46AM>
@@ -76,33 +149,6 @@
       setlength(tokens, cmd+1);
       thunks[cmd] := thunk;
       tokens[cmd] := token;
-    end;
-#+end_src
-
-** =launch=
-:PROPERTIES:
-:TS:       <2013-05-15 11:46AM>
-:ID:       tey0a41134g0
-:END:
-#+name: mnml:implementation
-#+begin_src pascal
-  procedure launch( const cmd  : TCmdId );
-    begin
-      setlength(queue, length(queue)+1);
-      queue[cmd] := cmd;
-    end;
-  
-  procedure launch( const cmd  : TToken );
-    var i : cardinal; found : boolean = false;
-    begin
-      for i := 0 to length(queue)-1 do
-        if tokens[i]=cmd then 
-          begin
-            launch( i );
-            found := true;
-          end;
-      if not found then
-        raise Exception.Create('undefined: ' + cmd );
     end;
 #+end_src
 
@@ -582,26 +628,26 @@
 
 #+name: @imp:ed
 #+begin_src pascal
-  
+
   procedure TEditor.Loop;
     begin
       init;
       repeat
         draw;
-        repeat 
+        repeat
           if not keypressed then sleep(50);
         until keypressed;
         onKeyPress;
       until state = TI;
       done;
     end;
-  
+
   procedure TEditor.Init;
     begin
       self.led := ui.zinput.create;
       self.home;
     end;
-  
+
   procedure TEditor.onKeyPress;
     var ch: char;
     begin
@@ -629,12 +675,12 @@
       end;
       led.isdone := false;
     end;
-  
+
   function TEditor.Done : boolean;
     begin
       result := self.state = TI
     end;
-  
+
 #+end_src
 
 ** multi-line editor commands
