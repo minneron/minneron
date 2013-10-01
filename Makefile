@@ -29,7 +29,7 @@ targets:
 	@echo
 
 min: .tangled
-	$(FPC) -Mobjfpc $(GEN)/min.pas
+	$(FPC) -Mobjfpc min.pas
 	mv $(GEN)/min .$
 
 run: min
