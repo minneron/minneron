@@ -1,8 +1,9 @@
-{$i xpc.inc}{$mode objfpc}{$h+}
+{$i xpc.inc}{$mode delphi}{$h+}
 unit impworld;
 interface uses
   xpc,      // pass, general compatability
   mnml,
+  arrays,
   vorunati,
   sysutils, // AppendStr, FormatDateTime
   kvm,      // fg, gotoxy, clreol
@@ -414,23 +415,14 @@ procedure MachineObj.Render;
 
 {-- concurrency --------------------}
 
-var actors : array[ 0 .. 254 ] of Actor;
-    tokens : array[ 0 .. 254 ] of Token;
-    numActors : byte;
-    numTokens : byte;
+type
+  TActors = GArray<Actor>;
+var
+  actors : TActors;
 
-procedure Register(this:Actor);
+procedure launch(this:Actor);
   begin
-    if numActors < 255 then
-      begin
-        actors[numActors] := this;
-        inc(numActors);
-      end
-    else
-      begin
-        Dispose(this, Destroy);
-        Writeln('out of actor slots');
-      end
+    actors.append(this);
   end;
 
 
@@ -530,10 +522,10 @@ type
 constructor ShellObj.Create;
   begin
     inherited Create;
-    vm := New(Machine, Create); register(vm);
+    vm := New(Machine, Create); launch(vm);
     clock := New(ClockMorph, Create);
     clock^.bounds.x := 0; clock^.bounds.y := 0;
-    Register(clock);
+    launch(clock);
     self.Clear;
     words := New(Dict, Create);
   end;
@@ -610,9 +602,8 @@ var
 
 
 procedure Step;
-  var i : byte; ch : char; a : Actor; msg:Event;
+  var i : byte; ch : char; a : Actor; msg:Event; numactors : cardinal;
   begin
-
     // TODO: without this next line (at least on freebsd)
     // it won't readkey. why not!?!
     if not keypressed then sleep(50);
@@ -628,7 +619,8 @@ procedure Step;
 
     { dispatch to all actors }
     i := 0;
-    while i < numActors do
+    numActors := actors.length;
+    while i < actors.length do
       begin
         a := actors[ i ];
         if a^.active then begin
@@ -642,38 +634,31 @@ procedure Step;
           end
         end else inc(i) { was inactive, skip over for now }
       end;
+    actors.length := numActors;
   end;
 
 procedure Draw;
-  var i : byte;
+  var i:cardinal;
   begin
-    if numActors > 0 then
-      for i := 0 to numActors-1 do
-        if actors[ i ]^.Visible then actors[ i ]^.Render
+    for i := 0 to actors.length - 1 do
+      if actors[i]^.Visible then actors[i]^.Render
   end;
 
 function Done : Boolean;
   begin
-    result := numActors = 0;
-  end;
-
-procedure Run;
-  begin
-    repeat step; draw until done;
-    halt;
+    result := actors.length = 0;
   end;
 
 initialization
 
   kvm.ClrScr;
-  numActors := 0; numTokens := 0;
+  actors := TActors.Create;
   focus := New(Shell, Create);
-  Register(focus);
+  launch(focus);
 
 finalization
 
   cw.cwriteln( '|w|!k' );
   kvm.ClrScr;
-  writeln('terminated cleanly.');
 
 end.
