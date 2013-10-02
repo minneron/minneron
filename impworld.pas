@@ -2,16 +2,16 @@
 unit impworld;
 interface uses
   xpc,      // pass, general compatability
+  mnml,
+  vorunati,
   sysutils, // AppendStr, FormatDateTime
   kvm,      // fg, gotoxy, clreol
   cw,       // cxy(color, x, y, string)
   num,      // n2s
   kbd;      // keypressed/readkey
 
-  procedure init;
   procedure step;
   procedure draw;
-  procedure exit;
   function done : boolean;
 
 implementation
@@ -608,14 +608,6 @@ destructor ShellObj.Destroy;
 var
   focus : Morph;
 
-procedure Init;
-  begin
-    kvm.ClrScr;
-    numActors := 0; numTokens := 0;
-    focus := New(Shell, Create);
-    Register(focus);
-  end;
-
 
 procedure Step;
   var i : byte; ch : char; a : Actor; msg:Event;
@@ -660,11 +652,6 @@ procedure Draw;
         if actors[ i ]^.Visible then actors[ i ]^.Render
   end;
 
-procedure Exit;
-  begin
-    clrscr; writeln('terminated cleanly.');
-  end;
-
 function Done : Boolean;
   begin
     result := numActors = 0;
@@ -672,9 +659,21 @@ function Done : Boolean;
 
 procedure Run;
   begin
-    init;
     repeat step; draw until done;
-    exit;
+    halt;
   end;
+
+initialization
+
+  kvm.ClrScr;
+  numActors := 0; numTokens := 0;
+  focus := New(Shell, Create);
+  Register(focus);
+
+finalization
+
+  cw.cwriteln( '|w|!k' );
+  kvm.ClrScr;
+  writeln('terminated cleanly.');
 
 end.
