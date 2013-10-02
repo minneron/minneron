@@ -36,9 +36,62 @@ type
   end;
   IMorph = interface (IGroup)
   end;
+
+const
+  cmd_quit  =  -1;
+  cmd_step  =  -2;
+  cmd_draw  =  -3;
+  cmd_hide  =  -4;
+  cmd_show  =  -5;
+  cmd_help  =  -6;
+
+type
+  TActor = class (TVorTask, IActor)
+    _active,           { wants update() }
+    _alive,            { exists but not alive triggers gc }
+    _visible,          { to allow hide/show }
+    _exists : boolean; { turn off everything at once }
+    constructor Create;
+    procedure step; override;
+    procedure Draw; virtual;
+    procedure Halt;
+    function Handle( msg : IMessage ):boolean; virtual;
+    function GetVisible : boolean;
+    function GetExists : boolean;
+    function GetActive : boolean;
+    function GetAlive : boolean;
+    function ToString : string; override;
+  end;
+
+  TGroup = class (TActor, IGroup)
+    children : GArray<IActor>;
+    constructor Create;
+    procedure Add( a : IActor );
+    function Handle( msg : IMessage ):boolean; override;
+  end;
+
+type
+  Point = object
+    x, y : integer;
+  end;
+
+  Quad = object( Point )
+    w, h : integer;
+    function x2 : integer;
+    function y2 : integer;
+  end;
+
+  TMorph = class (TGroup, IMorph)
+    bounds : Quad;
+    colors : word; { foreground and background }
+    constructor Create;
+    procedure Draw; override;
+  end;
+
 var
   world , focus : IMorph;
 
+
 implementation
 
 {-- fixed-size data blocks --------}
@@ -52,16 +105,6 @@ type
 
 
 {-- display -----------------------}
-type
-  Point = object
-    x, y : integer;
-  end;
-
-  Quad = object( Point )
-    w, h : integer;
-    function x2 : integer;
-    function y2 : integer;
-  end;
 
 function Quad.x2 : integer;
   begin
@@ -125,46 +168,6 @@ type
     end;
 
 {-- tasks ------------------------}
-const
-  cmd_quit  =  -1;
-  cmd_step  =  -2;
-  cmd_draw  =  -3;
-  cmd_hide  =  -4;
-  cmd_show  =  -5;
-  cmd_help  =  -6;
-
-type
-  TActor = class (TVorTask, IActor)
-    _active,           { wants update() }
-    _alive,            { exists but not alive triggers gc }
-    _visible,          { to allow hide/show }
-    _exists : boolean; { turn off everything at once }
-    constructor Create;
-    procedure step; override;
-    procedure Draw; virtual;
-    procedure Halt;
-    function Handle( msg : IMessage ):boolean; virtual;
-    function GetVisible : boolean;
-    function GetExists : boolean;
-    function GetActive : boolean;
-    function GetAlive : boolean;
-    function ToString : string; override;
-  end;
-
-  TGroup = class (TActor, IGroup)
-    children : GArray<IActor>;
-    constructor Create;
-    procedure Add( a : IActor );
-    function Handle( msg : IMessage ):boolean; override;
-  end;
-
-  TMorph = class (TGroup, IMorph)
-    bounds : Quad;
-    colors : word; { foreground and background }
-    constructor Create;
-    procedure Draw; override;
-  end;
-
   TMessage = class (TTagged, IMessage)
     sym : TSymbol;
     sender: IActor;
@@ -216,7 +219,7 @@ function TActor.GetExists;  begin  result := _exists end;
 function TActor.GetActive;  begin  result := _active end;
 function TActor.GetAlive;   begin  result := _alive end;
 
-  
+
 
 constructor TGroup.Create;
   begin
