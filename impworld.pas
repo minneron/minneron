@@ -17,23 +17,6 @@ interface uses
 
 implementation
 
-{-- dynamic types -----------------}
-type
-  TObj = class { base type for all objetcs }
-    public
-      constructor Create;
-      function Str: string; virtual;
-    end;
-
-constructor TObj.Create;
-  begin
-  end;
-
-function TObj.Str : string;
-  begin
-    result := '$';
-  end;
-
 {-- fixed-size data blocks --------}
 type
   Block = array[ 0 .. 1023 ] of byte;
@@ -68,7 +51,7 @@ function Quad.y2 : integer;
 
 {-- tagged data types -------------}
 type
-  TTagged = class(TObj)
+  TTagged = class
     public
       tag :longint;
     end;
@@ -89,7 +72,7 @@ type
   TypeKind = ( tkSimple, tkTkUnion, tkFunction, tkSchema );
   TFieldDef = class;
 
-  TTypeDef  = class(TObj)
+  TTypeDef  = class
     public
       size : Word;
       kind : TypeKind;
@@ -97,13 +80,13 @@ type
       first : TFieldDef;
     end;
 
-  TFieldDef = class(TObj)
+  TFieldDef = class
     public
       next : TFieldDef;
       name : TSymbol;
     end;
 
-  TTuple = class(TObj)
+  TTuple = class
     public
       meta : TTypeDef;
       data : TBytes;
@@ -121,7 +104,7 @@ const
 
 type
   TMessage = class;
-  TActor = class(TObj)
+  TActor = class
     active,           { wants update() }
     alive,            { exists but not alive triggers gc }
     visible,          { to allow hide/show }
@@ -228,7 +211,7 @@ type
     color : byte;
     constructor Create;
     procedure Render; override;
-    function Str:string; override;
+    function ToString:string; override;
   end;
 
 constructor TClockMorph.Create;
@@ -237,14 +220,14 @@ constructor TClockMorph.Create;
     color := $13; { cyan on blue }
   end;
 
-function TClockMorph.Str: string;
+function TClockMorph.ToString: string;
   begin
     result := FormatDateTime('MM.DD.YY hh:mm:ssam/pm', Now);
   end;
 
 procedure TClockMorph.Render;
   begin
-    cw.cxy( color, bounds.x, bounds.y, self.str )
+    cw.cxy( color, bounds.x, bounds.y, self.ToString )
   end;
 
 {-- stack -------------------}
@@ -439,20 +422,20 @@ constructor TEvent.Create(etag:integer; e:integer);
 
 type
   TEntry =  class;
-  TDict  = class(TObj)
+  TDict  = class
     public
       nextdict : TDict;
       latest   : TEntry;
       constructor Create;
-      procedure Define( name : string; value : TObj );
-      function Lookup( s : string; var item : TObj ): boolean;
+      procedure Define( name : string; value : TObject);
+      function Lookup( s : string; var item : TObject ): boolean;
     end;
 
   TEntry = class
     public
       prev : TEntry;
       name : string[32];
-      item : TObj;
+      item : TObject;
     end;
 
 constructor TDict.Create;
@@ -461,7 +444,7 @@ constructor TDict.Create;
     latest := nil;
   end;
 
-procedure TDict.Define( name: string; value : TObj );
+procedure TDict.Define( name: string; value : TObject);
   var en : TEntry;
   begin
     en := TEntry.Create;
@@ -471,7 +454,7 @@ procedure TDict.Define( name: string; value : TObj );
     latest := en;
   end;
 
-function TDict.Lookup( s : string; var item : TObj): boolean;
+function TDict.Lookup( s : string; var item : TObject): boolean;
   var en : TEntry; found : boolean;
   begin
     en := latest;
@@ -517,12 +500,12 @@ constructor TShellMorph.Create;
   end;
 
 procedure TShellMorph.invoke( cmd : string );
-  var o : TObj;
+  var o : TObject;
   begin
     if words.Lookup(cmd, o) then
       begin
         kvm.fg('g');
-        writeln( o.Str );
+        writeln( o.ToString );
       end
     else
       begin
