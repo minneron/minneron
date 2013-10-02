@@ -92,7 +92,7 @@ type
       data : TBytes;
     end;
 
-{-- actors ------------------------}
+{-- tasks ------------------------}
 const
   cmd_quit  =  -1;
   cmd_step  =  -2;
@@ -104,14 +104,14 @@ const
 
 type
   TMessage = class;
-  TActor = class
+  TActor = class (TVorTask)
     active,           { wants update() }
     alive,            { exists but not alive triggers gc }
     visible,          { to allow hide/show }
     exists : boolean; { turn off everything at once }
     constructor Create;
-    procedure Update; virtual;
-    procedure Render; virtual;
+    procedure step; override;
+    procedure Draw; virtual;
     function Handle( msg : TMessage ):boolean; virtual;
   end;
 
@@ -127,7 +127,7 @@ type
     bounds : Quad;
     colors : word; { foreground and background }
     constructor Create;
-    procedure Draw; virtual;
+    procedure Draw; override;
   end;
 
   TMessage = class (TTagged)
@@ -139,28 +139,29 @@ type
 
 constructor TActor.Create;
   begin
+    inherited Create;
     alive  := true;
     active := true;
     exists := true;
     visible := false;
   end;
 
-procedure TActor.Render;
+procedure TActor.Draw;
   begin
   end;
 
-procedure TActor.Update;
+procedure TActor.Step;
   begin
   end;
 
 function TActor.Handle( msg : TMessage ):boolean;
   begin
-    Handle := true;
+    result := true;
     case msg.tag of
       cmd_quit: active := false;
-      cmd_draw: Render;
-      cmd_step: Update;
-      else handle := false
+      cmd_draw: Draw;
+      cmd_step: Step;
+      else result := false
     end
   end;
 
@@ -187,7 +188,7 @@ function TGroup.Handle( msg: TMessage ):boolean;
         inc(i);
         handled := self.members[i].handle(msg)
       end;
-    handle := handled
+    result := handled
   end;
 
 constructor TMorph.Create;
@@ -210,7 +211,7 @@ type
   TClockMorph = class ( TMorph )
     color : byte;
     constructor Create;
-    procedure Render; override;
+    procedure Draw; override;
     function ToString:string; override;
   end;
 
@@ -225,7 +226,7 @@ function TClockMorph.ToString: string;
     result := FormatDateTime('MM.DD.YY hh:mm:ssam/pm', Now);
   end;
 
-procedure TClockMorph.Render;
+procedure TClockMorph.Draw;
   begin
     cw.cxy( color, bounds.x, bounds.y, self.ToString )
   end;
@@ -312,8 +313,8 @@ type
       ip, rp, wp : byte;
       data, addr : TStack;
       memory     : TBytes;
-      procedure Update; override;
-      procedure Render; override;
+      procedure Step; override;
+      procedure Draw; override;
       procedure RunOp( op:OpCode );
     end;
 
@@ -372,11 +373,11 @@ procedure TMachine.RunOp( op:OpCode );
     end
   end;
 
-procedure TMachine.Update;
+procedure TMachine.Step;
   begin
   end;
 
-procedure TMachine.Render;
+procedure TMachine.Draw;
   var i, j : integer;
   begin
     for i := 32 to 64 do for j := 8 to 16 do
@@ -386,13 +387,13 @@ procedure TMachine.Render;
 {-- concurrency --------------------}
 
 type
-  TActors = GArray<TActor>;
+  TTasks = GArray<IVorTask>;
 var
-  actors : TActors;
+  tasks : TTasks;
 
-procedure launch(this:TActor);
+procedure launch(this:IVorTask);
   begin
-    actors.append(this);
+    tasks.append(this);
   end;
 
 
@@ -413,6 +414,7 @@ type
 
 constructor TEvent.Create(etag:integer; e:integer);
   begin
+    inherited Create;
     tag  := etag;
     data := e;
   end;
@@ -484,7 +486,7 @@ type
     procedure Invoke( cmd : string );
     procedure Clear;
     function Handle( msg : TMessage ):boolean; override;
-    procedure Render; override;
+    procedure Draw; override;
     destructor Destroy; override;
   end;
 
@@ -526,12 +528,12 @@ procedure TShellMorph.Clear;
 function TShellMorph.Handle( msg : TMessage ) : boolean;
   var ch : char;
   begin
-    if msg.tag = evt_keydn then with TEvent(msg) do
+    if msg.tag = evt_keydn then with msg as TEvent do
       begin
-        handle := true;
+        result := true;
         ch := chr(data);
         case ch of
-          ^C : halt;
+          ^C : self.alive := false;
           ^H : if length(cmdstr) > 0 then
                  begin
                    SetLength(cmdstr, length(cmdstr)-1);
@@ -546,10 +548,10 @@ function TShellMorph.Handle( msg : TMessage ) : boolean;
           inc(curpos)
         end
       end
-    else handle := false;
+    else result := false;
   end;
 
-procedure TShellMorph.Render;
+procedure TShellMorph.Draw;
   begin
     cw.cxy($1e, 0, kvm.MaxY, '> ');
     cw.cxy($1f, 2, kvm.MaxY, cmdstr); clreol;
@@ -566,11 +568,11 @@ destructor TShellMorph.Destroy;
 
 {-- main program ---------}
 var
-  focus : TMorph;
+  focus : IVorTask;
 
 
-procedure Step;
-  var i : byte; ch : char; a : TActor; msg:TEvent; numactors : cardinal;
+procedure HandleKeys;
+  var ch : char; msg:TEvent;
   begin
     // TODO: without this next line (at least on freebsd)
     // it won't readkey. why not!?!
@@ -578,49 +580,64 @@ procedure Step;
 
     if keypressed then
       case kbd.ReadKey(ch) of
-        #0 : case kbd.ReadKey(ch) of kbd.ESC : halt; end;
+	^C : halt;
+        #0 : case kbd.ReadKey(ch) of
+               kbd.ESC :halt;
+             end;
       else
         msg := TEvent.Create(evt_keydn, ord(ch));
-        if not focus.handle(msg) then pass; {-- todo global keymap --}
-        msg.Free;
+        if assigned(focus) then
+	  if (focus is TActor)
+	    and not (focus as TActor).handle(msg)
+	    then pass; {--  TODO: global keymap --}
+	msg.Free;
       end; { case }
+  end;
 
+procedure Step;
+  var i : byte; a : IVorTask; n : cardinal;
+  begin
+    HandleKeys;
     { dispatch to all actors }
     i := 0;
-    numActors := actors.length;
-    while i < actors.length do
+    n := tasks.length;
+    while i < tasks.length do
       begin
-        a := actors[ i ];
-        if a.active then begin
-          a.Update;
-          if a.alive then inc(i)
-          else begin
-            Dec(numActors);
-            a.Free;
-            actors[ i ] := actors[ numActors ];
-            actors[ numActors ] := nil;
-          end
-        end else inc(i) { was inactive, skip over for now }
+	a := tasks[ i ];
+	if a.state = vo then begin
+	  a.step;
+	  if a.state in [vo, ru] then inc(i)
+	  else begin
+	    Dec(n);
+	    tasks[ i ] := tasks[ n ];
+	    tasks[ n ] := nil;
+	  end
+	end else inc(i) { was inactive, skip over for now }
       end;
-    actors.length := numActors;
-  end;
+    tasks.length := n;
+  end; { Step }
 
 procedure Draw;
-  var i:cardinal;
+  var i:cardinal; m : TMorph;
   begin
-    for i := 0 to actors.length - 1 do
-      if actors[i].Visible then actors[i].Render
+    if tasks.length > 0 then
+      for i := 0 to tasks.length - 1 do
+        if tasks[i] is TMorph then
+          begin
+            m := tasks[i] as TMorph;
+            if m.Visible then m.Draw;
+	  end
   end;
 
 function Done : Boolean;
   begin
-    result := actors.length = 0;
+    result := tasks.length = 0;
   end;
 
 initialization
 
   kvm.ClrScr;
-  actors := TActors.Create;
+  tasks := TTasks.Create;
   focus := TShellMorph.Create;
   launch(focus);
 

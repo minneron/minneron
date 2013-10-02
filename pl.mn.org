@@ -118,7 +118,7 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-10-01 03:34AM>
 :ID:       ojmk32r069g0
 :END:
-**** TODO [3/6] merge =impworld= and =vorunati= to add multiple objects to the scene
+**** TODO [4/6] merge =impworld= and =vorunati= to add multiple objects to the scene
 :PROPERTIES:
 :TS:       <2013-10-01 02:40AM>
 :ID:       nj157lo069g0
@@ -145,13 +145,7 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-10-01 09:03PM>
 :ID:       3b5043p079g0
 :END:
-
-***** TODO use sub-windows to separate the display
-:PROPERTIES:
-:TS:       <2013-10-01 06:58PM>
-:ID:       ssgezaj079g0
-:END:
-***** TODO have =impworld.actor= implement =IVorTask=
+***** DONE have =impworld.actor= implement =IVorTask=
 :PROPERTIES:
 :TS:       <2013-10-01 07:00PM>
 :ID:       jq769ej079g0
@@ -160,6 +154,12 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :PROPERTIES:
 :TS:       <2013-10-01 07:02PM>
 :ID:       5nu40hj079g0
+:END:
+
+***** TODO use sub-windows to separate the display
+:PROPERTIES:
+:TS:       <2013-10-01 06:58PM>
+:ID:       ssgezaj079g0
 :END:
 
 **** TODO let the combined loop handle =TEditor='s lifecycle.
