@@ -59,7 +59,7 @@ procedure launch( task : IVorTask );
   end;
 
 procedure step;
-  var i, n : cardinal;
+  var i : byte; a : IVorTask; n : cardinal;
   begin
     n := length(queue);
     if n > 0 then for i := 0 to n - 1 do thunks[queue[i]]();
@@ -67,8 +67,26 @@ procedure step;
       { shift newly launched commands to start of the array }
       for i := n to length(queue) - 1 do queue[i-n] := queue[i];
     { now truncate the array so only the new items remain }
-    SetLength(queue, Length(queue)-n)
-  end;
+    SetLength(queue, Length(queue)-n);
+
+    { dispatch to all tasks }
+    i := 0;
+    n := tasks.length;
+    while i < tasks.length do
+      begin
+	a := tasks[ i ];
+	if a.state = vo then begin
+	  a.step;
+	  if a.state in [vo, ru] then inc(i)
+	  else begin
+	    Dec(n);
+	    tasks[ i ] := tasks[ n ];
+	    tasks[ n ] := nil;
+	  end
+	end else inc(i) { was inactive, skip over for now }
+      end;
+    tasks.length := n;
+  end; { Step }
 
 procedure loop;
   begin

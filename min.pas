@@ -27,7 +27,6 @@ procedure step;
   begin
     if not keypressed then sleep(1);
     mnml.step;
-    impworld.step;
     if keypressed then
       begin
         ed.onkeypress;
@@ -38,12 +37,11 @@ procedure step;
 procedure draw;
   begin
     ed.draw;
-    impworld.draw;
   end;
 
 function done: boolean;
   begin
-    result := ed.done and impworld.done;
+    result := ed.done and mnml.done;
   end;
 
 procedure exit;

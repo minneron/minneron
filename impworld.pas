@@ -11,9 +11,31 @@ interface uses
   num,      // n2s
   kbd;      // keypressed/readkey
 
-  procedure step;
-  procedure draw;
-  function done : boolean;
+type
+  IMessage = interface
+    function GetTag : integer;
+    property tag : integer read GetTag;
+  end;
+  IActor = interface (IVorTask)
+    function Handle( msg : IMessage ):boolean;
+    function GetVisible: boolean;
+    function GetExists: boolean;
+    function GetActive: boolean;
+    function GetAlive: boolean;
+    property visible: boolean read GetVisible;
+    property exists:boolean read GetExists;
+    property active:boolean read GetActive;
+    property alive:boolean read GetAlive;
+    procedure Halt;
+    procedure Draw;
+  end;
+  IGroup = interface (IActor)
+    procedure Add( child : IActor );
+  end;
+  IMorph = interface (IGroup)
+  end;
+var
+  world , focus : IMorph;
 
 implementation
 
@@ -51,9 +73,11 @@ function Quad.y2 : integer;
 
 {-- tagged data types -------------}
 type
-  TTagged = class
+  TTagged = class(TInterfacedObject, IMessage)
+    protected
+      _tag : integer;
     public
-      tag :longint;
+      function GetTag : integer;
     end;
 
   TSymbol = class(TTagged)
@@ -66,6 +90,12 @@ type
       sym : TSymbol;
       line, column, span : longint;
     end;
+
+function TTagged.GetTag : integer;
+  begin
+    result := _tag
+  end;
+
 
 {-- Tuples ---------------------------}
 type
@@ -100,50 +130,53 @@ const
   cmd_hide  =  -4;
   cmd_show  =  -5;
   cmd_help  =  -6;
-  kGroupMaxSlot = 15;
 
 type
-  TMessage = class;
-  TActor = class (TVorTask)
-    active,           { wants update() }
-    alive,            { exists but not alive triggers gc }
-    visible,          { to allow hide/show }
-    exists : boolean; { turn off everything at once }
+  TActor = class (TVorTask, IActor)
+    _active,           { wants update() }
+    _alive,            { exists but not alive triggers gc }
+    _visible,          { to allow hide/show }
+    _exists : boolean; { turn off everything at once }
     constructor Create;
     procedure step; override;
     procedure Draw; virtual;
-    function Handle( msg : TMessage ):boolean; virtual;
+    procedure Halt;
+    function Handle( msg : IMessage ):boolean; virtual;
+    function GetVisible : boolean;
+    function GetExists : boolean;
+    function GetActive : boolean;
+    function GetAlive : boolean;
   end;
 
-  TGroup = class (TActor)
-    members : array[ 0 .. kGroupMaxSlot ] of TActor;
-    count   : byte;
+  TGroup = class (TActor, IGroup)
+    children : GArray<IActor>;
     constructor Create;
-    procedure Add( a : TActor );
-    function Handle( msg : TMessage ):boolean; override;
+    procedure Add( a : IActor );
+    function Handle( msg : IMessage ):boolean; override;
   end;
 
-  TMorph = class (TGroup)
+  TMorph = class (TGroup, IMorph)
     bounds : Quad;
     colors : word; { foreground and background }
     constructor Create;
     procedure Draw; override;
   end;
 
-  TMessage = class (TTagged)
+  TMessage = class (TTagged, IMessage)
     sym : TSymbol;
     sender: TActor;
     args: TTuple;
   end;
+
 
 
 constructor TActor.Create;
   begin
     inherited Create;
-    alive  := true;
-    active := true;
-    exists := true;
-    visible := false;
+    _alive  := true;
+    _active := true;
+    _exists := true;
+    _visible := false;
   end;
 
 procedure TActor.Draw;
@@ -154,39 +187,47 @@ procedure TActor.Step;
   begin
   end;
 
-function TActor.Handle( msg : TMessage ):boolean;
+procedure TActor.Halt;
+  begin
+    _alive := false;
+  end;
+
+function TActor.Handle( msg : IMessage ):boolean;
   begin
     result := true;
     case msg.tag of
-      cmd_quit: active := false;
+      cmd_quit: _active := false;
       cmd_draw: Draw;
       cmd_step: Step;
       else result := false
     end
   end;
+
+function TActor.GetVisible; begin  result := _visible end;
+function TActor.GetExists;  begin  result := _exists end;
+function TActor.GetActive;  begin  result := _active end;
+function TActor.GetAlive;   begin  result := _alive end;
+
+  
 
 constructor TGroup.Create;
   begin
-    self.count := 0;
+    self.children := (GArray<IActor>).Create;
   end;
 
-procedure TGroup.Add( a : TActor );
+procedure TGroup.Add( a : IActor );
   begin
-    if self.count < kGroupMaxSlot then
-      begin
-        self.members[count] := a;
-        inc(self.count);
-      end
+    children.append(a);
   end;
 
-function TGroup.Handle( msg: TMessage ):boolean;
+function TGroup.Handle( msg: IMessage ):boolean;
   var handled : boolean; i : byte = 0;
   begin
     handled := false;
-    while not handled and (i < self.count) do
+    while not handled and (i < self.children.length) do
       begin
+	handled := self.children[i].handle(msg);
         inc(i);
-        handled := self.members[i].handle(msg)
       end;
     result := handled
   end;
@@ -198,7 +239,7 @@ constructor TMorph.Create;
     bounds.y := 0;
     bounds.w := 1;
     bounds.h := 1;
-    visible := true;
+    _visible := true;
   end;
 
 procedure TMorph.Draw;
@@ -386,15 +427,6 @@ procedure TMachine.Draw;
 
 {-- concurrency --------------------}
 
-type
-  TTasks = GArray<IVorTask>;
-var
-  tasks : TTasks;
-
-procedure launch(this:IVorTask);
-  begin
-    tasks.append(this);
-  end;
 
 
 {-- event system ---------}
@@ -415,7 +447,7 @@ type
 constructor TEvent.Create(etag:integer; e:integer);
   begin
     inherited Create;
-    tag  := etag;
+    _tag  := etag;
     data := e;
   end;
 
@@ -485,7 +517,7 @@ type
     constructor Create;
     procedure Invoke( cmd : string );
     procedure Clear;
-    function Handle( msg : TMessage ):boolean; override;
+    function Handle( msg : IMessage ):boolean; override;
     procedure Draw; override;
     destructor Destroy; override;
   end;
@@ -493,10 +525,10 @@ type
 constructor TShellMorph.Create;
   begin
     inherited Create;
-    vm := TMachine.Create; launch(vm);
+    vm := TMachine.Create; world.add(vm);
     clock := TClockMorph.Create;
     clock.bounds.x := 0; clock.bounds.y := 0;
-    launch(clock);
+    world.add(clock);
     self.Clear;
     words := TDIct.Create;
   end;
@@ -525,7 +557,7 @@ procedure TShellMorph.Clear;
     curpos := 1;
   end;
 
-function TShellMorph.Handle( msg : TMessage ) : boolean;
+function TShellMorph.Handle( msg : IMessage ) : boolean;
   var ch : char;
   begin
     if msg.tag = evt_keydn then with msg as TEvent do
@@ -533,7 +565,7 @@ function TShellMorph.Handle( msg : TMessage ) : boolean;
         result := true;
         ch := chr(data);
         case ch of
-          ^C : self.alive := false;
+          ^C : _alive := false;
           ^H : if length(cmdstr) > 0 then
                  begin
                    SetLength(cmdstr, length(cmdstr)-1);
@@ -561,14 +593,12 @@ procedure TShellMorph.Draw;
 destructor TShellMorph.Destroy;
   begin
     self.words.Free;
-    vm.alive := false;
-    clock.alive := false;
+    vm.halt;
+    clock.halt;
     inherited Destroy;
   end;
 
 {-- main program ---------}
-var
-  focus : IVorTask;
 
 
 procedure HandleKeys;
@@ -594,52 +624,43 @@ procedure HandleKeys;
       end; { case }
   end;
 
-procedure Step;
-  var i : byte; a : IVorTask; n : cardinal;
+
+type
+  TWorld = class (TMorph)
+    public
+      procedure Step; override;
+      procedure Draw; override;
+      function Done : boolean;
+    end;
+
+procedure TWorld.Step;
+  var a : IActor;
   begin
     HandleKeys;
-    { dispatch to all actors }
-    i := 0;
-    n := tasks.length;
-    while i < tasks.length do
-      begin
-	a := tasks[ i ];
-	if a.state = vo then begin
-	  a.step;
-	  if a.state in [vo, ru] then inc(i)
-	  else begin
-	    Dec(n);
-	    tasks[ i ] := tasks[ n ];
-	    tasks[ n ] := nil;
-	  end
-	end else inc(i) { was inactive, skip over for now }
-      end;
-    tasks.length := n;
-  end; { Step }
-
-procedure Draw;
-  var i:cardinal; m : TMorph;
-  begin
-    if tasks.length > 0 then
-      for i := 0 to tasks.length - 1 do
-        if tasks[i] is TMorph then
-          begin
-            m := tasks[i] as TMorph;
-            if m.Visible then m.Draw;
-	  end
+    for a in self.children do
+      if a.active then a.Step;
+    Draw;
   end;
 
-function Done : Boolean;
+procedure TWorld.Draw;
+  var a : IActor;
   begin
-    result := tasks.length = 0;
+    for a in self.children do
+      if a.Visible then a.Draw;
+  end;
+
+function TWorld.Done : Boolean;
+  begin
+    result := children.length = 0;
   end;
 
 initialization
 
   kvm.ClrScr;
-  tasks := TTasks.Create;
+  world := TWorld.Create;
   focus := TShellMorph.Create;
-  launch(focus);
+  world.add(focus);
+//  launch(world);
 
 finalization
 
