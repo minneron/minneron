@@ -19,24 +19,19 @@ implementation
 
 {-- dynamic types -----------------}
 type
-  Obj = ^BaseObj; { base type for all objects }
-  BaseObj = object
-    constructor Create;
-    function Str: string; virtual;
-    destructor Destroy; virtual;
-  end;
+  TObj = class { base type for all objetcs }
+    public
+      constructor Create;
+      function Str: string; virtual;
+    end;
 
-constructor BaseObj.Create;
+constructor TObj.Create;
   begin
   end;
 
-function BaseObj.Str : string;
+function TObj.Str : string;
   begin
-    Str := '$';
-  end;
-
-destructor BaseObj.Destroy;
-  begin
+    result := '$';
   end;
 
 {-- fixed-size data blocks --------}
@@ -46,13 +41,11 @@ type
 
 {-- variable-sized buffers --------}
 type
-  Bytes  = array[ 0..0 ] of byte;
-  Buffer = ^Bytes;
+  TBytes = GArray<Byte>;
 
 
 {-- display -----------------------}
 type
-
   Point = object
     x, y : integer;
   end;
@@ -75,47 +68,46 @@ function Quad.y2 : integer;
 
 {-- tagged data types -------------}
 type
-  Tagged  = ^TaggedObj;
-  Symbol  = ^SymbolObj;   { for symbol/lookup tables }
-  Token   = ^TokenObj;    { for parsing long texts }
+  TTagged = class(TObj)
+    public
+      tag :longint;
+    end;
 
-  TaggedObj = object(BaseObj)
-    tag : longint;
-  end;
+  TSymbol = class(TTagged)
+    public
+      name : string[32];
+    end;
 
-  SymbolObj = object(TaggedObj)
-    name : string[32];
-  end;
-
-  TokenObj = object(TaggedObj)
-    sym : Symbol;
-    line, column, span : longint;
-  end;
+  TToken = class(TTagged)
+    public
+      sym : TSymbol;
+      line, column, span : longint;
+    end;
 
 {-- Tuples ---------------------------}
 type
-  TypeDef  = ^TypeDefObj;
-  FieldDef = ^FieldDefObj;
-  Tuple    = ^TupleObj;    { generic record/struct }
-
   TypeKind = ( tkSimple, tkTkUnion, tkFunction, tkSchema );
+  TFieldDef = class;
 
-  TypeDefObj  = object(BaseObj)
-    size : Word;
-    kind : TypeKind;
-    numFields : byte;
-    first : FieldDef;
-  end;
+  TTypeDef  = class(TObj)
+    public
+      size : Word;
+      kind : TypeKind;
+      numFields : byte;
+      first : TFieldDef;
+    end;
 
-  FieldDefObj = object(BaseObj)
-    next : FieldDef;
-    name : Symbol;
-  end;
+  TFieldDef = class(TObj)
+    public
+      next : TFieldDef;
+      name : TSymbol;
+    end;
 
-  TupleObj = object(TokenObj)
-    meta : TypeDef;
-    data : Buffer;
-  end;
+  TTuple = class(TObj)
+    public
+      meta : TTypeDef;
+      data : TBytes;
+    end;
 
 {-- actors ------------------------}
 const
@@ -128,12 +120,8 @@ const
   kGroupMaxSlot = 15;
 
 type
-  Actor = ^ActorObj;
-  Group = ^GroupObj;
-  Morph = ^MorphObj;
-  Message  = ^MessageObj;  { for message passing }
-
-  ActorObj = object(BaseObj)
+  TMessage = class;
+  TActor = class(TObj)
     active,           { wants update() }
     alive,            { exists but not alive triggers gc }
     visible,          { to allow hide/show }
@@ -141,32 +129,32 @@ type
     constructor Create;
     procedure Update; virtual;
     procedure Render; virtual;
-    function Handle( msg : Message ):boolean; virtual;
+    function Handle( msg : TMessage ):boolean; virtual;
   end;
 
-  GroupObj = object( ActorObj )
-    members : array[ 0 .. kGroupMaxSlot ] of Actor;
+  TGroup = class (TActor)
+    members : array[ 0 .. kGroupMaxSlot ] of TActor;
     count   : byte;
     constructor Create;
-    procedure Add( a : Actor );
-    function Handle( msg : Message ):boolean; virtual;
+    procedure Add( a : TActor );
+    function Handle( msg : TMessage ):boolean; override;
   end;
 
-  MorphObj = object( GroupObj )
+  TMorph = class (TGroup)
     bounds : Quad;
     colors : word; { foreground and background }
     constructor Create;
     procedure Draw; virtual;
   end;
 
-  MessageObj = object(TaggedObj)
-    sym : Symbol;
-    sender: Actor;
-    args: Tuple;
+  TMessage = class (TTagged)
+    sym : TSymbol;
+    sender: TActor;
+    args: TTuple;
   end;
 
 
-constructor ActorObj.Create;
+constructor TActor.Create;
   begin
     alive  := true;
     active := true;
@@ -174,18 +162,18 @@ constructor ActorObj.Create;
     visible := false;
   end;
 
-procedure ActorObj.Render;
+procedure TActor.Render;
   begin
   end;
 
-procedure ActorObj.Update;
+procedure TActor.Update;
   begin
   end;
 
-function ActorObj.Handle( msg : Message ):boolean;
+function TActor.Handle( msg : TMessage ):boolean;
   begin
     Handle := true;
-    case msg^.tag of
+    case msg.tag of
       cmd_quit: active := false;
       cmd_draw: Render;
       cmd_step: Update;
@@ -193,12 +181,12 @@ function ActorObj.Handle( msg : Message ):boolean;
     end
   end;
 
-constructor GroupObj.Create;
+constructor TGroup.Create;
   begin
     self.count := 0;
   end;
 
-procedure GroupObj.Add( a : Actor );
+procedure TGroup.Add( a : TActor );
   begin
     if self.count < kGroupMaxSlot then
       begin
@@ -207,21 +195,21 @@ procedure GroupObj.Add( a : Actor );
       end
   end;
 
-function GroupObj.Handle( msg: Message ):boolean;
+function TGroup.Handle( msg: TMessage ):boolean;
   var handled : boolean; i : byte = 0;
   begin
     handled := false;
     while not handled and (i < self.count) do
       begin
         inc(i);
-        handled := self.members[i]^.handle(msg)
+        handled := self.members[i].handle(msg)
       end;
     handle := handled
   end;
 
-constructor MorphObj.Create;
+constructor TMorph.Create;
   begin
-    ActorObj.Create;
+    inherited Create;
     bounds.x := 0;
     bounds.y := 0;
     bounds.w := 1;
@@ -229,42 +217,41 @@ constructor MorphObj.Create;
     visible := true;
   end;
 
-procedure MorphObj.Draw;
+procedure TMorph.Draw;
   begin
     WriteLn('morph')
   end;
 
 {-- ClockMorph -------------}
 type
-  ClockMorph = ^ClockObj;
-  ClockObj = object( MorphObj )
+  TClockMorph = class ( TMorph )
     color : byte;
     constructor Create;
-    procedure Render; virtual; { override }
-    function Str:string; virtual; { override }
+    procedure Render; override;
+    function Str:string; override;
   end;
 
-constructor ClockObj.Create;
+constructor TClockMorph.Create;
   begin
     inherited Create;
     color := $13; { cyan on blue }
   end;
 
-function ClockObj.Str: string;
+function TClockMorph.Str: string;
   begin
     result := FormatDateTime('MM.DD.YY hh:mm:ssam/pm', Now);
   end;
 
-procedure ClockObj.Render;
+procedure TClockMorph.Render;
   begin
     cw.cxy( color, bounds.x, bounds.y, self.str )
   end;
 
 {-- stack -------------------}
 type
-  Stack    = ^StackObj;
-  StackObj = object
-    slots : array[ 0..254 ] of longint;
+  TInt32Array = GArray<Int32>;
+  TStack      = class
+    slots : TInt32Array;
     count : byte;
     procedure Push( val : longint );
     function  Pop : longint;
@@ -276,33 +263,33 @@ type
     procedure Rot;
   end;
 
-procedure StackObj.Push( val : longint );
+procedure TStack.Push( val : longint );
   begin
     slots[count] := val; inc(count)
   end;
 
-function StackObj.Pop : longint;
+function TStack.Pop : longint;
   begin
     Dec(count); Pop := slots[count];
   end;
 
-function StackObj.tos : longint; inline;
+function TStack.tos : longint; inline;
   begin
     tos := slots[count-1]
   end;
 
-function StackObj.nos : longint; inline;
+function TStack.nos : longint; inline;
   begin
     nos := slots[count-2]
   end;
 
 
-procedure StackObj.Dup;
+procedure TStack.Dup;
   begin
     Push(tos)
   end;
 
-procedure StackObj.Swap;
+procedure TStack.Swap;
   var tmp : longint;
   begin
     tmp := tos;
@@ -310,12 +297,12 @@ procedure StackObj.Swap;
     slots[ count-2 ] := tmp;
   end;
 
-procedure StackObj.Over;
+procedure TStack.Over;
   begin
     Push(tos)
   end;
 
-procedure StackObj.Rot;
+procedure TStack.Rot;
   var tmp : longint;
   begin
     tmp := slots[count-3];
@@ -336,29 +323,29 @@ type
             opJmp, opEls, opRet, opZex,
             opNxt, opGet, opPut );
 type
-  Machine  = ^MachineObj;
-  MachineObj = object( MorphObj )
-    ibuf, obuf : string; { input/output buffers (255 chars) }
-    ip, rp, wp : byte;
-    data, addr : stack;
-    memory     : buffer;
-    procedure Update; virtual; { override; }
-    procedure Render; virtual; { override; }
-    procedure RunOp( op:OpCode );
-  end;
+  TMachine  = class( TMorph )
+    public
+      ibuf, obuf : string; { input/output buffers (255 chars) }
+      ip, rp, wp : byte;
+      data, addr : TStack;
+      memory     : TBytes;
+      procedure Update; override;
+      procedure Render; override;
+      procedure RunOp( op:OpCode );
+    end;
 
-procedure MachineObj.RunOp( op:OpCode );
+procedure TMachine.RunOp( op:OpCode );
   var temp : longint;
   begin
-    with data^ do case op of
+    with data do case op of
       opNop : begin end;
       opNot : push(not pop);
       opXor : push(pop xor pop);
       opAnd : push(pop and pop);
       opDup : dup;
       opDrp : temp := pop;
-      opPsh : addr^.push(pop);
-      opPop : push(addr^.pop);
+      opPsh : addr.push(pop);
+      opPop : push(addr.pop);
       opSwp : swap;
       opRot : rot;
       opFrk : begin {-- todo: fork --} end;
@@ -368,9 +355,9 @@ procedure MachineObj.RunOp( op:OpCode );
       opMul : push(pop * pop);
       opDvm :
         begin
-          addr^.push( tos mod nos );
+          addr.push( tos mod nos );
           push( pop div pop );
-          push( addr^.pop );
+          push( addr.pop );
         end;
       opInc : push(succ(pop));
       opDec : push(pred(pop));
@@ -388,25 +375,25 @@ procedure MachineObj.RunOp( op:OpCode );
       opIn : begin end;{--todo-- if (pop mod 32) in set32(pop)
                          then push(-1) else push(0); }
       opJmp: ip := pop;
-      opEls: if pop = 0 then begin {---todo-- ip:= memory^(ip) --} end
+      opEls: if pop = 0 then begin {---todo-- ip:= memory(ip) --} end
                         else inc(ip);
-      opRet: ip := addr^.pop;
-      opZex: if tos = 0 then begin temp := pop; ip := addr^.pop end;
-      opNxt: if addr^.tos = 0
-               then begin temp:=pop; temp := addr^.pop end
-               else begin addr^.over; ip := pop end;
-      opGet: push(memory^[pop]);
-      opPut: memory^[pop] := pop;
+      opRet: ip := addr.pop;
+      opZex: if tos = 0 then begin temp := pop; ip := addr.pop end;
+      opNxt: if addr.tos = 0
+               then begin temp:=pop; temp := addr.pop end
+               else begin addr.over; ip := pop end;
+      opGet: push(memory[pop]);
+      opPut: memory[pop] := pop;
       opSnd: begin end; {-- todo --}
       opYld: begin end; {-- todo --}
     end
   end;
 
-procedure MachineObj.Update;
+procedure TMachine.Update;
   begin
   end;
 
-procedure MachineObj.Render;
+procedure TMachine.Render;
   var i, j : integer;
   begin
     for i := 32 to 64 do for j := 8 to 16 do
@@ -416,11 +403,11 @@ procedure MachineObj.Render;
 {-- concurrency --------------------}
 
 type
-  TActors = GArray<Actor>;
+  TActors = GArray<TActor>;
 var
   actors : TActors;
 
-procedure launch(this:Actor);
+procedure launch(this:TActor);
   begin
     actors.append(this);
   end;
@@ -435,13 +422,13 @@ const
   evt_mosmv = -29;
 
 type
-  Event    = ^EventObj;
-  EventObj = object(MessageObj)
-    data : integer;
-    constructor Create(etag: integer; e:integer);
-  end;
+  TEvent  = class (TMessage)
+    public
+      data : integer;
+      constructor Create(etag: integer; e:integer);
+    end;
 
-constructor EventObj.Create(etag:integer; e:integer);
+constructor TEvent.Create(etag:integer; e:integer);
   begin
     tag  := etag;
     data := e;
@@ -451,48 +438,48 @@ constructor EventObj.Create(etag:integer; e:integer);
 {-- simple dictionary lookup ----}
 
 type
-  Dict  = ^DictObj;
-  Entry = ^EntryObj;
+  TEntry =  class;
+  TDict  = class(TObj)
+    public
+      nextdict : TDict;
+      latest   : TEntry;
+      constructor Create;
+      procedure Define( name : string; value : TObj );
+      function Lookup( s : string; var item : TObj ): boolean;
+    end;
 
-  DictObj = object(BaseObj)
-    nextdict : Dict;
-    latest   : Entry;
-    constructor Create;
-    procedure Define( name : string; value : obj );
-    function Lookup( s : string; var item : Obj ): boolean;
-  end;
-
-  EntryObj = object
-    prev : Entry;
-    name : string[32];
-    item : obj;
-  end;
+  TEntry = class
+    public
+      prev : TEntry;
+      name : string[32];
+      item : TObj;
+    end;
 
-constructor DictObj.Create;
+constructor TDict.Create;
   begin
     nextdict := nil;
     latest := nil;
   end;
 
-procedure DictObj.Define( name: string; value : Obj );
-  var en : Entry;
+procedure TDict.Define( name: string; value : TObj );
+  var en : TEntry;
   begin
-    en := New(Entry);
-    en^.prev := latest;
-    en^.name := name;
-    en^.item := value;
+    en := TEntry.Create;
+    en.prev := latest;
+    en.name := name;
+    en.item := value;
     latest := en;
   end;
 
-function DictObj.Lookup( s : string; var item : Obj): boolean;
-  var en : Entry; found : boolean;
+function TDict.Lookup( s : string; var item : TObj): boolean;
+  var en : TEntry; found : boolean;
   begin
     en := latest;
     found := false;
     while Assigned(en) and not found do
-      if en^.name = s then
+      if en.name = s then
         begin
-          item  := en^.item;
+          item  := en.item;
           found := true;
         end
       else
@@ -504,40 +491,38 @@ function DictObj.Lookup( s : string; var item : Obj): boolean;
 {-- interpreter widget ---}
 
 type
-  Shell = ^ShellObj;
-  ShellObj = object( MorphObj )
+  TShellMorph = class( TMorph )
     curpos : byte;
     cmdstr : string;
-    vm     : Machine;
-    clock  : ClockMorph;
-    words  : Dict;
+    vm     : TMachine;
+    clock  : TClockMorph;
+    words  : TDict;
     constructor Create;
     procedure Invoke( cmd : string );
     procedure Clear;
-    function Handle( msg : Message ):boolean; virtual; { override }
-    procedure Render; virtual;   { override }
-    destructor Destroy; virtual; { override }
+    function Handle( msg : TMessage ):boolean; override;
+    procedure Render; override;
+    destructor Destroy; override;
   end;
 
-constructor ShellObj.Create;
+constructor TShellMorph.Create;
   begin
     inherited Create;
-    vm := New(Machine, Create); launch(vm);
-    clock := New(ClockMorph, Create);
-    clock^.bounds.x := 0; clock^.bounds.y := 0;
+    vm := TMachine.Create; launch(vm);
+    clock := TClockMorph.Create;
+    clock.bounds.x := 0; clock.bounds.y := 0;
     launch(clock);
     self.Clear;
-    words := New(Dict, Create);
+    words := TDIct.Create;
   end;
 
-procedure ShellObj.invoke( cmd : string );
-  var o : obj;
+procedure TShellMorph.invoke( cmd : string );
+  var o : TObj;
   begin
-
-    if words^.Lookup(cmd, o) then
+    if words.Lookup(cmd, o) then
       begin
         kvm.fg('g');
-        writeln( o^.Str );
+        writeln( o.Str );
       end
     else
       begin
@@ -549,16 +534,16 @@ procedure ShellObj.invoke( cmd : string );
     gotoxy(0,0); clreol; { clear top line after the scroll }
   end;
 
-procedure ShellObj.Clear;
+procedure TShellMorph.Clear;
   begin
     cmdstr := '';
     curpos := 1;
   end;
 
-function ShellObj.Handle( msg : Message ) : boolean;
+function TShellMorph.Handle( msg : TMessage ) : boolean;
   var ch : char;
   begin
-    if msg^.tag = evt_keydn then with Event(msg)^ do
+    if msg.tag = evt_keydn then with TEvent(msg) do
       begin
         handle := true;
         ch := chr(data);
@@ -581,28 +566,28 @@ function ShellObj.Handle( msg : Message ) : boolean;
     else handle := false;
   end;
 
-procedure ShellObj.Render;
+procedure TShellMorph.Render;
   begin
     cw.cxy($1e, 0, kvm.MaxY, '> ');
     cw.cxy($1f, 2, kvm.MaxY, cmdstr); clreol;
     kvm.gotoxy( 1 + curpos, kvm.MaxY );
   end;
 
-destructor ShellObj.Destroy;
+destructor TShellMorph.Destroy;
   begin
-    dispose(self.words, Destroy);
-    vm^.alive := false;
-    clock^.alive := false;
+    self.words.Free;
+    vm.alive := false;
+    clock.alive := false;
     inherited Destroy;
   end;
 
 {-- main program ---------}
 var
-  focus : Morph;
+  focus : TMorph;
 
 
 procedure Step;
-  var i : byte; ch : char; a : Actor; msg:Event; numactors : cardinal;
+  var i : byte; ch : char; a : TActor; msg:TEvent; numactors : cardinal;
   begin
     // TODO: without this next line (at least on freebsd)
     // it won't readkey. why not!?!
@@ -612,9 +597,9 @@ procedure Step;
       case kbd.ReadKey(ch) of
         #0 : case kbd.ReadKey(ch) of kbd.ESC : halt; end;
       else
-        msg := New(Event, Create(evt_keydn, ord(ch)));
-        if not focus^.handle(msg) then pass; {-- todo global keymap --}
-        Dispose(msg, Destroy)
+        msg := TEvent.Create(evt_keydn, ord(ch));
+        if not focus.handle(msg) then pass; {-- todo global keymap --}
+        msg.Free;
       end; { case }
 
     { dispatch to all actors }
@@ -623,13 +608,13 @@ procedure Step;
     while i < actors.length do
       begin
         a := actors[ i ];
-        if a^.active then begin
-          a^.Update;
-          if a^.alive then inc(i)
+        if a.active then begin
+          a.Update;
+          if a.alive then inc(i)
           else begin
             Dec(numActors);
-            Dispose(a, Destroy);
-            actors[ i ] := Actors[ numActors ];
+            a.Free;
+            actors[ i ] := actors[ numActors ];
             actors[ numActors ] := nil;
           end
         end else inc(i) { was inactive, skip over for now }
@@ -641,7 +626,7 @@ procedure Draw;
   var i:cardinal;
   begin
     for i := 0 to actors.length - 1 do
-      if actors[i]^.Visible then actors[i]^.Render
+      if actors[i].Visible then actors[i].Render
   end;
 
 function Done : Boolean;
@@ -653,7 +638,7 @@ initialization
 
   kvm.ClrScr;
   actors := TActors.Create;
-  focus := New(Shell, Create);
+  focus := TShellMorph.Create;
   launch(focus);
 
 finalization
