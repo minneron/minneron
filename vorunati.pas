@@ -57,16 +57,19 @@ type
       procedure Step; virtual;
       procedure Run; virtual; // default version steps while state = vo.
     end;
-  
-  
-// TVorStep is a way to lift/wrap simple functions into the vorunati system.
+
 type
-  TVorStep = function : vor of object;
   TVorTask = class (TVorunati<void, void>)
+  end;
+
+// TVorLift is a way to lift/wrap simple functions into the vorunati system.
+type
+  TVorFunc = function : vor of object;
+  TVorLift = class (TVorunati<void, void>)
     private
-      _step : TVorStep;
+      _step : TVorFunc;
     public
-      constructor Create( stepper : TVorStep );
+      constructor Create( stepFunc : TVorFunc );
       procedure Step; override;
     end;
   
@@ -152,12 +155,12 @@ procedure TVorunati<I,O>.Run;
     while _state = vo do Step
   end;
 
-constructor TVorTask.Create( stepper : TVorStep );
+constructor TVorLift.Create( stepFunc : TVorFunc );
   begin
-    _step := stepper
+    _step := stepFunc
   end;
   
-procedure TVorTask.Step;
+procedure TVorLift.Step;
   begin
     _state := _step
   end;
