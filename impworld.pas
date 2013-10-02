@@ -3,6 +3,7 @@ unit impworld;
 interface uses
   xpc,      // pass, general compatability
   mnml,
+  cli,
   arrays,
   vorunati,
   sysutils, // AppendStr, FormatDateTime
@@ -28,6 +29,7 @@ type
     property alive:boolean read GetAlive;
     procedure Halt;
     procedure Draw;
+    function ToString : String;
   end;
   IGroup = interface (IActor)
     procedure Add( child : IActor );
@@ -146,6 +148,7 @@ type
     function GetExists : boolean;
     function GetActive : boolean;
     function GetAlive : boolean;
+    function ToString : string; override;
   end;
 
   TGroup = class (TActor, IGroup)
@@ -164,7 +167,7 @@ type
 
   TMessage = class (TTagged, IMessage)
     sym : TSymbol;
-    sender: TActor;
+    sender: IActor;
     args: TTuple;
   end;
 
@@ -177,6 +180,11 @@ constructor TActor.Create;
     _active := true;
     _exists := true;
     _visible := false;
+  end;
+
+function TActor.ToString;
+  begin
+    WriteStr(result, 'Actor(', self.ClassName, ')');
   end;
 
 procedure TActor.Draw;
@@ -602,7 +610,7 @@ destructor TShellMorph.Destroy;
 
 
 procedure HandleKeys;
-  var ch : char; msg:TEvent;
+  var ch : char; msg:IMessage;
   begin
     // TODO: without this next line (at least on freebsd)
     // it won't readkey. why not!?!
@@ -616,11 +624,8 @@ procedure HandleKeys;
              end;
       else
         msg := TEvent.Create(evt_keydn, ord(ch));
-        if assigned(focus) then
-	  if (focus is TActor)
-	    and not (focus as TActor).handle(msg)
-	    then pass; {--  TODO: global keymap --}
-	msg.Free;
+	if assigned(focus) and not focus.handle(msg) then
+	  pass; {--  TODO: global keymap --}
       end; { case }
   end;
 
@@ -634,7 +639,7 @@ type
     end;
 
 procedure TWorld.Step;
-  var a : IActor;
+  var a : IActor; i : cardinal;
   begin
     HandleKeys;
     for a in self.children do
@@ -660,7 +665,7 @@ initialization
   world := TWorld.Create;
   focus := TShellMorph.Create;
   world.add(focus);
-//  launch(world);
+  launch(world);
 
 finalization
 
