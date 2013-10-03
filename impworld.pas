@@ -18,7 +18,7 @@ type
     property tag : integer read GetTag;
   end;
   IActor = interface (IVorTask)
-    function Handle( msg : IMessage ):boolean;
+    function Send( msg : IMessage ):boolean;
     function GetVisible: boolean;
     function GetExists: boolean;
     function GetActive: boolean;
@@ -46,7 +46,7 @@ const
   cmd_help  =  -6;
 
 type
-  TActor = class (TVorTask, IActor)
+  TActor = class (TVorunati<IMessage,void>, IActor)
     _active,           { wants update() }
     _alive,            { exists but not alive triggers gc }
     _visible,          { to allow hide/show }
@@ -55,7 +55,7 @@ type
     procedure step; override;
     procedure Draw; virtual;
     procedure Halt;
-    function Handle( msg : IMessage ):boolean; virtual;
+    function Send( msg : IMessage ):boolean; override;
     function GetVisible : boolean;
     function GetExists : boolean;
     function GetActive : boolean;
@@ -67,7 +67,7 @@ type
     children : GArray<IActor>;
     constructor Create;
     procedure Add( a : IActor );
-    function Handle( msg : IMessage ):boolean; override;
+    function Send( msg : IMessage ):boolean; override;
   end;
 
 type
@@ -203,7 +203,7 @@ procedure TActor.Halt;
     _alive := false;
   end;
 
-function TActor.Handle( msg : IMessage ):boolean;
+function TActor.Send( msg : IMessage ):boolean;
   begin
     result := true;
     case msg.tag of
@@ -231,13 +231,13 @@ procedure TGroup.Add( a : IActor );
     children.append(a);
   end;
 
-function TGroup.Handle( msg: IMessage ):boolean;
+function TGroup.Send( msg: IMessage ):boolean;
   var handled : boolean; i : byte = 0;
   begin
     handled := false;
     while not handled and (i < self.children.length) do
       begin
-	handled := self.children[i].handle(msg);
+	handled := self.children[i].send(msg);
         inc(i);
       end;
     result := handled
@@ -528,7 +528,7 @@ type
     constructor Create;
     procedure Invoke( cmd : string );
     procedure Clear;
-    function Handle( msg : IMessage ):boolean; override;
+    function Send( msg : IMessage ):boolean; override;
     procedure Draw; override;
     destructor Destroy; override;
   end;
@@ -568,7 +568,7 @@ procedure TShellMorph.Clear;
     curpos := 1;
   end;
 
-function TShellMorph.Handle( msg : IMessage ) : boolean;
+function TShellMorph.Send( msg : IMessage ) : boolean;
   var ch : char;
   begin
     if msg.tag = evt_keydn then with msg as TEvent do
@@ -627,7 +627,7 @@ procedure HandleKeys;
              end;
       else
         msg := TEvent.Create(evt_keydn, ord(ch));
-	if assigned(focus) and not focus.handle(msg) then
+	if assigned(focus) and not focus.send(msg) then
 	  pass; {--  TODO: global keymap --}
       end; { case }
   end;
