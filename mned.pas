@@ -2,10 +2,10 @@
 {$mode delphi}{$I xpc.inc}{$H+}
 unit mned;
 interface uses xpc, fs, stri, num, cw, ui, kvm, kbd, cli,
-  tiles, vorunati, sysutils, mnml, mnbuf, mnrnd;
+  tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld;
 
 type
-  TEditor = class (TVorTask)
+  TEditor = class (TMorph)
     buf               : ITextTile;
     filename          : string;
     message           : string;
@@ -13,16 +13,17 @@ type
     topline, position : cardinal;
     led               : ui.zinput;  // led = (L)ine (ED)itor
     state             : vor;
+    dirty             : boolean;
   public { basic interface }
     constructor Create;
     function Load( path : string ) : boolean;
     function Save_as( path : string ) : boolean;
     function Save : boolean;
-    procedure Loop;
     procedure Init;
-    procedure OnKeyPress;
-    procedure Draw;
     function Done : boolean;
+  public { morph interface }
+    function OnKeyPress( ch : char ) : boolean; override;
+    procedure Draw; override;
   public { cursor movement commands }
     procedure arrowup;
     procedure arrowdown;
@@ -54,13 +55,14 @@ constructor TEditor.Create;
     topline := 0;
     position := 0;
     filename := '';
+    dirty := true;
     message  := 'welcome to minneron.';
   end;
 
 { file methods }
 
 procedure TEditor.parse( var txt : text );
-  var n : cardinal; line : string;
+  var line : string;
   begin
     while not eof( txt ) do begin
       readln( txt, line );
@@ -106,7 +108,7 @@ function TEditor.save_as( path : string ) : boolean;
   end;
 
  { drawing routine }
-procedure TEditor.draw;
+procedure TEditor.Draw;
   var ypos, line : cardinal;
   procedure draw_curpos;
     begin
@@ -119,51 +121,54 @@ procedure TEditor.draw;
       self.message := '';
     end;
 
-procedure draw_gutter( s : string );
-  var color : char = 'c';
-  begin
-    if line = position then color := 'C';
-    cwritexy( 0, ypos, '|k|!' + color + s + '|!k|w' );
-  end;
-
-procedure PlaceEditor;
-  begin
-    { This simply positions the input widget. }
-    with self.led do begin
-      x := cw.cur.x;
-      y := cw.cur.y;
-      tcol := $080f;
-      dlen := cw.max.x - cw.cur.x
+  procedure draw_gutter( s : string );
+    var color : char = 'c';
+    begin
+      if line = position then color := 'C';
+      cwritexy( 0, ypos, '|k|!' + color + s + '|!k|w' );
     end;
-  end;
 
-procedure draw_line(s:string);
-  begin
-    cwrite(s + '|!k|%' );
-  end;
+  procedure PlaceEditor;
+    begin
+      { This simply positions the input widget. }
+      with self.led do begin
+        x := cw.cur.x;
+        y := cw.cur.y;
+        tcol := $080f;
+        dlen := cw.max.x - cw.cur.x
+      end;
+    end;
 
-begin { TEditor.draw }
-  HideCursor;
-  cwrite('|w|!b');
-  //todo  fillbox( 1, 1, kvm.maxX, kvm.maxY, $0F20 );
-  draw_curpos;
-  ypos := 1; // line 0 is for the status / cursor position
+  procedure draw_line(s:string);
+    begin
+      cwrite(s + '|!k|%' );
+    end;
 
-  line := topline;
-  repeat
-    draw_gutter( flushrt( n2s( line ), 3, ' ' ));
-    if line = position then PlaceEditor
-    else draw_line(buf[line]);
-    inc( ypos ); inc(line)
-  until ( ypos >= self.h ) or ( line = buf.length );
-  { fill in extra space if the file is too short }
-  while ypos < self.h do begin
-    cwritexy( 0, ypos, '|!K|%' );
-    inc( ypos )
+  begin { TEditor.draw }
+    if dirty then
+      begin
+        dirty := false;
+        HideCursor;
+        cwrite('|w|!b');
+        //todo  fillbox( 1, 1, kvm.maxX, kvm.maxY, $0F20 );
+        draw_curpos;
+        ypos := 1; // line 0 is for the status / cursor position
+        line := topline;
+        repeat
+          draw_gutter( flushrt( n2s( line ), 3, ' ' ));
+          if line = position then PlaceEditor
+          else draw_line(buf[line]);
+          inc( ypos ); inc(line)
+        until ( ypos >= self.h ) or ( line = buf.length );
+        { fill in extra space if the file is too short }
+        while ypos < self.h do begin
+          cwritexy( 0, ypos, '|!K|%' );
+          inc( ypos )
+        end;
+        led.show;
+        // ShowCursor;
+      end;
   end;
-  led.show;
-  // ShowCursor;
-end;
 
 procedure TEditor.updatecamera;
   var screenline : word;
@@ -271,18 +276,6 @@ procedure TEditor.grabLine;
     end;
 
 { event stuff }
-procedure TEditor.Loop;
-  begin
-    init;
-    repeat
-      draw;
-      repeat
-        if not keypressed then sleep(50);
-      until keypressed;
-      onKeyPress;
-    until state = TI;
-    done;
-  end;
 
 procedure TEditor.Init;
   begin
@@ -290,11 +283,11 @@ procedure TEditor.Init;
     self.home;
   end;
 
-procedure TEditor.onKeyPress;
-  var ch: char;
+function TEditor.OnKeyPress( ch : char ) : boolean;
   begin
-    case kbd.readkey(ch) of
-      ^C : self.state := TI;
+    result := true;
+    case ch of
+      ^C : self.halt;
       ^R : begin HideCursor; mnml.launch(cmd_rnd); end;
       ^N : arrowdown;
       ^P : arrowup;
@@ -311,11 +304,12 @@ procedure TEditor.onKeyPress;
              #73 : pageup;
              #81 : pagedown;
              ^M  : newline;
-             else led.handlestripped( ch ); led.show;
+             else led.handlestripped( ch );
            end;
-      else led.handle( ch ); led.show;
+      else led.handle( ch );
     end;
     led.isdone := false;
+    dirty := true;
   end;
 
 function TEditor.Done : boolean;

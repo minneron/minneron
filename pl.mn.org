@@ -2,7 +2,7 @@
 #+tags: pl min
 #+date: <2013-01-11 11:43AM>
 
-* TODO [2/9] block-based display plan (single column)           :ed007:
+* TODO [2/4] block-based display plan (single column)           :ed007:
 :PROPERTIES:
 :TS: <2013-01-01 10:35PM>
 :ID: tm74ek017zf0
@@ -98,12 +98,12 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-09-28 10:09PM>
 :ID:       wuihoeu039g0
 :END:
-** TODO [0/1] break the display down into =impworld= morphs
+** TODO [2/5] break the display down into =impworld= morphs
 :PROPERTIES:
 :TS:       <2013-09-30 12:16AM>
 :ID:       9ad5js1059g0
 :END:
-*** TODO [2/5] implement =step= (task system / mnml / impworld )
+*** DONE [2/2] implement =step= (task system / mnml / impworld )
 :PROPERTIES:
 :TS: <2013-01-17 08:20AM>
 :ID: zwuf3p10szf0
@@ -118,17 +118,17 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-10-01 03:34AM>
 :ID:       ojmk32r069g0
 :END:
-**** TODO [4/6] merge =impworld= and =vorunati= to add multiple objects to the scene
+*** DONE [5/5] merge =impworld= and =vorunati= to add multiple objects to the scene
 :PROPERTIES:
 :TS:       <2013-10-01 02:40AM>
 :ID:       nj157lo069g0
 :END:
-***** DONE get the two mainloops running simultaneously
+**** DONE get the two mainloops running simultaneously
 :PROPERTIES:
 :TS:       <2013-10-01 06:57PM>
 :ID:       s0p1d8j079g0
 :END:
-***** DONE standardize the interface
+**** DONE standardize the interface
 :PROPERTIES:
 :TS:       <2013-10-01 06:57PM>
 :ID:       p11dw8j079g0
@@ -140,40 +140,38 @@ The problem is that several parts of the editor use the object's =cursor= direct
       exit;
     end;
 #+end_src*
-***** DONE migrate impworld from objects to classes
+**** DONE migrate impworld from objects to classes
 :PROPERTIES:
 :TS:       <2013-10-01 09:03PM>
 :ID:       3b5043p079g0
 :END:
-***** DONE have =impworld.actor= implement =IVorTask=
+**** DONE have =impworld.actor= implement =IVorTask=
 :PROPERTIES:
 :TS:       <2013-10-01 07:00PM>
 :ID:       jq769ej079g0
 :END:
-***** TODO move =impworld.step= into =mnml= itself
+**** DONE move =impworld.step= into =mnml= itself
 :PROPERTIES:
 :TS:       <2013-10-01 07:02PM>
 :ID:       5nu40hj079g0
 :END:
-
-***** TODO use sub-windows to separate the display
-:PROPERTIES:
-:TS:       <2013-10-01 06:58PM>
-:ID:       ssgezaj079g0
-:END:
-
-**** TODO let the combined loop handle =TEditor='s lifecycle.
+*** TODO let the combined loop handle =TEditor='s lifecycle.
 :PROPERTIES:
 :TS:       <2013-10-01 01:46PM>
 :ID:       orvbiu4079g0
 :END:
 
-**** TODO implement simple tiling
+*** TODO use sub-windows to separate the display
+:PROPERTIES:
+:TS:       <2013-10-01 06:58PM>
+:ID:       ssgezaj079g0
+:END:
+
+*** TODO implement simple tiling
 :PROPERTIES:
 :TS:       <2013-10-01 02:41AM>
 :ID:       3qk0olo069g0
 :END:
-
 
 
 ** TODO create a simple interactive grammar builder

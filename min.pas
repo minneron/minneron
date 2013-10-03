@@ -6,12 +6,14 @@ Copyright (c) 2012 Michal J Wallace. All rights reserved.
 program min;
 uses xpc, mnml, mned, cw, cx, kvm, sysutils, kbd, impworld;
 
-var ed : mned.TEditor;
+var
+  ed  : TEditor;
+  edi : IMorph;
 
 function init : boolean;
   begin
     result := false;
-    ed := TEditor.Create;
+    ed  := TEditor.Create;
     if ParamCount = 0 then
       writeln( 'usage : min <filename> ')
     else if not ed.Load( ParamStr( 1 )) then
@@ -19,24 +21,11 @@ function init : boolean;
     else
       begin
         ed.init;
+        edi := ed;
+        world.add(edi);
+        focus := edi;
         result := true;
       end;
-  end;
-
-procedure step;
-  begin
-    if not keypressed then sleep(1);
-    mnml.step;
-    if keypressed then
-      begin
-        ed.onkeypress;
-        ed.draw;
-      end;
-  end;
-
-procedure draw;
-  begin
-    ed.draw;
   end;
 
 function done: boolean;
@@ -51,11 +40,6 @@ procedure exit;
 
 begin
   if init then
-    begin
-      repeat
-        step;
-        draw;
-      until done;
-      exit;
-    end
+    repeat mnml.step until done;
+  exit;
 end.
