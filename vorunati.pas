@@ -19,8 +19,9 @@ type
   end;
 
   // ITake<I> allows an object to act as a sink for values of type I.
+  // result := true indicates that the value was accepted.
   ITake<I> = interface
-    procedure Send( ival : I );
+    function Send( ival : I ) : boolean;
   end;
   
   // IGive<O> allows an object to act as a source for values of type O.
@@ -53,7 +54,7 @@ type
       constructor Create;
       function GetState : vor; virtual;
       function Poll(out oval : O ) : boolean; virtual;
-      procedure Send( ival : I ); virtual;
+      function Send( ival : I ) : boolean; virtual;
       procedure Step; virtual;
       procedure Run; virtual; // default version steps while state = vo.
     end;
@@ -141,8 +142,9 @@ function TVorunati<I,O>.Poll( out oval : O) : boolean;
     result := false
   end;
 
-procedure TVorunati<I,O>.Send( ival : I );
+function TVorunati<I,O>.Send( ival : I ): boolean;
   begin
+    result :=  false
   end;
 
 procedure TVorunati<I,O>.Step;
