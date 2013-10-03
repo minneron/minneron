@@ -97,7 +97,7 @@ type
     public
       meta : TTypeDef;
       data : TBytes;
-  end;
+    end;
 
   TMessage = class (TTagged, IMessage)
     sym : TSymbol;
@@ -107,8 +107,7 @@ type
 
   TEvent  = class (TMessage)
     public
-      data : integer;
-      constructor Create(etag: integer; e:integer);
+      constructor Create(etag: integer; edata:variant);
     end;
 
 type
@@ -303,7 +302,8 @@ function TMorph.OnKeyPress( ch : char ):boolean;
 {-- ClockMorph -------------}
 type
   TClockMorph = class ( TMorph )
-    color : byte;
+    dirty : boolean;
+    color, last, text : string;
     constructor Create;
     procedure Draw; override;
     function ToString:string; override;
@@ -312,17 +312,22 @@ type
 constructor TClockMorph.Create;
   begin
     inherited Create;
-    color := $13; { cyan on blue }
+    color := '|!b|B';
+    dirty := true;
   end;
 
 function TClockMorph.ToString: string;
   begin
-    result := FormatDateTime('MM.DD.YY hh:mm:ssam/pm', Now);
+    result := FormatDateTime('MM.DD.YY HH:mm', Now);
   end;
 
 procedure TClockMorph.Draw;
   begin
-    cw.cxy( color, bounds.x, bounds.y, self.ToString )
+    text := self.ToString;
+    if text <> last then dirty := true;
+    if dirty then cwritexy( bounds.x, bounds.y, self.color + text );
+    dirty := false;
+    last := text;
   end;
 
 {-- stack -------------------}
@@ -484,11 +489,11 @@ procedure TMachine.Draw;
 
 {-- event system ---------}
 
-constructor TEvent.Create(etag:integer; e:integer);
+constructor TEvent.Create(etag:integer; edata:variant);
   begin
     inherited Create;
     _tag  := etag;
-    data := e;
+    _data := edata;
   end;
 
 
@@ -565,7 +570,6 @@ type
 constructor TShellMorph.Create;
   begin
     inherited Create;
-    vm := TMachine.Create; world.add(vm);
     clock := TClockMorph.Create;
     clock.bounds.x := 0; clock.bounds.y := 0;
     world.add(clock);
@@ -640,16 +644,12 @@ procedure HandleKeys;
   begin
     // TODO: without this next line (at least on freebsd)
     // it won't readkey. why not!?!
-    if not keypressed then sleep(50);
-
+    if not keypressed then sleep(5);
     if keypressed then
       case kbd.ReadKey(ch) of
 	^C : halt;
-        #0 : case kbd.ReadKey(ch) of
-               kbd.ESC :halt;
-             end;
       else
-        msg := TEvent.Create(evt_keych, ord(ch));
+        msg := TEvent.Create(evt_keych, ch);
 	if assigned(focus) and not focus.send(msg) then
 	  pass; {--  TODO: global keymap --}
       end; { case }
@@ -685,12 +685,14 @@ function TWorld.Done : Boolean;
     result := children.length = 0;
   end;
 
+var clock : TClockMorph;
 initialization
-
+  clock := TClockMorph.Create;
+  clock.bounds.x := kvm.width - 25;
   kvm.ClrScr;
-  world := TWorld.Create;
-  focus := TShellMorph.Create;
-  world.add(focus);
+  world	:= TWorld.Create;
+  world.add(clock);
+  focus	:= world;
   launch(world);
 
 finalization
