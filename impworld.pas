@@ -7,6 +7,7 @@ interface uses
   arrays,
   vorunati,
   sysutils, // AppendStr, FormatDateTime
+  variants,
   kvm,      // fg, gotoxy, clreol
   cw,       // cxy(color, x, y, string)
   num,      // n2s
@@ -15,7 +16,9 @@ interface uses
 type
   IMessage = interface
     function GetTag : integer;
+    function GetData : variant;
     property tag : integer read GetTag;
+    property data : variant read GetData;
   end;
   IActor = interface (IVorTask)
     function Send( msg : IMessage ):boolean;
@@ -38,12 +41,75 @@ type
   end;
 
 const
-  cmd_quit  =  -1;
-  cmd_step  =  -2;
-  cmd_draw  =  -3;
-  cmd_hide  =  -4;
-  cmd_show  =  -5;
-  cmd_help  =  -6;
+  cmd_quit = -1;
+  cmd_step = -2;
+  cmd_draw = -3;
+  cmd_hide = -4;
+  cmd_show = -5;
+  cmd_help = -6;
+  evt_keych = -25;
+//  evt_keyup = -26;
+//  evt_mosdn = -27;
+//  evt_mosup = -28;
+//  evt_mosmv = -29;
+
+type
+  TTagged = class(TInterfacedObject, IMessage)
+    protected
+      _tag : integer;
+      _data : variant;
+    public
+      function GetTag : integer;
+      function GetData : variant;
+      property tag : integer read GetTag;
+      property data : variant read GetData;
+    end;
+
+  TSymbol = class(TTagged)
+    public
+      name : string[32];
+    end;
+
+  TToken = class(TTagged)
+    public
+      sym : TSymbol;
+      line, column, span : longint;
+  end;
+
+  TypeKind = ( tkSimple, tkTkUnion, tkFunction, tkSchema );
+  TFieldDef = class;
+
+  TTypeDef  = class
+    public
+      size : Word;
+      kind : TypeKind;
+      numFields : byte;
+      first : TFieldDef;
+    end;
+
+  TFieldDef = class
+    public
+      next : TFieldDef;
+      name : TSymbol;
+    end;
+
+  TTuple = class
+    public
+      meta : TTypeDef;
+      data : TBytes;
+  end;
+
+  TMessage = class (TTagged, IMessage)
+    sym : TSymbol;
+    sender: IActor;
+    args: TTuple;
+  end;
+
+  TEvent  = class (TMessage)
+    public
+      data : integer;
+      constructor Create(etag: integer; e:integer);
+    end;
 
 type
   TActor = class (TVorunati<IMessage,void>, IActor)
@@ -86,6 +152,8 @@ type
     colors : word; { foreground and background }
     constructor Create;
     procedure Draw; override;
+    function Send( msg : IMessage ):boolean; override;
+    function OnKeyPress( ch :  char ):boolean; virtual;
   end;
 
 var
@@ -117,61 +185,15 @@ function Quad.y2 : integer;
   end;
 
 {-- tagged data types -------------}
-type
-  TTagged = class(TInterfacedObject, IMessage)
-    protected
-      _tag : integer;
-    public
-      function GetTag : integer;
-    end;
-
-  TSymbol = class(TTagged)
-    public
-      name : string[32];
-    end;
-
-  TToken = class(TTagged)
-    public
-      sym : TSymbol;
-      line, column, span : longint;
-    end;
 
 function TTagged.GetTag : integer;
   begin
     result := _tag
   end;
 
-
-{-- Tuples ---------------------------}
-type
-  TypeKind = ( tkSimple, tkTkUnion, tkFunction, tkSchema );
-  TFieldDef = class;
-
-  TTypeDef  = class
-    public
-      size : Word;
-      kind : TypeKind;
-      numFields : byte;
-      first : TFieldDef;
-    end;
-
-  TFieldDef = class
-    public
-      next : TFieldDef;
-      name : TSymbol;
-    end;
-
-  TTuple = class
-    public
-      meta : TTypeDef;
-      data : TBytes;
-    end;
-
-{-- tasks ------------------------}
-  TMessage = class (TTagged, IMessage)
-    sym : TSymbol;
-    sender: IActor;
-    args: TTuple;
+function TTagged.GetData : variant;
+  begin
+    result := _data
   end;
 
 
@@ -257,6 +279,26 @@ procedure TMorph.Draw;
   begin
     WriteLn('morph')
   end;
+
+function TMorph.Send( msg : IMessage ):boolean;
+  begin
+    result := inherited;
+    if not result then
+      case msg.tag of
+        evt_keych : result := self.OnKeyPress( msg.data );
+        //  evt_keyup = -26;
+        //  evt_mosdn = -27;
+        //  evt_mosup = -28;
+        //  evt_mosmv = -29;
+        else result := false;
+      end;
+  end; { TMorph.Send }
+
+function TMorph.OnKeyPress( ch : char ):boolean;
+  begin
+    result := false
+  end;
+
 
 {-- ClockMorph -------------}
 type
@@ -441,19 +483,6 @@ procedure TMachine.Draw;
 
 
 {-- event system ---------}
-const
-  evt_keydn = -25;
-  evt_keyup = -26;
-  evt_mosdn = -27;
-  evt_mosup = -28;
-  evt_mosmv = -29;
-
-type
-  TEvent  = class (TMessage)
-    public
-      data : integer;
-      constructor Create(etag: integer; e:integer);
-    end;
 
 constructor TEvent.Create(etag:integer; e:integer);
   begin
@@ -528,7 +557,7 @@ type
     constructor Create;
     procedure Invoke( cmd : string );
     procedure Clear;
-    function Send( msg : IMessage ):boolean; override;
+    function OnKeyPress( ch : char ):boolean; override;
     procedure Draw; override;
     destructor Destroy; override;
   end;
@@ -568,30 +597,24 @@ procedure TShellMorph.Clear;
     curpos := 1;
   end;
 
-function TShellMorph.Send( msg : IMessage ) : boolean;
-  var ch : char;
+function TShellMorph.OnKeyPress( ch : char ) : boolean;
   begin
-    if msg.tag = evt_keydn then with msg as TEvent do
-      begin
-        result := true;
-        ch := chr(data);
-        case ch of
-          ^C : _alive := false;
-          ^H : if length(cmdstr) > 0 then
-                 begin
-                   SetLength(cmdstr, length(cmdstr)-1);
-                   dec(curpos);
-                 end
-               else pass;
-          ^M : begin
-                 self.Invoke(cmdstr); self.Clear
-               end;
-        else
-          cmdstr := cmdstr + ch;
-          inc(curpos)
-        end
-      end
-    else result := false;
+    result := true;
+    case ch of
+      ^C : _alive := false;
+      ^H : if length(cmdstr) > 0 then
+           begin
+             SetLength(cmdstr, length(cmdstr)-1);
+             dec(curpos);
+           end
+           else pass;
+      ^M : begin
+             self.Invoke(cmdstr); self.Clear
+           end;
+      else
+        cmdstr := cmdstr + ch;
+        inc(curpos)
+    end
   end;
 
 procedure TShellMorph.Draw;
@@ -626,7 +649,7 @@ procedure HandleKeys;
                kbd.ESC :halt;
              end;
       else
-        msg := TEvent.Create(evt_keydn, ord(ch));
+        msg := TEvent.Create(evt_keych, ord(ch));
 	if assigned(focus) and not focus.send(msg) then
 	  pass; {--  TODO: global keymap --}
       end; { case }
@@ -642,7 +665,7 @@ type
     end;
 
 procedure TWorld.Step;
-  var a : IActor; i : cardinal;
+  var a : IActor;
   begin
     HandleKeys;
     for a in self.children do
