@@ -255,7 +255,8 @@ create view outline as
     exists(select collapse from outline_collapse oc
            where oc.olid=om.olid and collapse=nid) as collapsed,
     exists(select hide from outline_hidden oh
-           where oh.olid=om.olid and hide=nid) as hidden
+           where oh.olid=om.olid and hide=nid) as hidden,
+    exists(select leaf from tree_leaf where leaf=nid) as leaf
   from outline_master om natural join tree_walk tw;
 
 create table edge (
