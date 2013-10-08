@@ -174,36 +174,59 @@ create trigger tree_move_node after update of parent on tree_data
      delete from subtree;
   end;
 
-create view tree_roots as
-  select tree, below as root
-  from tree_path
-  group by tree, below
-  having count(above) = 1;
+-- A view that shows the 'breadcrumb trail' for a path.
+-- this also sorts the results in the correct order for
+-- performing a depth-first walk of the tree.
+--
+-- !! if your tree has nodes with more than 1000 child
+--    nodes, you will need to change the call to substr()
+--    to include more digits, or the nodes will not be
+--    sorted correctly.
+create view tree_crumbs as
+  select tree, target, group_concat(crumb, ':') as crumbs
+  from (
+    select tp.tree, tp.below as target, substr('0000'||seq, -3) as crumb
+    from tree_path tp
+      left join tree_data td on (tp.tree=td.tree and tp.above=td.child)
+      left join node n on (above=n.nid)
+    order by tp.tree, target, steps desc )
+  group by tree, target;
 
+-- a view to give you the depth of any node
+create view tree_depth as
+  select tree, below as nid, max(steps) as depth
+  from tree_path
+  group by tree, below;
+
+-- this combines tree_crumbs with depth, node and type data
+-- so you can just select from this table and get
+-- everything you need for a walk of the tree.
+create view tree_walk as
+  select tc.tree,
+     k.nid as knd, k.val as kind,
+     n.nid, n.val as node,
+     td.depth, ts.seq, tc.crumbs
+  from tree_crumbs tc
+    left join tree_depth td on (tc.tree=td.tree and tc.target=td.nid)
+    left join tree_data  ts on (tc.tree=ts.tree and tc.target=ts.child)
+    left join node n on (tc.target=n.nid)
+    left join node k on (n.knd=k.nid)
+  order by crumbs;
+
+-- a view to give you the leaves of a tree
 create view tree_leaf as
   select tree, above as leaf
   from tree_path
   group by tree, above
   having count(below) = 1;
 
-create view tree_depth as
-  select tree, below as nid, max(steps) as depth
+-- and the 'roots' (or rather all top-level nodes)
+create view tree_root as
+  select tree, below as root
   from tree_path
-  group by tree, below;
+  group by tree, below
+  having count(above) = 1;
 
--- a depth first walk of the tree. (sort of)
--- 'leaf' indicates the leaf we're walking toward.
--- each time it changes, go back to the top of the tree,
--- so anything that isn't a leaf may be visited
--- multiple times.
-create view tree_walk as
-  select tl.tree, leaf, n.nid, k.val as kind, n.val as data, seq
-  from tree_leaf tl
-    left join tree_path tp on (tl.tree=tp.tree and tl.leaf=tp.below)
-    left join tree_data td on (tp.tree=td.tree and tp.above=td.child)
-    left join node n on (above=n.nid)
-    left join node k on (n.knd=k.nid)
-  order by tp.below, steps desc;
 
 create table edge (
   eid integer primary key,
