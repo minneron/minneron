@@ -2,7 +2,7 @@
 
 create table kind (
   knd integer primary key,
-  nid integer references node
+  foreign key (knd) references node (nid)
 );
 
 create table node (
@@ -16,19 +16,20 @@ create table node (
 begin;
   insert into node (nid, knd, val) values
      -- meta stuff --
-     (   0,  0, 'null'),
+     (   0, -2, 'null'),
      (  -1, -1, 'type'),
+     (  -2, -1, 'void'),
      -- primitive types --
-     (  -2, -1, 'Str'),
-     (  -3, -1, 'Int'),
-     (  -4, -1, 'Num'),
-     (  -5, -1, 'Set'),
+     (  -3, -1, 'Str'),
+     (  -4, -1, 'Int'),
+     (  -5, -1, 'Num'),
+     (  -6, -1, 'Set'),
      -- compound types --
-     (  -6, -1, 'Tuple'),
-     (  -7, -1, 'List'),
-     (  -8, -1, 'Tree'),
-     (  -9, -1, 'Grid'),
-     ( -10, -1, 'Dict'),
+     (  -7, -1, 'Tuple'),
+     (  -8, -1, 'List'),
+     (  -9, -1, 'Tree'),
+     ( -10, -1, 'Grid'),
+     ( -11, -1, 'Dict'),
      -- grammar combinators --
      (-100,   -1, 'Grammar'),
      (-101, -100, 'nul' ),
@@ -50,7 +51,11 @@ begin;
      (-117, -100, 'virt');
 commit;
 
+-- TODO: auto-maintain the kind table with a trigger
+insert into kind (knd)
+  select nid from node where knd=-1;
 
+pragma foreign_keys=1;
 
 -- tree_data contains the core data for ordered trees.
 create table tree_data (
