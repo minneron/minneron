@@ -169,6 +169,36 @@ create trigger tree_move_node after update of parent on tree_data
      delete from subtree;
   end;
 
+create view tree_roots as
+  select tree, below as root
+  from tree_path
+  group by tree, below
+  having count(above) = 1;
+
+create view tree_leaf as
+  select tree, above as leaf
+  from tree_path
+  group by tree, above
+  having count(below) = 1;
+
+create view tree_depth as
+  select tree, below as nid, max(steps) as depth
+  from tree_path
+  group by tree, below;
+
+-- a depth first walk of the tree. (sort of)
+-- 'leaf' indicates the leaf we're walking toward.
+-- each time it changes, go back to the top of the tree,
+-- so anything that isn't a leaf may be visited
+-- multiple times.
+create view tree_walk as
+  select tl.tree, leaf, n.nid, k.val as kind, n.val as data
+  from tree_leaf tl
+    left join tree_path tp on (tl.tree=tp.tree and tl.leaf=tp.below)
+    left join node n on (above=n.nid)
+    left join node k on (n.knd=k.nid)
+  order by tp.below, steps desc;
+
 create table edge (
   eid integer primary key,
   sub integer references node,
