@@ -1,20 +1,20 @@
 -- these three tables should be enough to track basic outlines.
 
 create table kind (
-  kid integer primary key,
+  knd integer primary key,
   nid integer references node
 );
 
 create table node (
   nid integer primary key,
-  kid integer references kind,
+  knd integer references kind,
   val, -- (can be any of the sqlite primitive types)
-  foreign key(kid) references kind deferrable initially deferred
+  foreign key(knd) references kind deferrable initially deferred
 );
 
 -- built-in types and nodes all have non-positive primary keys
 begin;
-  insert into node (nid, kid, val) values
+  insert into node (nid, knd, val) values
      -- meta stuff --
      (   0,  0, 'null'),
      (  -1, -1, 'type'),
@@ -57,7 +57,7 @@ create table tree_data (
   tree   integer references node,  -- a node can appear in multiple trees
   parent integer references node,
   child  integer references node,
-  seq    real );
+  seq    integer );
 
 -- tree_path contains automatically generated information
 -- about each node's full subtree.
@@ -191,7 +191,7 @@ create table dict (
 
 create table grid (
   nid integer references node,
-  kid integer references kind,
+  knd integer references kind,
   x   integer,
   y   integer,
   val integer
