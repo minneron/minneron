@@ -197,9 +197,10 @@ create view tree_depth as
 -- so anything that isn't a leaf may be visited
 -- multiple times.
 create view tree_walk as
-  select tl.tree, leaf, n.nid, k.val as kind, n.val as data
+  select tl.tree, leaf, n.nid, k.val as kind, n.val as data, seq
   from tree_leaf tl
     left join tree_path tp on (tl.tree=tp.tree and tl.leaf=tp.below)
+    left join tree_data td on (tp.tree=td.tree and tp.above=td.child)
     left join node n on (above=n.nid)
     left join node k on (n.knd=k.nid)
   order by tp.below, steps desc;
