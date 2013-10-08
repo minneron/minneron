@@ -57,9 +57,14 @@ insert into kind (knd)
 
 pragma foreign_keys=1;
 
+
+create table tree_master (
+  tree primary key
+);
+
 -- tree_data contains the core data for ordered trees.
 create table tree_data (
-  tree   integer references node,  -- a node can appear in multiple trees
+  tree   integer references tree_master,
   parent integer references node,
   child  integer references node,
   seq    integer );
@@ -67,7 +72,7 @@ create table tree_data (
 -- tree_path contains automatically generated information
 -- about each node's full subtree.
 create table tree_path (
-  tree   integer references node,
+  tree   integer references tree_master,
   above  integer references node,
   below  integer references node,
   steps  integer not null default 0
@@ -227,6 +232,31 @@ create view tree_root as
   group by tree, below
   having count(above) = 1;
 
+
+
+
+create table outline_master (
+  olid integer primary key,
+  tree  integer references tree_master
+);
+
+create table outline_collapse (
+  olid integer references outline_master,
+  collapse integer references node
+);
+
+create view outline_hidden as
+  select olid, below as hide from outline_collapse oc
+  inner join tree_path tp on oc.collapse=tp.above
+  where tp.steps <> 0;
+
+create view outline as
+  select olid, tw.depth, tw.kind, tw.node,
+    exists(select collapse from outline_collapse oc
+           where oc.olid=om.olid and collapse=nid) as collapsed,
+    exists(select hide from outline_hidden oh
+           where oh.olid=om.olid and hide=nid) as hidden
+  from outline_master om natural join tree_walk tw;
 
 create table edge (
   eid integer primary key,
