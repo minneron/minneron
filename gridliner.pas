@@ -1,3 +1,4 @@
+{$mode delphi}
 program gridliner;
 uses arrays, dom;
 

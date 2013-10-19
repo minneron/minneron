@@ -98,7 +98,7 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-09-28 10:09PM>
 :ID:       wuihoeu039g0
 :END:
-** TODO [2/5] break the display down into =impworld= morphs
+** TODO [3/5] break the display down into =impworld= morphs
 :PROPERTIES:
 :TS:       <2013-09-30 12:16AM>
 :ID:       9ad5js1059g0
@@ -155,7 +155,7 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-10-01 07:02PM>
 :ID:       5nu40hj079g0
 :END:
-*** TODO let the combined loop handle =TEditor='s lifecycle.
+*** DONE let the combined loop handle =TEditor='s lifecycle.
 :PROPERTIES:
 :TS:       <2013-10-01 01:46PM>
 :ID:       orvbiu4079g0
@@ -174,69 +174,80 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :END:
 
 
-** TODO create a simple interactive grammar builder
+* TODO [0/2] create outlines and store them in a database
 :PROPERTIES:
-:TS:       <2013-09-30 12:22AM>
-:ID:       v10jy22059g0
+:TS:       <2013-10-06 12:44AM>
+:ID:       ax2k15d1c9g0
 :END:
-*** TODO port the =pasout= logic so I have a simple tree editor
+*** TODO integrate =pasout= into minneron so I have a simple tree editor
 :PROPERTIES:
 :TS:       <2013-09-30 12:19AM>
 :ID:       wvuesy1059g0
 :END:
+*** TODO implement trees with closure tables in sqlite/sqldb
+:PROPERTIES:
+:TS:       <2013-10-06 12:45AM>
+:ID:       qjz9j6d1c9g0
+:END:
 
-*** TODO introduce the token type (tagged string span)
+
+* TODO [0/10] create a simple interactive grammar builder
+:PROPERTIES:
+:TS:       <2013-09-30 12:22AM>
+:ID:       v10jy22059g0
+:END:
+** TODO introduce the token type (tagged string span)
 :PROPERTIES:
 :TS:       <2013-09-30 12:34AM>
 :ID:       83p89n2059g0
 :END:
 
-*** TODO using =pre= or =imprex=, build a tokenizer interactively
+** TODO using =pre= or =imprex=, build a tokenizer interactively
 :PROPERTIES:
 :TS:       <2013-09-30 12:35AM>
 :ID:       8cfgnp2059g0
 :END:
 
-*** TODO using the tokenizer, apply syntax-highlighting to the buffer
+** TODO using the tokenizer, apply syntax-highlighting to the buffer
 :PROPERTIES:
 :TS:       <2013-09-30 12:36AM>
 :ID:       icbieq2059g0
 :END:
 
-*** TODO introduce the element type (nested span)
+** TODO introduce the element type (nested span)
 :PROPERTIES:
 :TS: <2013-01-12 02:50PM>
 :ID: 3xyfre41lzf0
 :END:
-*** TODO modify =pre= or =imprex= so that matching builds an element tree
+** TODO modify =pre= or =imprex= so that matching builds an element tree
 :PROPERTIES:
 :TS:       <2013-09-30 12:24AM>
 :ID:       noyae62059g0
 :END:
-*** TODO render the parse tree in a second, read only tree window
+** TODO render the parse tree in a second, read only tree window
 :PROPERTIES:
 :TS:       <2013-09-30 12:25AM>
 :ID:       kb1jz72059g0
 :END:
 
-*** TODO use the grammar tree buffer + a cursor to drive a parser
+** TODO use the grammar tree buffer + a cursor to drive a parser
 :PROPERTIES:
 :TS:       <2013-09-30 12:26AM>
 :ID:       h1k7h92059g0
 :END:
 
-*** TODO using =pre= / =imprex=, lex and parse the source buffer
+** TODO using =pre= / =imprex=, lex and parse the source buffer
 :PROPERTIES:
 :TS: <2013-01-10 09:37AM>
 :ID: uwf83b81izf0
 :END:
-*** TODO automatically update the parse tree when grammar changes
+** TODO automatically update the parse tree when grammar changes
 :PROPERTIES:
 :TS:       <2013-09-30 12:23AM>
 :ID:       46w8l42059g0
 :END:
 
-*** TODO display blocks corresponding to the parsed inner nodes
+** TODO display blocks corresponding to the parsed inner nodes
 :PROPERTIES:
 :TS: <2013-01-10 09:38AM>
 :ID: xzn4eb81izf0

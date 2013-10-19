@@ -5,6 +5,7 @@ interface uses xpc, fs, stri, num, cw, ui, kvm, kbd, cli,
   tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld;
 
 type
+  
   TEditor = class (TMorph)
     buf               : ITextTile;
     filename          : string;
