@@ -1,0 +1,282 @@
+{$i xpc.inc}{$mode delphi}
+unit uminneron;
+interface
+uses classes, kvm, udboutln, xpc, kbd, cli;
+
+type
+  TView	= class(TComponent)
+    protected
+      _x, _y, _w, _h : cardinal;
+      _bg, _fg : byte;
+      procedure SetX(value : cardinal);
+      procedure SetY(value : cardinal);
+      procedure SetW(value : cardinal);
+      procedure SetH(value : cardinal);
+      procedure Render(term :  ITerm); virtual;
+    public
+      procedure Redraw;
+    published
+      property x : cardinal read _x write SetX;
+      property y : cardinal read _y write SetY;
+      property w : cardinal read _w write SetW;
+      property h : cardinal read _h write SetH;
+      constructor Create( aOwner : TComponent ); override;
+      procedure CmdRedraw( sender : TObject);
+    end;
+
+  // TODO : probably set up state transitions, contexts...?
+  TKeyCommander = class (TComponent)
+    protected
+      _keymap : array[ char ] of TNotifyEvent;
+      procedure SetKeyCmd( ch : char; cmd : TNotifyEvent );
+      procedure DoNothing( Sender : TObject );
+    public
+      constructor Create( aOwner : TComponent ); override;
+      procedure HandleKeys;
+    published
+      property KeyMap[ ch : char ] : TNotifyEvent write SetKeyCmd;
+    end;
+
+  TDbCursor = class (TComponent) // TODO : ICursor
+    protected
+      _rs : TRecordSet;
+      _kf : string;
+      _mk : integer; // can't really use bookmarks because they disappear on refresh :/
+      _hr : boolean; // allow hiding rows?
+      _hf : string; // if so, use this field as a flag
+      fMarkChanged : TNotifyEvent;
+    public
+      procedure CmdToTop(Sender : TObject);
+      procedure CmdToEnd(Sender : TObject);
+      procedure CmdNext(Sender : TObject);
+      procedure CmdPrev(Sender : TObject);
+      function  AtMark : boolean;
+      procedure ToMark;
+      procedure SetMark(id : integer);
+   published
+      property OnMarkChanged : TNotifyEvent read fMarkChanged write fMarkChanged;
+      property RecordSet : TRecordSet read _rs write _rs;
+      property KeyField : string  read _kf write _kf;
+      property canHideRows : boolean  read _hr write _hr;
+      property hideFlag : string  read _hf write _hf;
+      property Mark : integer read _mk write SetMark;
+    end;
+
+  TDbTreeGrid = class (TView)
+    protected
+      _top : cardinal;
+      _cur : TDbCursor;
+    published
+      procedure Render(term :  ITerm); override;
+      property DataCursor : TDbCursor read _cur write _cur;
+   end;
+
+  TTermView = class (TView)
+    protected
+      // TODO :expose something like crt for use by vm, etc
+    end;
+
+  TStepper = class (TComponent)
+    protected
+      fstep : TNotifyEvent;
+      procedure DoStep; virtual;
+    public
+      procedure Step(times:cardinal=1);
+    published
+      property OnStep : TNotifyEvent read fStep write fStep;
+    end;
+
+  TData = class (TComponent)
+    protected
+      _kind : integer;
+    published
+      property kind : integer read _kind write _kind;
+    end;
+
+implementation
+
+constructor TView.Create( aOwner : TComponent );
+  begin
+    inherited Create( aOwner );
+    _x := 0; _y := 0; _w := 30; _h := 10;
+    _bg := $FC; _fg := $0;
+  end;
+
+procedure TView.SetX(value : cardinal);
+  begin
+    x := value;
+  end;
+
+procedure TView.SetY(value : cardinal);
+  begin
+    y := value;
+  end;
+
+procedure TView.SetW(value : cardinal);
+  begin
+    w := value;
+  end;
+
+procedure TView.SetH(value : cardinal);
+  begin
+    h := value;
+  end;
+
+procedure TView.Redraw;
+  var term : kvm.ITerm;
+  begin
+    term := kvm.work;
+    kvm.work := kvm.TSubTerm.Create(term, _x, _y, _w, _h);
+    bg(_bg); fg(_fg);
+    try
+      self.Render(term);
+    finally
+      kvm.work := term;
+    end
+  end;
+
+procedure TView.Render(term : ITerm);
+  begin
+    ClrScr;
+  end;
+
+procedure TView.CmdRedraw( sender : TObject );
+  begin
+    Redraw;
+  end;
+
+{---------------------------------------------------------------}
+{ TDbCursor                                                     }
+{---------------------------------------------------------------}
+procedure TDbCursor.SetMark(id : integer );
+  begin
+    _mk := id;
+    if assigned(fMarkChanged) then fMarkChanged(self);
+  end;
+procedure TDbCursor.ToMark;
+  begin
+    _rs.locate(keyField, _mk, [])
+  end;
+procedure TDbCursor.CmdToTop(Sender : TObject);
+  begin
+    ToMark; _rs.First; SetMark(_rs[keyField]);
+  end;
+procedure TDbCursor.CmdToEnd(Sender : TObject);
+  begin
+    ToMark; _rs.Last; SetMark(_rs[keyField]);
+  end;
+procedure TDbCursor.CmdNext(Sender : TObject);
+  begin
+    ToMark;
+    if canHideRows and not _rs.EOF then
+      repeat _rs.Next until _rs.EOF or (_rs[hideFlag]=0)
+    else _rs.Next;
+    SetMark(_rs[keyField]);
+  end;
+procedure TDbCursor.CmdPrev(Sender : TObject);
+  begin
+    ToMark;
+    if canHideRows and not _rs.BOF then
+      repeat _rs.Prior until _rs.BOF or (_rs[hideFlag]=0)
+    else _rs.Prior;
+    SetMark(_rs[keyField]);
+  end;
+function TDbCursor.AtMark : boolean;
+  begin
+    result := _rs[keyField] = _mk;
+  end;
+{---------------------------------------------------------------}
+{ TDbTreeGrid                                                   }
+{---------------------------------------------------------------}
+procedure TDbTreeGrid.Render(term : ITerm);
+  var
+    depth : integer = -1;
+    sigil : char = ' ';
+    i	  : integer;
+    count : cardinal =  0;
+    rs	  : TRecordSet;
+begin
+  clrscr;
+  bg('b'); fg('W');clrscr;
+
+  rs := _cur.RecordSet;
+  rs.first;
+  while not rs.eof do
+    begin
+      if rs['depth'] > depth then pass
+      else if rs['depth'] < depth then pass
+      else pass;
+      depth := rs['depth'];
+
+      if rs['collapsed']=1 then sigil := '+'
+      else if rs['leaf']=1 then sigil := ' '
+      else sigil := '-';
+
+      if rs['hidden'] = 0 then
+        begin
+	  if _cur.AtMark then bg('g') else bg('b');
+	  gotoxy(0,count);
+	  if rs['depth'] > 0 then for i := 1 to rs['depth'] do write('  ');
+	  write(sigil +  ' ' + rs['node']);
+	  for i := 2 to kvm.work.maxx - (length(rs['node'])
+	    + rs['depth'] * 2) do write(' ');
+
+	  inc(count);
+	end;
+      rs.Next;
+    end;
+end;
+
+{---------------------------------------------------------------}
+{ TKeyCommander                                                 }
+{---------------------------------------------------------------}
+constructor TKeyCommander.Create( aOwner : TComponent );
+  var ch : char;
+  begin
+    inherited Create( aOwner );
+    for ch := #0 to #255 do _keymap[ch] := DoNothing;
+  end;
+
+procedure TKeyCommander.SetKeyCmd( ch : char; cmd : TNotifyEvent );
+  begin
+    _keymap[ch] := cmd;
+  end;
+
+procedure TKeyCommander.DoNothing( Sender : TObject );
+  begin
+    pass
+  end;
+
+procedure TKeyCommander.HandleKeys;
+  var ch : char;
+  begin
+    if kbd.KeyPressed then
+      begin
+	// TODO: separate map for extended keys.
+	if kbd.ReadKey(ch) = #0 then kbd.ReadKey(ch);
+	_keymap[ch](self);
+      end;
+  end;
+
+procedure TStepper.DoStep;
+  begin
+  end;
+
+procedure TStepper.Step(times:cardinal=1);
+  var i : integer;
+  begin
+    if times > 0 then for i := 0 to times do
+      begin
+        DoStep;
+        if Assigned(fStep) then fStep(self);
+      end;
+  end;
+
+initialization
+  RegisterClass(TView);
+  RegisterClass(TKeyCommander);
+  RegisterClass(TTermView);
+  RegisterClass(TDbTreeGrid);
+  RegisterClass(TStepper);
+  RegisterClass(TData);
+end.
