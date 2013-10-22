@@ -233,8 +233,6 @@ create view tree_root as
   having count(above) = 1;
 
 
-
-
 create table outline_master (
   olid integer primary key,
   tree  integer references tree_master
@@ -251,7 +249,7 @@ create view outline_hidden as
   where tp.steps <> 0;
 
 create view outline as
-  select olid, tw.depth, tw.kind, tw.node,
+  select olid, nid, tw.depth, tw.kind, tw.node,
     exists(select collapse from outline_collapse oc
            where oc.olid=om.olid and collapse=nid) as collapsed,
     exists(select hide from outline_hidden oh
