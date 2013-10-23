@@ -68,12 +68,11 @@ procedure TEditor.TellUser(msg : string);
 
 { file methods }
 
-
 function TEditor.Load( path : string ) : boolean;
   begin
     result := false;
     try
-      buf.Load(path);
+      buf.LoadFromFile(path);
       self.filename := path;
       result := true;
     except
@@ -82,12 +81,8 @@ function TEditor.Load( path : string ) : boolean;
   end;
 
 function TEditor.Save : boolean;
-  var txt: text; i : cardinal;
   begin
-    assign( txt, self.filename );
-    rewrite( txt );
-    for i := 0 to self.buf.length -1 do writeln(txt, buf[i]);
-    close( txt );
+    buf.SaveToFile(self.filename);
     result := true; // TODO error checking
     TellUser(filename + ' saved.');
   end;

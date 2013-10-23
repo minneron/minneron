@@ -18,7 +18,8 @@ type
     public
       constructor Create( w, h : cardinal );
     public
-      procedure Load(path:string);
+      procedure LoadFromFile(path:string);
+      procedure SaveToFile(path:string);
     public
       function  GetLength : cardinal; override;
       function  GetLine(i:cardinal) : string; override;
@@ -53,7 +54,7 @@ constructor TBuffer.Create( w, h : cardinal );
   end;
 
 
-procedure TBuffer.Load( path : string );
+procedure TBuffer.LoadFromFile( path : string );
   var txt : text; line: string;
   begin
     if fs.exists( path ) then
@@ -70,6 +71,15 @@ procedure TBuffer.Load( path : string );
     else raise EFileNotFound(path)
   end;
   
+procedure TBuffer.SaveToFile( path : string );
+  var txt: text; i : cardinal;
+  begin
+    assign( txt, path );
+    rewrite( txt );
+    for i := 0 to self.length -1 do writeln(txt, self[i]);
+    close( txt );
+  end;
+
 { ITextTile implementation for TBuffer }
 function TBuffer.GetLength : cardinal;
   begin
