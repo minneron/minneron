@@ -4,7 +4,7 @@ interface
 uses classes, kvm, udboutln, xpc, kbd, cli, num, sqldb;
 
 type
-  TView	= class(TComponent)
+  TView = class(TComponent)
     protected
       _x, _y, _w, _h : cardinal;
       _bg, _fg : byte;
@@ -106,22 +106,22 @@ constructor TView.Create( aOwner : TComponent );
 
 procedure TView.SetX(value : cardinal);
   begin
-    x := value;
+    _x := value;
   end;
 
 procedure TView.SetY(value : cardinal);
   begin
-    y := value;
+    _y := value;
   end;
 
 procedure TView.SetW(value : cardinal);
   begin
-    w := value;
+    _w := value;
   end;
 
 procedure TView.SetH(value : cardinal);
   begin
-    h := value;
+    _h := value;
   end;
 
 procedure TView.Redraw;
@@ -209,9 +209,9 @@ procedure TDbTreeGrid.Render(term : ITerm);
   var
     depth : integer = -1;
     sigil : char = ' ';
-    i	  : integer;
+    i     : integer;
     count : cardinal =  0;
-    rs	  : TRecordSet;
+    rs    : TRecordSet;
 begin
   clrscr;
   bg('b'); fg('W');clrscr;
@@ -269,9 +269,9 @@ procedure TKeyCommander.HandleKeys;
   begin
     if kbd.KeyPressed then
       begin
-	// TODO: separate map for extended keys.
-	if kbd.ReadKey(ch) = #0 then kbd.ReadKey(ch);
-	_keymap[ch]();
+        // TODO: separate map for extended keys.
+        if kbd.ReadKey(ch) = #0 then kbd.ReadKey(ch);
+        _keymap[ch]();
       end;
   end;
 
