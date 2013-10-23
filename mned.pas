@@ -9,7 +9,7 @@ type
   TEditor = class (TMorph)
     buf               : ITextTile;
     filename          : string;
-    message           : string;
+    status            : string;
     x, y, h, w        : integer;
     topline, position : cardinal;
     led               : ui.zinput;  // led = (L)ine (ED)itor
@@ -40,9 +40,11 @@ type
     procedure keepInput;
     procedure CursorMoved;
     procedure parse( var txt : text );
+    procedure TellUser(s : string);
   end;
 
 implementation
+
 
 constructor TEditor.Create;
   begin
@@ -56,8 +58,14 @@ constructor TEditor.Create;
     position := 0;
     filename := '';
     dirty := true;
-    message  := 'welcome to minneron.';
+    TellUser('welcome to minneron.');
   end;
+
+procedure TEditor.TellUser(msg : string);
+  begin
+    status  := msg;
+  end;
+
 
 { file methods }
 
@@ -84,7 +92,7 @@ function TEditor.Load( path : string ) : boolean;
       close( txt );
       self.filename := path;
     end
-    else message := 'couldn''t load "' + path + '"';
+    else TellUser('couldn''t load "' + path + '"');
   end; { TEditor.Load }
 
 function TEditor.Save : boolean;
@@ -95,7 +103,7 @@ function TEditor.Save : boolean;
     for i := 0 to self.buf.length -1 do writeln(txt, buf[i]);
     close( txt );
     result := true; // TODO error checking
-    message := filename + ' saved.';
+    TellUser(filename + ' saved.');
   end;
 
 function TEditor.SaveAs( path : string ) : boolean;
@@ -116,9 +124,9 @@ procedure TEditor.Draw;
                '|!b' +
                '|B[|C' + flushrt( n2s( self.position ), 6, '.' ) +
                '|w/|c' + flushrt( n2s( self.buf.length ), 6, '.' ) +
-               '|B]|Y ' + self.message +
+               '|B]|Y ' + self.status +
                '|%' );
-      self.message := '';
+      self.status := '';
     end;
 
   procedure draw_gutter( s : string );
