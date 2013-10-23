@@ -231,15 +231,23 @@ begin
 
       if rs['hidden'] = 0 then
         begin
-	  if _cur.AtMark then bg('g') else bg('b');
-	  gotoxy(0,count);
-	  if rs['depth'] > 0 then for i := 1 to rs['depth'] do write('  ');
-	  write(sigil +  ' ' + rs['node']);
-	  for i := 2 to kvm.work.maxx - (length(rs['node'])
-	    + rs['depth'] * 2) do write(' ');
+          if _cur.AtMark then bg('b') else bg('k');
+          gotoxy(0,count);
+          { draw the outline controls }
+          if rs['depth'] > 0 then for i := 1 to rs['depth'] do write('  ');
+          write(sigil +  ' ');
+          { draw the node itself }
+          fg('c'); write(rs['kind'],' ');
+          fg('W');
+          write(rs['node']);
 
-	  inc(count);
-	end;
+          { fill in the rest of the line }
+          for i := 3 to kvm.work.maxx - (
+            length(rs['node']) + length(rs['kind'])
+            + rs['depth'] * 2) do write(' ');
+
+          inc(count);
+        end;
       rs.Next;
     end;
 end;
