@@ -7,7 +7,7 @@ interface uses xpc, fs, stri, num, cw, ui, kvm, kbd, cli,
 type
   
   TEditor = class (TMorph)
-    buf               : ITextTile;
+    buf               : TBuffer;
     filename          : string;
     status            : string;
     x, y, h, w        : integer;
@@ -39,8 +39,7 @@ type
     procedure updateCamera;
     procedure keepInput;
     procedure CursorMoved;
-    procedure parse( var txt : text );
-    procedure TellUser(s : string);
+    procedure TellUser(msg : string);
   end;
 
 implementation
@@ -63,37 +62,24 @@ constructor TEditor.Create;
 
 procedure TEditor.TellUser(msg : string);
   begin
-    status  := msg;
+    status := msg;
   end;
 
 
 { file methods }
 
-procedure TEditor.parse( var txt : text );
-  var line : string;
-  begin
-    while not eof( txt ) do begin
-      readln( txt, line );
-      self.buf.AddLine( line );
-    end;
-    // li.print( lisnode.create( self.buf ));
-  end;
 
 function TEditor.Load( path : string ) : boolean;
-  var txt : text;
   begin
-    result := fs.exists( path );
-    if result then
-    begin
-      //  need to check for io errors in here
-      assign( txt, path );
-      reset( txt );
-      self.parse( txt );
-      close( txt );
+    result := false;
+    try
+      buf.Load(path);
       self.filename := path;
-    end
-    else TellUser('couldn''t load "' + path + '"');
-  end; { TEditor.Load }
+      result := true;
+    except
+      on e:EFileNotFound do TellUser('invalid path:' + path);
+    end;
+  end;
 
 function TEditor.Save : boolean;
   var txt: text; i : cardinal;
