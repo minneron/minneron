@@ -1,5 +1,9 @@
 -- these three tables should be enough to track basic outlines.
 
+------------------------------------------------------------------
+-- basic data type
+------------------------------------------------------------------
+
 create table kind (
   knd integer primary key,
   foreign key (knd) references node (nid)
@@ -103,7 +107,8 @@ create trigger tree_add_node after insert on tree_data
 create table subtree (nid integer);
 
 create trigger tree_del_node after delete on tree_data
-  when not exists (select * from flags where flag='recursive-tree-delete')
+  when not exists(select * from flags
+                  where flag='recursive-tree-delete')
   begin
     -- this trigger deletes the whole subtree, which would cause
     -- some harmless but slightly wasteful recursion.
@@ -284,3 +289,32 @@ create table grid (
   y   integer,
   val integer
 );
+
+------------------------------------------------------------------
+-- help / docs table
+------------------------------------------------------------------
+create table db_meta (name string unique, purpose string);
+create view tables as
+  select master.name, master.type, meta.purpose
+  from sqlite_master as master
+    left natural join db_meta as meta
+  where type in ('table', 'view');
+insert into db_meta (name, purpose) values
+   ('db_meta', 'the table containing these descriptions'),
+   ('edge', 'arbitrary relations between nodes'),
+   ('flags', '(helper table used by triggers)'),
+   ('kind', 'redundant index of internal type system'),
+   ('node', 'the main table, containing all values'),
+   ('outline', 'combined view of most outline/tree data'),
+   ('outline_collapse', 'allows outlines to fold parts of the tree'),
+   ('outline_hidden', 'does the work of showing/hiding subnodes'),
+   ('outline_master', 'outlines are just views of a tree'),
+   ('subtree', '(helper table used by triggers)'),
+   ('tree_crumbs', 'shows the "breadcrumb trail" for tree paths'),
+   ('tree_data', 'core data for ordered trees'),
+   ('tree_depth', 'calculates depth of nodes in the tree'),
+   ('tree_leaves', 'selects the leaves of trees'),
+   ('tree_master', 'redundant list of all trees'),
+   ('tree_path', '(trigger-generated helper for trees)'),
+   ('tree_root', 'selects the roots of the trees'),
+   ('tree_walk', 'a flattened view of the trees');
