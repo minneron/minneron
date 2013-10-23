@@ -1,7 +1,7 @@
 {$i xpc.inc}{$mode delphi}
 unit uminneron;
 interface
-uses classes, kvm, udboutln, xpc, kbd, cli;
+uses classes, kvm, udboutln, xpc, kbd, cli, num, sqldb;
 
 type
   TView	= class(TComponent)
@@ -51,7 +51,9 @@ type
       procedure Next;
       procedure Prev;
       function  AtMark : boolean;
+      function  RowIsVisible : boolean;
       procedure ToMark;
+      procedure Toggle;
       procedure SetMark(id : integer);
    published
       property OnMarkChanged : TNotifyEvent read fMarkChanged write fMarkChanged;
@@ -161,25 +163,44 @@ procedure TDbCursor.ToEnd;
   begin
     ToMark; _rs.Last; SetMark(_rs[keyField]);
   end;
+function TDBCursor.RowIsVisible : boolean;
+  begin
+    result := CanHideRows and (_rs[hideFlag]=0)
+  end;
 procedure TDbCursor.Next;
   begin
     ToMark;
-    if canHideRows and not _rs.EOF then
-      repeat _rs.Next until _rs.EOF or (_rs[hideFlag]=0)
-    else _rs.Next;
-    SetMark(_rs[keyField]);
+    repeat _rs.Next until _rs.EOF or RowIsVisible;
+    if RowIsVisible then SetMark(_rs[keyField]);
   end;
 procedure TDbCursor.Prev;
   begin
     ToMark;
-    if canHideRows and not _rs.BOF then
-      repeat _rs.Prior until _rs.BOF or (_rs[hideFlag]=0)
-    else _rs.Prior;
-    SetMark(_rs[keyField]);
+    repeat _rs.Prior until _rs.BOF or RowIsVisible;
+    if RowIsVisible then SetMark(_rs[keyField]);
   end;
 function TDbCursor.AtMark : boolean;
   begin
     result := _rs[keyField] = _mk;
+  end;
+procedure TDbCursor.Toggle;
+  var olid, nid : integer; sql : string;
+  begin
+    ToMark;
+    olid := _rs['olid'];
+    nid  := _rs['nid'];
+    sql := _rs.sql.text;
+    if _rs['collapsed'] then
+      _rs.sql.text := 'delete from outline_collapse where olid=' + n2s(olid)
+        +  ' and collapse=' + n2s(nid)
+    else
+      _rs.sql.text := 'insert into outline_collapse values (' + n2s(olid)
+        +   ' , ' + n2s(nid) + ')';
+    _rs.ExecSQL;
+    // ! not sure why i have to cast this:
+    TSQLTransaction(_rs.Transaction).Commit;
+    _rs.Execute(sql);
+    SetMark(_mk); // MarkChanged;
   end;
 {---------------------------------------------------------------}
 { TDbTreeGrid                                                   }

@@ -27,16 +27,12 @@ constructor TRecordSet.Create(dbc : TSQLConnection; query : string);
   begin
     inherited Create(dbc);
     self.database := dbc;
-    self.sql := TStringList.Create;
-    self.sql.add(query);
+    self.sql.text := query;
   end;
 
 function TRecordSet.Execute(q : string) : TRecordSet;
   begin
-    if assigned(self.sql) then self.sql.free;
-    self.sql := TStringList.Create;
-    self.close;
-    self.sql.add(q);
+    self.sql.text := q;
     self.open;
     result := self;
   end;

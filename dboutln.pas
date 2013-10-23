@@ -30,7 +30,7 @@ var
   
 procedure TDbOutlnApp.Initialize;
   begin
-    rs := db.query('select nid, kind, node, depth, collapsed, '+
+    rs := db.query('select olid, nid, kind, node, depth, collapsed, '+
 		   'hidden, leaf from outline');
     curs := TDbCursor.Create(db);
     curs.RecordSet := rs;
@@ -49,6 +49,7 @@ procedure TDbOutlnApp.Initialize;
       keyMap[']'] := curs.ToEnd;
       keyMap['q'] := self.Quit;
       keyMap[^C ] := self.Quit;
+      keymap[^I ] := curs.Toggle;
 
       keyMap[^L ] := view.Redraw;
     end;
