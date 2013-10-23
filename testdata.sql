@@ -10,7 +10,7 @@ insert into node (nid, knd, val) values
   (22,   -3, 'bb'),
   (23,   -3, 'bc');
 
-insert into tree_master values (1);
+insert into trees values (1);
 
 insert into tree_data
   (tree, parent, child, seq) values

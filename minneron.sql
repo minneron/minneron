@@ -21,7 +21,7 @@ begin;
   insert into node (nid, knd, val) values
      -- meta stuff --
      (   0, -2, 'null'),
-     (  -1, -1, 'type'),
+     (  -1, -1, 'kind'),
      (  -2, -1, 'void'),
      -- primitive types --
      (  -3, -1, 'Str'),
@@ -36,39 +36,51 @@ begin;
      ( -11, -1, 'Dict'),
      -- grammar combinators --
      (-100,   -1, 'Grammar'),
-     (-101, -100, 'nul' ),
-     (-102, -100, 'any' ),
-     (-103, -100, 'lit' ),
-     (-104, -100, 'alt' ),
-     (-105, -100, 'seq' ),
-     (-106, -100, 'rep' ),
-     (-107, -100, 'neg' ),
-     (-108, -100, 'opt' ),
-     (-109, -100, 'orp' ),
-     (-110, -100, 'def' ),
-     (-111, -100, 'act' ),
-     (-112, -100, 'tok' ),
-     (-113, -100, 'skip'),
-     (-114, -100, 'node'),
-     (-115, -100, 'hide'),
-     (-116, -100, 'lift'),
-     (-117, -100, 'virt');
+     (-101, -1, 'nul' ),
+     (-102, -1, 'any' ),
+     (-103, -1, 'lit' ),
+     (-104, -1, 'alt' ),
+     (-105, -1, 'seq' ),
+     (-106, -1, 'rep' ),
+     (-107, -1, 'neg' ),
+     (-108, -1, 'opt' ),
+     (-109, -1, 'orp' ),
+     (-110, -1, 'def' ),
+     (-111, -1, 'act' ),
+     (-112, -1, 'tok' ),
+     (-113, -1, 'skip'),
+     (-114, -1, 'node'),
+     (-115, -1, 'hide'),
+     (-116, -1, 'lift'),
+     (-117, -1, 'virt');
 commit;
 
+
+create view kinds as
+  select nid as knd, val as kind from node where nid in kind;
+
+create trigger new_kind instead of insert on kinds
+  begin
+    insert into node (knd, val) values (-1, new.kind);
+    insert into kind values(last_insert_rowid());
+  end;
+
 -- TODO: auto-maintain the kind table with a trigger
-insert into kind (knd)
+replace into kind (knd)
   select nid from node where knd=-1;
 
 pragma foreign_keys=1;
 
 
-create table tree_master (
+create table trees (
   tree primary key
 );
 
+insert into trees values (-1); -- for kinds
+
 -- tree_data contains the core data for ordered trees.
 create table tree_data (
-  tree   integer references tree_master,
+  tree   integer references trees,
   parent integer references node,
   child  integer references node,
   seq    integer );
@@ -76,7 +88,7 @@ create table tree_data (
 -- tree_path contains automatically generated information
 -- about each node's full subtree.
 create table tree_path (
-  tree   integer references tree_master,
+  tree   integer references trees,
   above  integer references node,
   below  integer references node,
   steps  integer not null default 0
@@ -240,7 +252,7 @@ create view tree_root as
 
 create table outline_master (
   olid integer primary key,
-  tree  integer references tree_master
+  tree  integer references trees
 );
 
 create table outline_collapse (
@@ -304,6 +316,7 @@ insert into db_meta (name, purpose) values
    ('edge', 'arbitrary relations between nodes'),
    ('flags', '(helper table used by triggers)'),
    ('kind', 'redundant index of internal type system'),
+   ('kinds', 'lookup view (with insert trigger) for kinds'),
    ('node', 'the main table, containing all values'),
    ('outline', 'combined view of most outline/tree data'),
    ('outline_collapse', 'allows outlines to fold parts of the tree'),
@@ -314,7 +327,7 @@ insert into db_meta (name, purpose) values
    ('tree_data', 'core data for ordered trees'),
    ('tree_depth', 'calculates depth of nodes in the tree'),
    ('tree_leaves', 'selects the leaves of trees'),
-   ('tree_master', 'redundant list of all trees'),
+   ('trees', 'redundant list of all trees'),
    ('tree_path', '(trigger-generated helper for trees)'),
    ('tree_root', 'selects the roots of the trees'),
    ('tree_walk', 'a flattened view of the trees');
