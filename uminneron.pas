@@ -48,6 +48,8 @@ type
     public
       procedure ToTop;
       procedure ToEnd;
+      function AtTop : boolean;
+      function AtEnd : boolean;
       procedure Next;
       procedure Prev;
       function  AtMark : boolean;
@@ -55,6 +57,8 @@ type
       procedure ToMark;
       procedure Toggle;
       procedure SetMark(id : integer);
+      procedure SetItem(key : string; value: variant);
+      function  GetItem(key : string): variant;
    published
       property OnMarkChanged : TNotifyEvent read fMarkChanged write fMarkChanged;
       property RecordSet : TRecordSet read _rs write _rs;
@@ -62,6 +66,8 @@ type
       property canHideRows : boolean  read _hr write _hr;
       property hideFlag : string  read _hf write _hf;
       property Mark : integer read _mk write SetMark;
+      property Item[ key : string ] : variant
+         read GetItem write SetItem; default;
     end;
 
   TDbTreeGrid = class (TView)
@@ -151,38 +157,56 @@ procedure TDbCursor.SetMark(id : integer );
     _mk := id;
     if assigned(fMarkChanged) then fMarkChanged(self);
   end;
+
 procedure TDbCursor.ToMark;
   begin
     _rs.locate(keyField, _mk, [])
   end;
+
 procedure TDbCursor.ToTop;
   begin
     ToMark; _rs.First; SetMark(_rs[keyField]);
   end;
+
 procedure TDbCursor.ToEnd;
   begin
     ToMark; _rs.Last; SetMark(_rs[keyField]);
   end;
+
+function TDbCursor.AtTop : boolean;
+  begin
+    ToMark; result := _rs.BOF;
+  end;
+
+function TDbCursor.AtEnd : boolean;
+  begin
+    ToMark; result := _rs.EOF;
+  end;
+
 function TDBCursor.RowIsVisible : boolean;
   begin
-    result := CanHideRows and (_rs[hideFlag]=0)
+    result := (not CanHideRows) or (_rs[hideFlag]=0)
   end;
+
 procedure TDbCursor.Next;
   begin
     ToMark;
     repeat _rs.Next until _rs.EOF or RowIsVisible;
     if RowIsVisible then SetMark(_rs[keyField]);
   end;
+
 procedure TDbCursor.Prev;
   begin
     ToMark;
     repeat _rs.Prior until _rs.BOF or RowIsVisible;
     if RowIsVisible then SetMark(_rs[keyField]);
   end;
+
 function TDbCursor.AtMark : boolean;
   begin
     result := _rs[keyField] = _mk;
   end;
+
 procedure TDbCursor.Toggle;
   var olid, nid : integer; sql : string;
   begin
@@ -202,6 +226,17 @@ procedure TDbCursor.Toggle;
     _rs.Execute(sql);
     SetMark(_mk); // MarkChanged;
   end;
+
+procedure TDbCursor.SetItem(key : string; value: variant);
+  begin
+    ToMark; _rs.Edit; _rs[key] := value; _rs.Post;
+  end;
+
+function TDbCursor.GetItem(key : string): variant;
+  begin
+    ToMark; result := _rs[key];
+  end;
+
 {---------------------------------------------------------------}
 { TDbTreeGrid                                                   }
 {---------------------------------------------------------------}
@@ -213,10 +248,10 @@ procedure TDbTreeGrid.Render(term : ITerm);
     count : cardinal =  0;
     rs    : TRecordSet;
 begin
-  clrscr;
-  bg('b'); fg('W');clrscr;
+  bg('b'); fg('W');
 
   rs := _cur.RecordSet;
+  rs.open;
   rs.first;
   while not rs.eof do
     begin
@@ -234,7 +269,8 @@ begin
           if _cur.AtMark then bg('b') else bg('k');
           gotoxy(0,count);
           { draw the outline controls }
-          if rs['depth'] > 0 then for i := 1 to rs['depth'] do write('  ');
+          if rs['depth'] > 0 then
+            for i := 1 to rs['depth'] do write('  ');
           write(sigil +  ' ');
           { draw the node itself }
           fg('c'); write(rs['kind'],' ');
@@ -249,6 +285,12 @@ begin
           inc(count);
         end;
       rs.Next;
+    end;
+  bg('k');
+  for i := count to kvm.maxy do
+    begin
+      gotoxy(0,i);
+      clreol;
     end;
 end;
 
