@@ -8,8 +8,6 @@ type
   TBuffer = class (TTextTile)
     private type
       TTextNodes  = GRing<string>;
-      ITextCursor = IRingCursor<string>;
-      cursor	  = ITextCursor;
     private
       nodes : TTextNodes;
     public
