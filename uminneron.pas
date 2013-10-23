@@ -21,7 +21,6 @@ type
       property w : cardinal read _w write SetW;
       property h : cardinal read _h write SetH;
       constructor Create( aOwner : TComponent ); override;
-      procedure CmdRedraw( sender : TObject);
     end;
 
   // TODO : probably set up state transitions, contexts...?
@@ -141,10 +140,6 @@ procedure TView.Render(term : ITerm);
     ClrScr;
   end;
 
-procedure TView.CmdRedraw( sender : TObject );
-  begin
-    Redraw;
-  end;
 
 {---------------------------------------------------------------}
 { TDbCursor                                                     }

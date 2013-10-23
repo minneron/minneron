@@ -20,6 +20,7 @@ type
       procedure Initialize; override;
       procedure DoRun; override;
       procedure Quit;
+      procedure OnCursorChange( Sender : TObject );
     end;
 
 var
@@ -39,7 +40,7 @@ procedure TDbOutlnApp.Initialize;
     curs.Mark := rs['nid'];
     view := TDbTreeGrid.Create(db);
     view.datacursor := curs;
-    curs.OnMarkChanged := view.CmdRedraw;
+    curs.OnMarkChanged := self.OnCursorChange;
     cmdr := TKeyCommander.Create(db);
     with cmdr do begin
       keyMap['p'] := curs.Prev;
@@ -52,6 +53,11 @@ procedure TDbOutlnApp.Initialize;
       keyMap[^L ] := view.Redraw;
     end;
     clrscr;
+    view.Redraw;
+  end;
+
+procedure TDbOutlnApp.OnCursorChange( Sender : TObject );
+  begin
     view.Redraw;
   end;
 
