@@ -37,9 +37,8 @@ type
     procedure DeleteNextChar;
   private { misc internal methods }
     procedure updateCamera;
-    procedure grabLine;
     procedure keepInput;
-    procedure moveInput;
+    procedure CursorMoved;
     procedure parse( var txt : text );
   end;
 
@@ -208,20 +207,14 @@ procedure TEditor.ToEnd;
     for i := kvm.maxY div 2 downto 1 do dec(topline);
   end;
 
-procedure TEditor.grabLine;
-    begin
-      self.led.work := self.buf[self.position]
-    end;
-
 procedure TEditor.PrevLine;
   begin
     keepInput;
     if self.position > 0 then
       begin
 	dec(self.position);
-	moveInput;
+	CursorMoved;
       end;
-    grabLine;
   end;
 
 procedure TEditor.NextLine;
@@ -230,9 +223,8 @@ procedure TEditor.NextLine;
     if self.position + 1 < self.buf.length then
       begin
 	inc(self.position);
-	moveInput;
+	CursorMoved;
       end;
-    grabLine;
   end;
 
 procedure TEditor.PrevPage;
@@ -254,9 +246,10 @@ procedure TEditor.keepInput;
     buf[position] := led.value
   end;
 
-procedure TEditor.moveInput;
+procedure TEditor.CursorMoved;
   begin
     updateCamera;
+    self.led.work := self.buf[self.position]
   end;
 
 { multi-line editor commands }
@@ -306,7 +299,6 @@ function TEditor.OnKeyPress( ch : char ) : boolean;
              #79 : ToEnd;
              #73 : PrevPage;
              #81 : NextPage;
-             ^M  : Newline;
              else led.handlestripped( ch );
            end;
       else led.handle( ch );
