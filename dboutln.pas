@@ -1,11 +1,11 @@
 {$mode delphi}
 program dboutln;
-uses xpc, udboutln, custapp, classes, kvm, cw, uminneron;
+uses xpc, udboutln, custapp, classes, kvm, cw, uminneron, stri;
 
 const
-  kCMD_CREATE_NODE = 00; 
-  kCMD_CREATE_TYPE = 01; 
-  kCMD_INSERT_NODE = 02; 
+  kCMD_CREATE_NODE = 00;
+  kCMD_CREATE_TYPE = 01;
+  kCMD_INSERT_NODE = 02;
   kCMD_NUDGE_NEXT  = 03;
   kCMD_NUDGE_PREV  = 04;
 
@@ -26,8 +26,19 @@ type
 var
   db : TDatabase;
 
+procedure fillscreen( chars : string );
+  var y, x, len : cardinal; line : string;
+  begin
+    len := length(chars);
+    setlength(line, kvm.width);
+    for y := 0 to kvm.maxY do
+      begin
+        gotoxy(0,y);
+        for x := 1 to kvm.width do line[x] := chars[random(len)+1];
+        write(line);
+      end
+  end;
 
-  
 procedure TDbOutlnApp.Initialize;
   begin
     rs := db.query('select olid, nid, kind, node, depth, collapsed, '+
@@ -39,6 +50,8 @@ procedure TDbOutlnApp.Initialize;
     curs.hideFlag := 'hidden';
     curs.Mark := rs['nid'];
     view := TDbTreeGrid.Create(db);
+    view.x := 15;
+    view.y := 5;
     view.datacursor := curs;
     curs.OnMarkChanged := self.OnCursorChange;
     cmdr := TKeyCommander.Create(db);
@@ -53,7 +66,7 @@ procedure TDbOutlnApp.Initialize;
 
       keyMap[^L ] := view.Redraw;
     end;
-    clrscr;
+    fg('K'); fillscreen('!@#$%^&*(){}][/=+?-_;:');
     view.Redraw;
   end;
 
@@ -76,8 +89,9 @@ var app : TDbOutlnApp;
 begin
   db := connect('minneron.sdb');
   App := TDbOutlnApp.Create(db);
+  hidecursor;
   App.Initialize;
   App.Run;
   db.Free;
-  clrscr; fg(7); bg(0);
+  clrscr; fg(7); bg(0); showcursor;
 end.
