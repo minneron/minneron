@@ -20,7 +20,6 @@ type
     function Load( path : string ) : boolean;
     function SaveAs( path : string ) : boolean;
     function Save : boolean;
-    procedure Init;
     function Done : boolean;
   public { morph interface }
     function OnKeyPress( ch : char ) : boolean; override;
@@ -57,6 +56,8 @@ constructor TEditor.Create;
     position := 0;
     filename := '';
     dirty := true;
+    self.led := ui.zinput.create;
+    self.ToTop;
     TellUser('welcome to minneron.');
   end;
 
@@ -261,12 +262,6 @@ procedure TEditor.DeleteNextChar;
   end;
 
 { event stuff }
-
-procedure TEditor.Init;
-  begin
-    self.led := ui.zinput.create;
-    self.ToTop;
-  end;
 
 function TEditor.OnKeyPress( ch : char ) : boolean;
   begin

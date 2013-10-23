@@ -13,14 +13,13 @@ var
 function init : boolean;
   begin
     result := false;
-    ed  := TEditor.Create;
+    ed := TEditor.Create;
     if ParamCount = 0 then
       writeln( 'usage : min <filename> ')
     else if not ed.Load( ParamStr( 1 )) then
       writeln( 'unable to load file: ', paramstr( 1 ))
     else
       begin
-        ed.init;
         edi := ed;
         world.add(edi);
         focus := edi;
