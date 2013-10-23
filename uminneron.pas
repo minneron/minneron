@@ -25,16 +25,17 @@ type
     end;
 
   // TODO : probably set up state transitions, contexts...?
+  TCommandEvent = procedure of object;
   TKeyCommander = class (TComponent)
     protected
-      _keymap : array[ char ] of TNotifyEvent;
-      procedure SetKeyCmd( ch : char; cmd : TNotifyEvent );
-      procedure DoNothing( Sender : TObject );
+      _keymap : array[ char ] of TCommandEvent;
+      procedure SetKeyCmd( ch : char; cmd : TCommandEvent );
+      procedure DoNothing;
     public
       constructor Create( aOwner : TComponent ); override;
       procedure HandleKeys;
     published
-      property KeyMap[ ch : char ] : TNotifyEvent write SetKeyCmd;
+      property KeyMap[ ch : char ] : TCommandEvent write SetKeyCmd;
     end;
 
   TDbCursor = class (TComponent) // TODO : ICursor
@@ -46,10 +47,10 @@ type
       _hf : string; // if so, use this field as a flag
       fMarkChanged : TNotifyEvent;
     public
-      procedure CmdToTop(Sender : TObject);
-      procedure CmdToEnd(Sender : TObject);
-      procedure CmdNext(Sender : TObject);
-      procedure CmdPrev(Sender : TObject);
+      procedure ToTop;
+      procedure ToEnd;
+      procedure Next;
+      procedure Prev;
       function  AtMark : boolean;
       procedure ToMark;
       procedure SetMark(id : integer);
@@ -157,15 +158,15 @@ procedure TDbCursor.ToMark;
   begin
     _rs.locate(keyField, _mk, [])
   end;
-procedure TDbCursor.CmdToTop(Sender : TObject);
+procedure TDbCursor.ToTop;
   begin
     ToMark; _rs.First; SetMark(_rs[keyField]);
   end;
-procedure TDbCursor.CmdToEnd(Sender : TObject);
+procedure TDbCursor.ToEnd;
   begin
     ToMark; _rs.Last; SetMark(_rs[keyField]);
   end;
-procedure TDbCursor.CmdNext(Sender : TObject);
+procedure TDbCursor.Next;
   begin
     ToMark;
     if canHideRows and not _rs.EOF then
@@ -173,7 +174,7 @@ procedure TDbCursor.CmdNext(Sender : TObject);
     else _rs.Next;
     SetMark(_rs[keyField]);
   end;
-procedure TDbCursor.CmdPrev(Sender : TObject);
+procedure TDbCursor.Prev;
   begin
     ToMark;
     if canHideRows and not _rs.BOF then
@@ -237,12 +238,12 @@ constructor TKeyCommander.Create( aOwner : TComponent );
     for ch := #0 to #255 do _keymap[ch] := DoNothing;
   end;
 
-procedure TKeyCommander.SetKeyCmd( ch : char; cmd : TNotifyEvent );
+procedure TKeyCommander.SetKeyCmd( ch : char; cmd : TCommandEvent );
   begin
     _keymap[ch] := cmd;
   end;
 
-procedure TKeyCommander.DoNothing( Sender : TObject );
+procedure TKeyCommander.DoNothing;
   begin
     pass
   end;
@@ -254,7 +255,7 @@ procedure TKeyCommander.HandleKeys;
       begin
 	// TODO: separate map for extended keys.
 	if kbd.ReadKey(ch) = #0 then kbd.ReadKey(ch);
-	_keymap[ch](self);
+	_keymap[ch]();
       end;
   end;
 

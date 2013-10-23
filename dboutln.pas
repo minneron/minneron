@@ -19,9 +19,7 @@ type
     public
       procedure Initialize; override;
       procedure DoRun; override;
-      procedure CmdCreateNode(Sender : TObject);
-      procedure CmdQuit(Sender : TObject);
-      procedure CmdRedraw(Sender : TObject);
+      procedure Quit;
     end;
 
 var
@@ -44,14 +42,14 @@ procedure TDbOutlnApp.Initialize;
     curs.OnMarkChanged := view.CmdRedraw;
     cmdr := TKeyCommander.Create(db);
     with cmdr do begin
-      keyMap['p'] := curs.CmdPrev;
-      keyMap['n'] := curs.CmdNext;
-      keyMap['['] := curs.CmdToTop;
-      keyMap[']'] := curs.CmdToEnd;
-      keyMap['q'] := self.CmdQuit;
-      keyMap[^C ] := self.CmdQuit;
+      keyMap['p'] := curs.Prev;
+      keyMap['n'] := curs.Next;
+      keyMap['['] := curs.ToTop;
+      keyMap[']'] := curs.ToEnd;
+      keyMap['q'] := self.Quit;
+      keyMap[^C ] := self.Quit;
 
-      keyMap[^L ] := self.CmdRedraw;
+      keyMap[^L ] := view.Redraw;
     end;
     clrscr;
     view.Redraw;
@@ -62,20 +60,11 @@ procedure TDbOutlnApp.DoRun;
     cmdr.HandleKeys;
   end;
 
-procedure TDbOutlnApp.CmdCreateNode(sender : TObject);
-  begin
-  end;
-
-procedure TDbOutlnApp.CmdQuit(Sender :TObject);
+procedure TDbOutlnApp.Quit;
   begin
     Terminate;
   end;
 
-procedure TDbOutlnApp.CmdRedraw(Sender :TObject);
-  begin
-    view.Redraw;
-  end;
-  
 var app : TDbOutlnApp;
 begin
   db := connect('minneron.sdb');
