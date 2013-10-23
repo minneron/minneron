@@ -18,7 +18,7 @@ type
   public { basic interface }
     constructor Create;
     function Load( path : string ) : boolean;
-    function Save_as( path : string ) : boolean;
+    function SaveAs( path : string ) : boolean;
     function Save : boolean;
     procedure Init;
     function Done : boolean;
@@ -26,15 +26,15 @@ type
     function OnKeyPress( ch : char ) : boolean; override;
     procedure Draw; override;
   public { cursor movement commands }
-    procedure arrowup;
-    procedure arrowdown;
-    procedure home;
-    procedure _end;
-    procedure pageup;
-    procedure pagedown;
+    procedure PrevLine;
+    procedure NextLine;
+    procedure ToTop;
+    procedure ToEnd;
+    procedure PrevPage;
+    procedure NextPage;
   public { line manipulation commands }
-    procedure newline;
-    procedure delete;
+    procedure Newline;
+    procedure DeleteNextChar;
   private { misc internal methods }
     procedure updateCamera;
     procedure grabLine;
@@ -86,9 +86,9 @@ function TEditor.Load( path : string ) : boolean;
       self.filename := path;
     end
     else message := 'couldn''t load "' + path + '"';
-  end; { TEditor.load }
+  end; { TEditor.Load }
 
-function TEditor.save : boolean;
+function TEditor.Save : boolean;
   var txt: text; i : cardinal;
   begin
     assign( txt, self.filename );
@@ -99,12 +99,12 @@ function TEditor.save : boolean;
     message := filename + ' saved.';
   end;
 
-function TEditor.save_as( path : string ) : boolean;
+function TEditor.SaveAs( path : string ) : boolean;
   var oldname : string;
   begin
     oldname := self.filename;
     self.filename := path;
-    result := self.save;
+    result := self.Save;
     if not result then self.filename := oldname
   end;
 
@@ -192,7 +192,7 @@ procedure TEditor.updatecamera;
   end;
 
 {  cursor movement interface }
-procedure TEditor.home;
+procedure TEditor.ToTop;
   begin
     if self.buf.length = 0 then exit;
     position := 0;
@@ -200,7 +200,7 @@ procedure TEditor.home;
     led.work := buf[ 0 ];
   end;
 
-procedure TEditor._end;
+procedure TEditor.ToEnd;
   var i : byte;
   begin
     position := self.buf.length - 1;
@@ -213,75 +213,77 @@ procedure TEditor.grabLine;
       self.led.work := self.buf[self.position]
     end;
 
-  procedure TEditor.arrowup;
-    begin
-      keepInput;
-      if self.position > 0 then
-        begin
-          dec(self.position);
-          moveInput;
-        end;
-      grabLine;
-    end;
+procedure TEditor.PrevLine;
+  begin
+    keepInput;
+    if self.position > 0 then
+      begin
+	dec(self.position);
+	moveInput;
+      end;
+    grabLine;
+  end;
 
-  procedure TEditor.arrowdown;
-    begin
-      keepInput;
-      if self.position + 1 < self.buf.length then
-        begin
-          inc(self.position);
-          moveInput;
-        end;
-      grabLine;
-    end;
+procedure TEditor.NextLine;
+  begin
+    keepInput;
+    if self.position + 1 < self.buf.length then
+      begin
+	inc(self.position);
+	moveInput;
+      end;
+    grabLine;
+  end;
 
-  procedure TEditor.pageup;
-    var c : byte;
-    begin
-      for c := 1 to h do arrowup;
-    end;
+procedure TEditor.PrevPage;
+  var c : byte;
+  begin
+    for c := 1 to h do PrevLine;
+  end;
 
-  procedure TEditor.pagedown;
-    var c : byte;
-    begin
-      for c := 1 to h do arrowdown;
-    end;
+procedure TEditor.NextPage;
+  var c : byte;
+  begin
+    for c := 1 to h do NextLine;
+  end;
 
 { zinput integration }
-  procedure TEditor.keepInput;
+
+procedure TEditor.keepInput;
   begin
     buf[position] := led.value
   end;
-  procedure TEditor.moveInput;
+
+procedure TEditor.moveInput;
   begin
     updateCamera;
   end;
 
 { multi-line editor commands }
-  procedure TEditor.newline;
-    begin
-      buf.InsLine(position, led.str_to_end );
-      led.del_to_end;
-      arrowdown;
-      led.to_start;
-    end;
+procedure TEditor.Newline;
+  begin
+    buf.InsLine(position, led.str_to_end );
+    led.del_to_end;
+    NextLine;
+    led.to_start;
+  end;
 
-  procedure TEditor.delete;
-    begin
-      if led.at_end and (position + 1 < buf.length) then
-        begin
-          led.work += buf.GetLine(position+1);
-          buf.DelLine(position+1);
-        end
-      else led.del
-    end;
+procedure TEditor.DeleteNextChar;
+  begin
+    if led.at_end and (position + 1 < buf.length) then
+      begin
+	led.work += buf.GetLine(position+1);
+	buf.DelLine(position+1);
+      end
+    else led.del
+  end;
 
 { event stuff }
 
 procedure TEditor.Init;
   begin
     self.led := ui.zinput.create;
-    self.home;
+    self.ToTop;
   end;
 
 function TEditor.OnKeyPress( ch : char ) : boolean;
@@ -290,21 +292,21 @@ function TEditor.OnKeyPress( ch : char ) : boolean;
     case ch of
       ^C : self.halt;
       ^R : begin HideCursor; mnml.launch(cmd_rnd); end;
-      ^N : arrowdown;
-      ^P : arrowup;
-      ^M : newline;
-      ^D : delete;
-      ^S : save;
-      ^V : pagedown;
-      ^U : pageup;
+      ^N : NextLine;
+      ^P : PrevLine;
+      ^M : Newline;
+      ^D : DeleteNextChar;
+      ^S : Save;
+      ^V : NextPage;
+      ^U : PrevPage;
       #0 : case kbd.readkey(ch) of
-             #72 : arrowup; // when you press the UP arrow!
-             #80 : arrowdown; // when you press the DOWN arrow!
-             #71 : home;
-             #79 : _end;
-             #73 : pageup;
-             #81 : pagedown;
-             ^M  : newline;
+             #72 : PrevLine; // when you press the UP arrow!
+             #80 : NextLine; // when you press the DOWN arrow!
+             #71 : ToTop;
+             #79 : ToEnd;
+             #73 : PrevPage;
+             #81 : NextPage;
+             ^M  : Newline;
              else led.handlestripped( ch );
            end;
       else led.handle( ch );
