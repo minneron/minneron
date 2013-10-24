@@ -1,0 +1,78 @@
+* types (for signatures)
+| code | meaning |
+|------+---------|
+| b    | boolean |
+| i    | integer |
+| c    | char    |
+| n    | natural |
+| s    | string  |
+| v    | variant |
+| e    | element |
+| o    | object  |
+| x    | xml     |
+
+* messages / commands
+| class   | meaning        | take | give |                       |
+|---------+----------------+------+------+-----------------------|
+| TCmdr   |                |      |      |                       |
+|         | DoNothing      | -    | -    |                       |
+| TView   |                |      |      |                       |
+|         | Redraw         | -    | -    |                       |
+| TCurs   |                |      |      |                       |
+|         | ToTop          | -    | -    |                       |
+|         | ToEnd          | -    | -    |                       |
+|         | AtTop          | -    | b    |                       |
+|         | AtEnd          | -    | b    |                       |
+|         | Next           | -    | -    |                       |
+|         | Prev           | -    | -    |                       |
+|         | AtMark         | -    | b    |                       |
+|         | RowVisible     | -    | b    |                       |
+|         | ToMark         | -    | -    |                       |
+|         | Toggle         | -    | -    |                       |
+|         | SetMark        | i    | -    |                       |
+|         | SetItem        | s v  | -    |                       |
+|         | GetItem        | s    | v    |                       |
+| OutDoc  |                |      |      |                       |
+|         | StartList      | -    |      |                       |
+|         | StartItem      | -    | -    |                       |
+|         | CloseItem      | -    | -    |                       |
+|         | CloseList      | -    | -    |                       |
+|         | SetAttr        | s s  |      | merge with SetItem?   |
+|         | AddText        | s    | o    | ditch return value?   |
+|         | CloseTag       | s    |      | meaning self-closing? |
+| TEditor |                |      |      |                       |
+|         | Load           | s    | -    |                       |
+|         | Save           | -    | -    |                       |
+|         | SaveAs         | s    | -    |                       |
+|         | Done?          | -    | b    |                       |
+|         | PrevLine       |      |      | (= Prev)              |
+|         | NextLine       |      |      | (= Next)              |
+|         | ToTop          |      |      | (=ToTop)              |
+|         | ToEnd          |      |      | (=ToEnd)              |
+|         | PrevPage       |      |      |                       |
+|         | NextPage       |      |      |                       |
+|         | NewLine        |      |      |                       |
+|         | DeleteNextChar |      |      |                       |
+
+
+* Units
+| ~/r/minneron | uoutdoc.pas   |
+| ~/r/minneron | uminneron.pas |
+  
+* Hierarchy
+| um.TView         | is        | TComponent          |   |
+|                  | in        | uminneron           |   |
+|                  | .cardinal | x                   | 0 |
+|                  | .cardinal | y                   | 1 |
+|                  | .cardinal | w                   | 2 |
+|                  | .cardinal | h                   | 3 |
+| um.TCommandEvent | typedef   | procedure of object |   |
+| um.TKeyCommander | is        | TComponent          |   |
+|                  | msg       | DoNothing           | 0 |
+|                  |           |                     |   |
+| um.TKeyCommander | is        | TComponent          |   |
+| um.TDbCursor     | is        | TComponent          |   |
+| um.TDbTreeGrid   | is        | TComponent          |   |
+| um.TTermView     | is        | TComponent          |   |
+| um.TStepper      | is        | TComponent          |   |
+| um.TData         |           |                     |   |
