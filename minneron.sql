@@ -35,7 +35,7 @@ begin;
      ( -10, -1, 'Grid'),
      ( -11, -1, 'Dict'),
      -- grammar combinators --
-     (-100,   -1, 'Grammar'),
+     (-100, -1, 'Grammar'),
      (-101, -1, 'nul' ),
      (-102, -1, 'any' ),
      (-103, -1, 'lit' ),
@@ -75,8 +75,6 @@ pragma foreign_keys=1;
 create table trees (
   tree primary key
 );
-
-insert into trees values (-1); -- for kinds
 
 -- tree_data contains the core data for ordered trees.
 create table tree_data (
@@ -274,6 +272,47 @@ create view outline as
     exists(select leaf from tree_leaf where leaf=nid) as leaf
   from outline_master om natural join tree_walk tw;
 
+
+
+-----------------------------------------------------------
+-- grammar type system
+-----------------------------------------------------------
+insert into trees values (-1);              -- kinds
+insert into outline_master values (-1,-1);
+insert into tree_data (tree, parent, child, seq) values
+  (  -1,      0,     -1,   1), -- kind
+  (  -1,     -1,     -2,   2), -- void
+  (  -1,     -1,     -3,   3), -- Str
+  (  -1,     -1,     -4,   4), -- Int
+  (  -1,     -1,     -5,   5), -- Num
+  (  -1,     -1,     -6,   6), -- Set
+  (  -1,     -1,     -7,   7), -- Tuple
+  (  -1,     -1,     -8,   8), -- List
+  (  -1,     -1,     -9,   9), -- Tree
+  (  -1,     -1,    -10,  10), -- Grid
+  (  -1,     -1,    -11,  11), -- Dict
+  (  -1,     -1,   -100, 100), -- Grammar
+  (  -1,   -100,   -101,   1),    -- nul
+  (  -1,   -100,   -102,   2),    -- any
+  (  -1,   -100,   -103,   3),    -- lit
+  (  -1,   -100,   -104,   4),    -- alt
+  (  -1,   -100,   -105,   5),    -- seq
+  (  -1,   -100,   -106,   6),    -- rep
+  (  -1,   -100,   -107,   7),    -- neg
+  (  -1,   -100,   -108,   8),    -- opt
+  (  -1,   -100,   -109,   9),    -- orp
+  (  -1,   -100,   -110,  10),    -- def
+  (  -1,   -100,   -111,  11),    -- act
+  (  -1,   -100,   -112,  12),    -- tok
+  (  -1,   -100,   -113,  13),    -- skip
+  (  -1,   -100,   -114,  14),    -- node
+  (  -1,   -100,   -115,  15),    -- hide
+  (  -1,   -100,   -116,  16),    -- lift
+  (  -1,   -100,   -117,  17);    -- virt
+
+------------------------------------------------------
+-- amoeba-style graph database
+------------------------------------------------------
 create table edge (
   eid integer primary key,
   sub integer references node,
