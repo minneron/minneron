@@ -184,5 +184,5 @@ begin
   App.Initialize;
   App.Run;
   dbc.Free;
-  clrscr; fg(7); bg(0); showcursor;
+  fg(7); bg(0); clrscr; showcursor;
 end.
