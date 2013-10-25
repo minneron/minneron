@@ -4,7 +4,7 @@ Copyright (c) 2012 Michal J Wallace. All rights reserved.
 ---------------------------------------------------------------}
 {$mode delphi}{$i xpc.inc}{$H+}
 program min;
-uses xpc, mnml, mned, cw, cx, kvm, sysutils, kbd, impworld, custapp;
+uses xpc, mnml, mned, cw, cx, fx, kvm, sysutils, kbd, impworld, custapp;
 
 type
   TMinApp  = class(TCustomApplication)
@@ -23,6 +23,10 @@ procedure TMinApp.Initialize;
     okay : boolean;
   begin
     ed := TEditor.Create(self);
+    ed.x := 5;
+    ed.y := 3;
+    ed.h := ed.h div 2 + 1;
+    ed.w := 80;
     okay := false;
     if ParamCount = 0 then
       writeln( 'usage : min <filename> ')
@@ -40,14 +44,15 @@ procedure TMinApp.DoRun;
     if ed.dirty then ed.Redraw;
     mnml.step;
     if ed.done and mnml.done then Terminate;
-  end;
-
+  end; { TMinApp.DoRun }
 
 var app : TMinApp;
 begin
   impworld.world.manageKeyboard := false;
   app := TMinApp.Create(nil);
+  CustomApplication := app;
   app.Initialize;
+  bg('k'); fg('K'); fillscreen('!@#$%^&*(){}][/=+?-_;:');
   app.Run;
   app.Free;
   fg(7); bg(0); clrscr; showcursor;

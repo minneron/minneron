@@ -1,7 +1,7 @@
 { editor widget for minneron }
 {$mode delphi}{$I xpc.inc}{$H+}
 unit mned;
-interface uses xpc, classes, fs, stri, num, cw, ui, kvm, kbd, cli,
+interface uses xpc, classes, fs, stri, num, cw, ui, kvm, kbd, fx,
   tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld,
   uminneron, custapp;
 
@@ -123,10 +123,10 @@ procedure TEditor.Render( term : ITerm );
     begin
       { This simply positions the input widget. }
       with self.led do begin
-        x := cw.cur.x;
-        y := cw.cur.y;
+	x := term.wherex - self.x;
+	y := term.wherey - self.y;
         tcol := $080f;
-        dlen := cw.max.x - cw.cur.x
+	dlen := self.w - x;
       end;
     end;
 
@@ -270,6 +270,7 @@ function TEditor.OnKeyPress( ch : char ) : boolean;
     case ch of
       ^C : self.done := true;
       ^R : begin HideCursor; mnml.launch(cmd_rnd); end;
+      ^L : begin bg('k'); fg('K'); fillscreen('!@#$%^&*(){}][/=+?-_;:'); end;
       ^N : NextLine;
       ^P : PrevLine;
       ^M : Newline;
