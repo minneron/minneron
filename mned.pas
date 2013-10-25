@@ -1,52 +1,52 @@
 { editor widget for minneron }
 {$mode delphi}{$I xpc.inc}{$H+}
 unit mned;
-interface uses xpc, fs, stri, num, cw, ui, kvm, kbd, cli,
-  tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld;
+interface uses xpc, classes, fs, stri, num, cw, ui, kvm, kbd, cli,
+  tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld,
+  uminneron, custapp;
 
 type
-  
-  TEditor = class (TMorph)
-    buf               : TBuffer;
-    filename          : string;
-    status            : string;
-    x, y, h, w        : integer;
-    topline, position : cardinal;
-    led               : ui.zinput;  // led = (L)ine (ED)itor
-    state             : vor;
-    dirty             : boolean;
-  public { basic interface }
-    constructor Create;
-    function Load( path : string ) : boolean;
-    function SaveAs( path : string ) : boolean;
-    function Save : boolean;
-    function Done : boolean;
-  public { morph interface }
-    function OnKeyPress( ch : char ) : boolean; override;
-    procedure Draw; override;
-  public { cursor movement commands }
-    procedure PrevLine;
-    procedure NextLine;
-    procedure ToTop;
-    procedure ToEnd;
-    procedure PrevPage;
-    procedure NextPage;
-  public { line manipulation commands }
-    procedure Newline;
-    procedure DeleteNextChar;
-  private { misc internal methods }
-    procedure updateCamera;
-    procedure keepInput;
-    procedure CursorMoved;
-    procedure TellUser(msg : string);
-  end;
+  TEditor = class (TView)
+    protected
+      buf               : TBuffer;
+      filename          : string;
+      status            : string;
+      topline, position : cardinal;
+      led               : ui.zinput;  // led = (L)ine (ED)itor
+      state             : vor;
+    published { basic interface }
+      constructor Create(aOwner : TComponent); override;
+      function Load( path : string ) : boolean;
+      function SaveAs( path : string ) : boolean;
+      function Save : boolean;
+    public {  morph interface (removing this) }
+      done              : boolean;
+      dirty             : boolean;
+      function OnKeyPress( ch : char ) : boolean;
+      procedure Render( term : ITerm) ; override;
+    public { cursor movement commands }
+      procedure PrevLine;
+      procedure NextLine;
+      procedure ToTop;
+      procedure ToEnd;
+      procedure PrevPage;
+      procedure NextPage;
+    public { line manipulation commands }
+      procedure Newline;
+      procedure DeleteNextChar;
+    private { misc internal methods }
+      procedure updateCamera;
+      procedure keepInput;
+      procedure CursorMoved;
+      procedure TellUser(msg : string);
+    end;
 
 implementation
 
 
-constructor TEditor.Create;
+constructor TEditor.Create( aOwner : TComponent );
   begin
-    inherited;
+    inherited Create( aOwner );
     x := 0;
     y := 0;
     w := kvm.width;
@@ -55,6 +55,7 @@ constructor TEditor.Create;
     topline := 0;
     position := 0;
     filename := '';
+    done := false;
     dirty := true;
     self.led := ui.zinput.create;
     self.ToTop;
@@ -98,7 +99,7 @@ function TEditor.SaveAs( path : string ) : boolean;
   end;
 
  { drawing routine }
-procedure TEditor.Draw;
+procedure TEditor.Render( term : ITerm );
   var ypos, line : cardinal;
   procedure draw_curpos;
     begin
@@ -267,7 +268,7 @@ function TEditor.OnKeyPress( ch : char ) : boolean;
   begin
     result := true;
     case ch of
-      ^C : self.halt;
+      ^C : self.done := true;
       ^R : begin HideCursor; mnml.launch(cmd_rnd); end;
       ^N : NextLine;
       ^P : PrevLine;
@@ -289,11 +290,6 @@ function TEditor.OnKeyPress( ch : char ) : boolean;
     end;
     led.isdone := false;
     dirty := true;
-  end;
-
-function TEditor.Done : boolean;
-  begin
-    result := self.state = TI
   end;
 
 initialization

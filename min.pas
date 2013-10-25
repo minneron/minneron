@@ -10,11 +10,11 @@ type
   TMinApp  = class(TCustomApplication)
     private
       ed  : TEditor;
-      edi : IMorph;
     public
       procedure Initialize; override;
       procedure DoRun; override;
-      destructor Destroy; override;
+    published
+      property editor : TEditor read ed write ed;
     end;
 
 
@@ -22,41 +22,33 @@ procedure TMinApp.Initialize;
   var
     okay : boolean;
   begin
+    ed := TEditor.Create(self);
     okay := false;
-    ed := TEditor.Create;
     if ParamCount = 0 then
       writeln( 'usage : min <filename> ')
     else if not ed.Load( ParamStr( 1 )) then
       writeln( 'unable to load file: ', paramstr( 1 ))
     else
-      begin
-        edi := ed;
-	impworld.world.add(edi);
-	impworld.focus := edi;
-        okay := true;
-      end;
+      okay := true;
     if not okay then terminate;
   end;
 
 
 procedure TMinApp.DoRun;
   begin
+    if keypressed then ed.OnKeyPress(readkey);
+    if ed.dirty then ed.Redraw;
     mnml.step;
     if ed.done and mnml.done then Terminate;
   end;
 
 
-destructor TMinApp.Destroy;
-  begin
-    ed.Destroy;
-    inherited Destroy;
-  end;
-
-
 var app : TMinApp;
 begin
+  impworld.world.manageKeyboard := false;
   app := TMinApp.Create(nil);
   app.Initialize;
   app.Run;
   app.Free;
+  fg(7); bg(0); clrscr; showcursor;
 end.
