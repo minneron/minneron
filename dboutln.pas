@@ -1,7 +1,7 @@
 {$mode delphi}
 program dboutln;
 uses xpc, udboutln, custapp, classes, kvm, cw, uminneron,
-     stri, db, sqldb, cli, kbd, num;
+     stri, db, sqldb, fx, kbd, num;
 
 const
   kCMD_CREATE_NODE = 00;
@@ -29,19 +29,6 @@ type
 
 var
   dbc : udboutln.TDatabase;
-
-procedure fillscreen( chars : string );
-  var y, x, len : cardinal; line : string;
-  begin
-    len := length(chars);
-    setlength(line, kvm.width);
-    for y := 0 to kvm.maxY do
-      begin
-        gotoxy(0,y);
-        for x := 1 to kvm.width do line[x] := chars[random(len)+1];
-        write(line);
-      end
-  end;
 
 procedure TDbOutlnApp.Initialize;
   begin
