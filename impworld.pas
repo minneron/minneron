@@ -110,7 +110,7 @@ type
       constructor Create(etag: integer; edata:variant);
     end;
 
-type
+
   TActor = class (TVorunati<IMessage,void>, IActor)
     _active,           { wants update() }
     _alive,            { exists but not alive triggers gc }
@@ -135,7 +135,7 @@ type
     function Send( msg : IMessage ):boolean; override;
   end;
 
-type
+
   Point = object
     x, y : integer;
   end;
@@ -155,8 +155,19 @@ type
     function OnKeyPress( ch :  char ):boolean; virtual;
   end;
 
+  TWorld = class (TMorph)
+    public
+      manageKeyboard : boolean;
+      constructor Create;
+      procedure Step; override;
+      procedure Draw; override;
+      function Done : boolean;
+    end;
+
+
 var
-  world , focus : IMorph;
+  world	: TWorld;
+  focus	: IMorph;
 
 
 implementation
@@ -656,18 +667,16 @@ procedure HandleKeys;
   end;
 
 
-type
-  TWorld = class (TMorph)
-    public
-      procedure Step; override;
-      procedure Draw; override;
-      function Done : boolean;
-    end;
+constructor TWorld.Create;
+  begin
+    inherited;
+    manageKeyboard := true;
+  end;
 
 procedure TWorld.Step;
   var a : IActor;
   begin
-    HandleKeys;
+    if ManageKeyboard then HandleKeys;
     for a in self.children do
       if a.active then a.Step;
     Draw;
@@ -696,8 +705,7 @@ initialization
   launch(world);
 
 finalization
-
+  //world.Free; { nope. this will crash if we launch(world).}
   cw.cwriteln( '|w|!k' );
   kvm.ClrScr;
-
 end.
