@@ -4,15 +4,25 @@ Copyright (c) 2012 Michal J Wallace. All rights reserved.
 ---------------------------------------------------------------}
 {$mode delphi}{$i xpc.inc}{$H+}
 program min;
-uses xpc, mnml, mned, cw, cx, kvm, sysutils, kbd, impworld;
+uses xpc, mnml, mned, cw, cx, kvm, sysutils, kbd, impworld, custapp;
 
-var
-  ed  : TEditor;
-  edi : IMorph;
+type
+  TMinApp  = class(TCustomApplication)
+    private
+      ed  : TEditor;
+      edi : IMorph;
+    public
+      procedure Initialize; override;
+      procedure DoRun; override;
+      destructor Destroy; override;
+    end;
 
-function init : boolean;
+
+procedure TMinApp.Initialize;
+  var
+    okay : boolean;
   begin
-    result := false;
+    okay := false;
     ed := TEditor.Create;
     if ParamCount = 0 then
       writeln( 'usage : min <filename> ')
@@ -21,24 +31,32 @@ function init : boolean;
     else
       begin
         edi := ed;
-        world.add(edi);
-        focus := edi;
-        result := true;
+	impworld.world.add(edi);
+	impworld.focus := edi;
+        okay := true;
       end;
+    if not okay then terminate;
   end;
 
-function done: boolean;
+
+procedure TMinApp.DoRun;
   begin
-    result := ed.done and mnml.done;
+    mnml.step;
+    if ed.done and mnml.done then Terminate;
   end;
 
-procedure exit;
+
+destructor TMinApp.Destroy;
   begin
     ed.Destroy;
+    inherited Destroy;
   end;
 
+
+var app : TMinApp;
 begin
-  if init then
-    repeat mnml.step until done;
-  exit;
+  app := TMinApp.Create(nil);
+  app.Initialize;
+  app.Run;
+  app.Free;
 end.
