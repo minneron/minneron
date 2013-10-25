@@ -1,7 +1,7 @@
 {$i xpc.inc}{$mode delphi}
 unit uminneron;
 interface
-uses classes, kvm, udboutln, xpc, kbd, cli, num, sqldb;
+uses classes, kvm, udboutln, xpc, kbd, cli, num, sqldb, custapp, cw;
 
 type
   TView = class(TComponent)
@@ -23,19 +23,42 @@ type
       constructor Create( aOwner : TComponent ); override;
     end;
 
-  // TODO : probably set up state transitions, contexts...?
+  //  TODO : improve the keyboard handling
+  //    - probably should use use sparse arrays
+  //    - allow each control to have its own sparse array
+  //    - update kbd module to use widechars.
+  //    - set up state transitions to allow emacs-style sequences
+type
+  TKeyEvtKind = ( keNil, keCmd, keNfy, keCRT ); //  keKbd for keyboard module
   TCommandEvent = procedure of object;
-  TKeyCommander = class (TComponent)
-    protected
-      _keymap : array[ char ] of TCommandEvent;
-      procedure SetKeyCmd( ch : char; cmd : TCommandEvent );
-      procedure DoNothing;
-    public
-      constructor Create( aOwner : TComponent ); override;
-      procedure HandleKeys;
+  TCrtKeyEvent  = procedure (ext : boolean; ch : char) of object;
+  TKeyboardEvent = record
+    case kind : TKeyEvtKind of
+      keNil : (eNil: pointer);
+      keCmd : (eCmd: TCommandEvent);
+      keNfy : (eNfy: TNotifyEvent);
+      keCrt : (eCrt: TCrtKeyEvent);
+  end;
+
+const
+  DoNothing : TKeyboardEvent = (kind: keNil; eNil : NIL);
+
+type
+  TKeyMap = class (TComponent)
+    private
+      _key, _ext : array[ char ] of TKeyboardEvent;
+      procedure SetKeyEvt( ch : widechar; e : TKeyboardEvent );
+      procedure SetKeyCmd( ch : widechar; e : TCommandEvent );
+      procedure SetKeyNfy( ch : widechar; e : TNotifyEvent );
+      procedure SetKeyCrt( ch : widechar; e : TCrtKeyEvent );
+//      procedure DoNothing;
     published
-      property KeyMap[ ch : char ] : TCommandEvent write SetKeyCmd;
-    end;
+      constructor Create( aOwner : TComponent ); override;
+      property cmd[ ch : widechar ] : TCommandEvent write SetKeyCmd;
+      property nfy[ ch : widechar ] : TNotifyEvent  write SetKeyNfy;
+      property crt[ ch : widechar ] : TCrtKeyEvent  write SetKeyCrt;
+      procedure HandleKeys;
+  end;
 
   TDbCursor = class (TComponent) // TODO : ICursor
     protected
@@ -295,34 +318,67 @@ begin
 end;
 
 {---------------------------------------------------------------}
-{ TKeyCommander                                                 }
+{ TKeyMap                                                       }
 {---------------------------------------------------------------}
-constructor TKeyCommander.Create( aOwner : TComponent );
-  var ch : char;
+constructor TKeyMap.Create( aOwner : TComponent );
+  var ch : widechar;
   begin
     inherited Create( aOwner );
-    for ch := #0 to #255 do _keymap[ch] := DoNothing;
+    for ch := #0 to #$FF do _key[ch] := DoNothing;
+    for ch := #0 to #$FF do _ext[ch] := DoNothing;
+    if Assigned(CustomApplication) then
+      begin
+        SetKeyCmd( ^C, CustomApplication.Terminate);
+      end
   end;
 
-procedure TKeyCommander.SetKeyCmd( ch : char; cmd : TCommandEvent );
+procedure TKeyMap.SetKeyEvt( ch : widechar; e : TKeyboardEvent );
   begin
-    _keymap[ch] := cmd;
+    if ch > #255 then _ext[ char(ord(ch) and $ff) ] := e
+    else _key[ch] := e;
   end;
 
-procedure TKeyCommander.DoNothing;
+procedure TKeyMap.SetKeyCmd( ch : widechar; e : TCommandEvent );
+  var kbe : TKeyboardEvent;
   begin
-    pass
+    kbe.kind := keCmd; kbe.eCmd := e; SetKeyEvt(ch, kbe);
   end;
 
-procedure TKeyCommander.HandleKeys;
+procedure TKeyMap.SetKeyNfy( ch : widechar; e : TNotifyEvent );
+  var kbe : TKeyboardEvent;
+  begin
+    kbe.kind := keNfy; kbe.eNfy := e; SetKeyEvt(ch, kbe);
+  end;
+
+procedure TKeyMap.SetKeyCrt( ch : widechar; e : TCrtKeyEvent );
+  var kbe : TKeyboardEvent;
+  begin
+    kbe.kind := keCrt; kbe.eCrt := e; SetKeyEvt(ch, kbe);
+  end;
+
+procedure TKeyMap.HandleKeys;
   var ch : char;
+  procedure send(ext : boolean; e : TKeyboardEvent);
+    begin
+      // if ch >= #32 then s := ch else s := '^' + chr(ord(ch) + ord('@'));
+      // write ('kind:', e.Kind);
+      // if ext
+      //   then writeln('ext: #', ord(ch))
+      //   else writeln('chr: #', ord(ch), ' (" ', s, ' ")');
+      case e.kind of
+        keNil : pass;
+        keCmd : e.eCmd();
+        keNfy : e.eNfy( self );
+        keCrt : e.eCrt( ext, ch );
+      end;
+    end;
   begin
     if kbd.KeyPressed then
       begin
-        // TODO: separate map for extended keys.
-        if kbd.ReadKey(ch) = #0 then kbd.ReadKey(ch);
-        _keymap[ch]();
-      end;
+        if kbd.ReadKey(ch) = #0
+          then send(true,  _ext[kbd.ReadKey])
+          else send(false, _key[ch])
+      end
   end;
 
 procedure TStepper.DoStep;
@@ -341,7 +397,7 @@ procedure TStepper.Step(times:cardinal=1);
 
 initialization
   RegisterClass(TView);
-  RegisterClass(TKeyCommander);
+  RegisterClass(TKeyMap);
   RegisterClass(TTermView);
   RegisterClass(TDbTreeGrid);
   RegisterClass(TStepper);

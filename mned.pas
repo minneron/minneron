@@ -2,12 +2,12 @@
 {$mode delphi}{$I xpc.inc}{$H+}
 unit mned;
 interface uses xpc, classes, fs, stri, num, cw, ui, kvm, kbd, fx,
-  tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld,
+  tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld, cli,
   uminneron, custapp;
 
 type
   TEditor = class (TView)
-    protected
+   protected
       buf               : TBuffer;
       filename          : string;
       status            : string;
@@ -17,8 +17,10 @@ type
     published { basic interface }
       constructor Create(aOwner : TComponent); override;
       function Load( path : string ) : boolean;
-      function SaveAs( path : string ) : boolean;
-      function Save : boolean;
+      procedure SaveAs( path : string );
+      procedure Save;
+      procedure AddDefaultKeys( km : TKeyMap );
+      procedure DelegateKey( ext : Boolean; ch : char);
     public {  morph interface (removing this) }
       done              : boolean;
       dirty             : boolean;
@@ -82,20 +84,18 @@ function TEditor.Load( path : string ) : boolean;
     end;
   end;
 
-function TEditor.Save : boolean;
+procedure TEditor.Save;
   begin
     buf.SaveToFile(self.filename);
-    result := true; // TODO error checking
     TellUser(filename + ' saved.');
   end;
 
-function TEditor.SaveAs( path : string ) : boolean;
+procedure TEditor.SaveAs( path : string );
   var oldname : string;
   begin
     oldname := self.filename;
     self.filename := path;
-    result := self.Save;
-    if not result then self.filename := oldname
+    self.filename := oldname
   end;
 
  { drawing routine }
@@ -239,6 +239,7 @@ procedure TEditor.keepInput;
 
 procedure TEditor.CursorMoved;
   begin
+    self.dirty := true;
     updateCamera;
     self.led.work := self.buf[self.position]
   end;
@@ -264,33 +265,39 @@ procedure TEditor.DeleteNextChar;
 
 { event stuff }
 
+procedure TEditor.DelegateKey( ext : boolean; ch : char );
+  begin
+    if ext then led.handlestripped(ch)
+    else led.handle(ch);
+    self.dirty := true;
+  end;
+
+procedure TEditor.AddDefaultKeys( km : TKeyMap );
+  var ch : widechar;
+  begin
+    for ch := #0 to #225 do km.crt[ ch ] := DelegateKey;
+    for ch := #$EE00  to #$EEFF do km.crt[ ch ] := DelegateKey;
+    km.cmd[ ^C ] := CustomApplication.Terminate;
+    km.cmd[ ^N ] := NextLine;
+    km.cmd[ ^P ] := PrevLine;
+    km.cmd[ ^M ] := Newline;
+    km.cmd[ ^D ] := DeleteNextChar;
+    km.cmd[ ^S ] := Save;
+    km.cmd[ ^V ] := NextPage;
+    km.cmd[ ^U ] := PrevPage;
+    km.cmd[ kbd.UP ] := PrevLine;
+    km.cmd[ kbd.DOWN ] := PrevLine;
+    km.cmd[ kbd.HOME ] := ToTop;
+    km.cmd[ kbd.END_ ] := ToEnd;
+    km.cmd[ kbd.PgUp ] := PrevPage;
+    km.cmd[ kbd.PgDn ] := NextPage;
+  end;
+
 function TEditor.OnKeyPress( ch : char ) : boolean;
   begin
-    result := true;
-    case ch of
-      ^C : self.done := true;
-      ^R : begin HideCursor; mnml.launch(cmd_rnd); end;
-      ^L : begin bg('k'); fg('K'); fillscreen('!@#$%^&*(){}][/=+?-_;:'); end;
-      ^N : NextLine;
-      ^P : PrevLine;
-      ^M : Newline;
-      ^D : DeleteNextChar;
-      ^S : Save;
-      ^V : NextPage;
-      ^U : PrevPage;
-      #0 : case kbd.readkey(ch) of
-             #72 : PrevLine; // when you press the UP arrow!
-             #80 : NextLine; // when you press the DOWN arrow!
-             #71 : ToTop;
-             #79 : ToEnd;
-             #73 : PrevPage;
-             #81 : NextPage;
-             else led.handlestripped( ch );
-           end;
-      else led.handle( ch );
-    end;
-    led.isdone := false;
-    dirty := true;
+    // ^R : begin HideCursor; mnml.launch(cmd_rnd); end;
+    // #0 : led.handlestripped( ReadKey );
+    // led.handle( ch );
   end;
 
 initialization

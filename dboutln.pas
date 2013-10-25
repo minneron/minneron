@@ -13,7 +13,7 @@ const
 type
   TDbOutlnApp  = class(TCustomApplication)
     protected
-      cmdr : TKeyCommander;
+      keys : TKeyMap;
       curs : TDbCursor;
       view : TDbTreeGrid;
       rsOutln,
@@ -48,18 +48,18 @@ procedure TDbOutlnApp.Initialize;
     view.y := 5;
     view.datacursor := curs;
     curs.OnMarkChanged := self.OnCursorChange;
-    cmdr := TKeyCommander.Create(dbc);
-    with cmdr do begin
-      keyMap[^P] := curs.Prev;
-      keyMap[^N] := curs.Next;
-      keyMap['p'] := curs.Prev;
-      keyMap['n'] := curs.Next;
-      keyMap['['] := curs.ToTop;
-      keyMap[']'] := curs.ToEnd;
-      keyMap[^C ] := self.Quit;
-      keymap[^I ] := curs.Toggle;
-      keymap[^T ] := self.ChooseType;
-      keyMap[^L ] := self.Redraw;
+    keys := TKeyMap.Create(dbc);
+    with keys do begin
+      cmd[ ^P ] := curs.Prev;
+      cmd[ ^N ] := curs.Next;
+      cmd['p'] := curs.Prev;
+      cmd['n'] := curs.Next;
+      cmd['['] := curs.ToTop;
+      cmd[']'] := curs.ToEnd;
+      cmd[ ^C ] := self.Quit;
+      cmd[ ^I ] := curs.Toggle;
+      cmd[ ^T ] := self.ChooseType;
+      cmd[ ^L ] := self.Redraw;
     end;
     Redraw;
   end;
@@ -78,7 +78,7 @@ procedure TDbOutlnApp.OnCursorChange( Sender : TObject );
 
 procedure TDbOutlnApp.DoRun;
   begin
-    cmdr.HandleKeys;
+    keys.HandleKeys;
   end;
 
 function vinc(var i:integer):integer;
