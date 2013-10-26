@@ -318,9 +318,25 @@ create table edge (
   sub integer references node,
   rel integer references node,
   obj integer references node,
-  seq integer
+  seq integer,
+  began datetime,
+  ended datetime
 );
 
+create view facts as
+  select eid,
+    s.knd as subknd, s.nid as subnid, s.val as sub,
+    r.knd as relknd, r.nid as relnid, r.val as rel,
+    o.knd as objknd, o.nid as objnid, o.val as obj
+  from edge, node as s, node as r, node as o
+  where edge.sub = s.nid
+    and edge.rel = r.nid
+    and edge.obj = o.nid;
+
+
+------------------------------------------------------
+-- arbitrary data structures
+------------------------------------------------------
 create table list (
   lid integer references node,
   nid integer references node,
