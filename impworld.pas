@@ -177,10 +177,6 @@ type
   Block = array[ 0 .. 1023 ] of byte;
   Drive = file of block;
 
-{-- variable-sized buffers --------}
-type
-  TBytes = GArray<Byte>;
-
 
 {-- display -----------------------}
 
@@ -405,95 +401,6 @@ procedure TStack.Rot;
     slots[count-1] := tmp;
   end;
 
-{-- virtual machine ------------}
-type
-  OpCode = (opNop, opNot, opXor, opAnd,
-            opDup, opDrp, opPsh, opPop,
-            opSwp, opRot,
-            opFrk, opSpn, opSnd, opYld,
-            opAdd, opSub, opMul, opDvm,
-            opInc, opDec, opShr, opShl,
-            opCmp, opGT,  opLT,  opEq, opIn,
-            opJmp, opEls, opRet, opZex,
-            opNxt, opGet, opPut );
-type
-  TMachine  = class( TMorph )
-    public
-      ibuf, obuf : string; { input/output buffers (255 chars) }
-      ip, rp, wp : byte;
-      data, addr : TStack;
-      memory     : TBytes;
-      procedure Step; override;
-      procedure Draw; override;
-      procedure RunOp( op:OpCode );
-    end;
-
-procedure TMachine.RunOp( op:OpCode );
-  var temp : longint;
-  begin
-    with data do case op of
-      opNop : begin end;
-      opNot : push(not pop);
-      opXor : push(pop xor pop);
-      opAnd : push(pop and pop);
-      opDup : dup;
-      opDrp : temp := pop;
-      opPsh : addr.push(pop);
-      opPop : push(addr.pop);
-      opSwp : swap;
-      opRot : rot;
-      opFrk : begin {-- todo: fork --} end;
-      opSpn : begin {-- todo: spawn --} end;
-      opAdd : push(pop + pop);
-      opSub : push(pop - pop);
-      opMul : push(pop * pop);
-      opDvm :
-        begin
-          addr.push( tos mod nos );
-          push( pop div pop );
-          push( addr.pop );
-        end;
-      opInc : push(succ(pop));
-      opDec : push(pred(pop));
-      opShl : push(pop shl pop);
-      opShr : push(pop shr pop);
-      opCmp : begin
-                temp := pop - pop;
-                if temp > 0 then push(1)
-                else if temp < 0 then push(-1)
-                else push(0)
-              end;
-      opGt : if pop > pop then push(-1) else push(0);
-      opLt : if pop < pop then push(-1) else push(0);
-      opEq : if pop = pop then push(-1) else push(0);
-      opIn : begin end;{--todo-- if (pop mod 32) in set32(pop)
-                         then push(-1) else push(0); }
-      opJmp: ip := pop;
-      opEls: if pop = 0 then begin {---todo-- ip:= memory(ip) --} end
-                        else inc(ip);
-      opRet: ip := addr.pop;
-      opZex: if tos = 0 then begin temp := pop; ip := addr.pop end;
-      opNxt: if addr.tos = 0
-               then begin temp:=pop; temp := addr.pop end
-               else begin addr.over; ip := pop end;
-      opGet: push(memory[pop]);
-      opPut: memory[pop] := pop;
-      opSnd: begin end; {-- todo --}
-      opYld: begin end; {-- todo --}
-    end
-  end;
-
-procedure TMachine.Step;
-  begin
-  end;
-
-procedure TMachine.Draw;
-  var i, j : integer;
-  begin
-    for i := 32 to 64 do for j := 8 to 16 do
-      cw.cxy( random(8), i, j, 'x' );
-  end;
-
 {-- concurrency --------------------}
 
 
@@ -567,7 +474,6 @@ type
   TShellMorph = class( TMorph )
     curpos : byte;
     cmdstr : string;
-    vm     : TMachine;
     clock  : TClockMorph;
     words  : TDict;
     constructor Create;
@@ -642,7 +548,6 @@ procedure TShellMorph.Draw;
 destructor TShellMorph.Destroy;
   begin
     self.words.Free;
-    vm.halt;
     clock.halt;
     inherited Destroy;
   end;
