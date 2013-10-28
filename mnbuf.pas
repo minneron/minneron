@@ -1,6 +1,6 @@
 {$mode delphi}{$i xpc.inc}{$H+}
 unit mnbuf;
-interface uses xpc, rings, tiles, sysutils, fs;
+interface uses xpc, rings, tiles, sysutils, fs, classes;
 type
   token = string;
   anchor = TObject;
@@ -20,7 +20,11 @@ type
     public
       procedure LoadFromFile(path:string);
       procedure SaveToFile(path:string);
+      procedure LoadFromStrings( strings : TStrings );
+      function ToStrings : TStrings;
+      function ToString : string; override;
     public
+      procedure Clear;
       function  GetLength : cardinal; override;
       function  GetLine(i:cardinal) : string; override;
       procedure SetLine(i:cardinal; s:string); override;
@@ -29,16 +33,17 @@ type
       procedure DelLine(i:cardinal); override;
       property length : cardinal read GetLength;
       property lines[i:cardinal]:string
-	read GetLine write SetLine; default;
+        read GetLine write SetLine; default;
+      property strings : TStrings read ToStrings write LoadFromStrings;
     end;
 
   { GSpan : a pair of virtual tokens used for spans/selections }
   type GSpan<t> = class
     public type
       tag = class( anchor )
-	public
+        public
           is_start, is_end : boolean;
-          span		 : GSpan<T>;
+          span : GSpan<T>;
         end;
     public
       start_tag, end_tag : tag;
@@ -59,18 +64,18 @@ procedure TBuffer.LoadFromFile( path : string );
   begin
     if fs.exists( path ) then
       begin
-	//  need to check for io errors in here
-	assign( txt, path );
-	reset( txt );
-	while not eof( txt ) do begin
-	  readln( txt, line );
-	  self.AddLine( line );
-	end;
-	close( txt );
+        //  need to check for io errors in here
+        assign( txt, path );
+        reset( txt );
+        while not eof( txt ) do begin
+          readln( txt, line );
+          self.AddLine( line );
+        end;
+        close( txt );
       end
     else raise EFileNotFound(path)
   end;
-  
+
 procedure TBuffer.SaveToFile( path : string );
   var txt: text; i : cardinal;
   begin
@@ -79,7 +84,36 @@ procedure TBuffer.SaveToFile( path : string );
     for i := 0 to self.length -1 do writeln(txt, self[i]);
     close( txt );
   end;
+
+{ TStrings conversion routines (.strings property) }
 
+procedure TBuffer.LoadFromStrings( strings : TStrings );
+  var line: string;
+  begin
+    for line in strings do self.AddLine(line);
+  end;
+
+function TBuffer.ToStrings : TStrings;
+  var i : cardinal;
+  begin
+    result := TStringList.Create;
+    for i := 0 to self.length -1 do result.Add(self[i]);
+  end;
+
+function TBuffer.ToString : string;
+  var i, len : cardinal;
+  begin
+    len := self.length;
+    if len > 0 then result := self[0] else result := '';
+    if len > 1 then
+      for i := 1 to self.length -1 do appendstr(result, self[i]);
+  end;
+
+procedure TBuffer.Clear;
+  begin
+    while self.length > 0 do self.DelLine(0)
+  end;
+
 { ITextTile implementation for TBuffer }
 function TBuffer.GetLength : cardinal;
   begin
