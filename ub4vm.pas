@@ -1,6 +1,6 @@
 {$mode delphi}
 unit ub4vm;
-interface uses classes, arrays;
+interface uses classes, arrays, uminneron, kvm;
 
 type
 
@@ -29,7 +29,7 @@ type
             opCmp, opGT,  opLT,  opEq, opIn,
             opJmp, opEls, opRet, opZex,
             opNxt, opGet, opPut );
-
+
   TB4VM  = class( TComponent )
     public
       ibuf, obuf : string; { input/output buffers (255 chars) }
@@ -38,6 +38,12 @@ type
       memory     : TByteArray;
       procedure RunOp( op:OpCode );
       procedure Step;
+    end;
+
+  TB4TermView  = class( TView )
+    public
+      vm : TB4VM;
+      procedure Render(term : ITerm); override;
     end;
 
 implementation
@@ -150,6 +156,15 @@ procedure TB4VM.RunOp( op:OpCode );
 procedure TB4VM.Step;
   begin
   end;
-
-begin
+
+procedure TB4TermView.Render(term :  ITerm);
+  var i : integer;
+  begin
+    //  TODO : have output go to a cached virtual screen
+    // !! it's 'rendering' this way so that any output it does goes
+    //    to the sub terminal
+    for i := 1 to 100 do vm.step;
+  end;
+
+initialization
 end.

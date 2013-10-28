@@ -5,13 +5,14 @@ Copyright (c) 2012 Michal J Wallace. All rights reserved.
 {$mode delphi}{$i xpc.inc}{$H+}
 program min;
 uses xpc, mnml, mned, cw, cx, fx, kvm, sysutils, kbd,
-  impworld, custapp, uminneron, cli;
+  impworld, custapp, uminneron, cli, ub4vm;
 
 type
   TMinApp  = class(TCustomApplication)
     private
-      ed  : TEditor;
+      ed : TEditor;
       km : TKeyMap;
+      b4 : TB4VM;
     public
       procedure Initialize; override;
       procedure MakeKeyMap;
@@ -25,11 +26,15 @@ procedure TMinApp.Initialize;
   var
     okay : boolean;
   begin
+
     ed := TEditor.Create(self);
     ed.x := 5;
-    ed.y := 3;
+    ed.y := 2;
     ed.h := ed.h div 2 + 1;
-    ed.w := 80;
+    ed.w := 64;
+
+    b4 := TB4VM.Create(self);
+
     okay := false;
     if ParamCount = 0 then
       writeln( 'usage : min <filename> ')
