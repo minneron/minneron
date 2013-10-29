@@ -1,7 +1,7 @@
 {$i xpc.inc}{$mode delphi}
 unit uminneron;
 interface
-uses classes, kvm, udboutln, xpc, kbd, cli, num, sqldb, custapp, cw;
+uses classes, kvm, udboutln, xpc, kbd, cli, num, sqldb, custapp, cw, math;
 
 type
   TView = class(TComponent)
@@ -12,17 +12,29 @@ type
       procedure SetY(value : cardinal);
       procedure SetW(value : cardinal);
       procedure SetH(value : cardinal);
-      procedure Render(term :  ITerm); virtual;
-    public
-      procedure Redraw;
     published
+      procedure Nudge(dx, dy : integer);
+      procedure Redraw;
+      procedure Render(term :  ITerm); virtual;
+      procedure Resize(new_w, new_h : cardinal); virtual;
       property x : cardinal read _x write SetX;
       property y : cardinal read _y write SetY;
       property w : cardinal read _w write SetW;
       property h : cardinal read _h write SetH;
       constructor Create( aOwner : TComponent ); override;
     end;
-
+  
+  // A class with its own video ram buffer:
+  TTermView = class (TView, ITerm)
+    protected
+      _gridterm : TGridTerm;
+    published
+      property term : TGridTerm read _gridterm implements ITerm;
+      constructor Create( aOwner : TComponent ); override;
+      procedure Render(term :  ITerm); override;
+      procedure Resize(new_w, new_h : cardinal); override;
+    end;
+
   //  TODO : improve the keyboard handling
   //    - probably should use use sparse arrays
   //    - allow each control to have its own sparse array
@@ -38,8 +50,7 @@ type
       keCmd : (eCmd: TCommandEvent);
       keNfy : (eNfy: TNotifyEvent);
       keCrt : (eCrt: TCrtKeyEvent);
-  end;
-
+    end;
 const
   DoNothing : TKeyboardEvent = (kind: keNil; eNil : NIL);
 
@@ -59,7 +70,7 @@ type
       property crt[ ch : widechar ] : TCrtKeyEvent  write SetKeyCrt;
       procedure HandleKeys;
   end;
-
+
   TDbCursor = class (TComponent) // TODO : ICursor
     protected
       _rs : TRecordSet;
@@ -92,7 +103,7 @@ type
       property Item[ key : string ] : variant
          read GetItem write SetItem; default;
     end;
-
+
   TDbTreeGrid = class (TView)
     protected
       _top : cardinal;
@@ -101,11 +112,6 @@ type
       procedure Render(term :  ITerm); override;
       property DataCursor : TDbCursor read _cur write _cur;
    end;
-
-  TTermView = class (TView)
-    protected
-      // TODO :expose something like crt for use by vm, etc
-    end;
 
   TStepper = class (TComponent)
     protected
@@ -123,7 +129,7 @@ type
     published
       property kind : integer read _kind write _kind;
     end;
-
+
 implementation
 
 constructor TView.Create( aOwner : TComponent );
@@ -152,7 +158,14 @@ procedure TView.SetH(value : cardinal);
   begin
     _h := value;
   end;
+  
+procedure TView.Nudge(dx, dy : integer);
+  begin
+    _x += dx;
+    _y += dy;
+  end;
 
+
 procedure TView.Redraw;
   var term : kvm.ITerm;
   begin
@@ -171,7 +184,40 @@ procedure TView.Render(term : ITerm);
     ClrScr;
   end;
 
+procedure TView.Resize(new_w, new_h : cardinal);
+  begin
+    _w := new_w;
+    _h := new_h;
+  end;
+
+constructor TTermView.Create( aOwner : TComponent );
+  begin
+    inherited Create( aOwner );
+    _gridterm := TGridTerm.Create(0, 0);
+  end;
 
+procedure TTermView.Resize(new_w, new_h : cardinal);
+  begin
+    inherited Resize(new_w, new_h);
+    _gridterm.grid.Resize(new_w, new_h);
+  end;
+
+procedure TTermView.Render(term : ITerm);
+  var endy, endx, x, y : byte; old : TTextAttr; cell : TTermCell;
+  begin
+    endy := min(_h-1, term.maxY);
+    endx := min(_w-1, term.maxX);
+    for y := 0 to endy do
+      begin
+	term.gotoxy(_x, _y+y);
+        for x := 0 to endx do
+          begin
+            cell := _gridterm.grid[x,y];
+	    term.emit(cell.ch);
+          end;
+      end;
+  end;
+
 {---------------------------------------------------------------}
 { TDbCursor                                                     }
 {---------------------------------------------------------------}
