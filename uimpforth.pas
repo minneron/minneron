@@ -1,34 +1,56 @@
-unit empty;
-interface
+{$mode delphi}
+unit uimpforth;
+interface uses gqueue, classes;
 
 const
   tokLen = 15;
 type
-  tokstr = string[toklen];
-  address  = 0..65535;
-  cardinal = address;
-  integer  = int32;
-  thunk    = procedure;
+  tokstr    = string[toklen];
+  address   = 0..65535;
+  cardinal  = address;
+  integer   = int32;
+  thunk	    = procedure of object;
+  indicator = function : boolean of object;
 
-  {-- main public inteface --}
-  procedure createop( const iden : tokstr; code : thunk );
-  procedure mainloop;
-  
-  {-- these might wind up hidden... --}
-  procedure pushdat( x:integer );
-  procedure pushret( x:integer );
-  procedure pass;
-  procedure gosub;
-  procedure step;
-  procedure execute;
-  procedure interpret;
-  function lookup : boolean;
-  procedure notfound;
-  function default_number : boolean;
-  procedure default_getnext;
-  procedure default_welcome;
-  procedure default_refill;
-  
+  TLexicon  = class
+  end;	    
+
+  TCmd	    = class
+  end;
+
+  TCmdQueue = TQueue<TCmd>;
+
+  TImpForth = class (TComponent)
+    protected
+      refill,       { repopulates 'src' }
+      getnext,      { copy next token from 'src' to 'token' }
+      respond,
+      welcome : thunk;
+      number  : indicator;
+    public
+
+      constructor Create(aOwner : TComponent); override;
+
+      {-- main public inteface --}
+      procedure createop( const iden : tokstr; code : thunk );
+      procedure mainloop;
+
+      {-- these might wind up hidden... --}
+      procedure pushdat( x:integer );
+      procedure pushret( x:integer );
+      procedure pass;
+      procedure gosub;
+      procedure step;
+      procedure execute;
+      procedure interpret;
+      function lookup : boolean;
+      procedure notfound;
+      function default_number : boolean;
+      procedure default_respond;
+      procedure default_getnext;
+      procedure default_welcome;
+      procedure default_refill;
+    end;
 
 const
   prim	 = 0;
@@ -43,7 +65,7 @@ type
   end;
 
 var
-  brand	 : string  = 'EmptyForth';
+  brand	 : string  = 'ImpForth';
   verMaj : byte  = 0;
   verMin : byte = 1;
 
@@ -70,28 +92,17 @@ var
   numwds : cardinal = 0;
   numops : cardinal = 0;
 
-{-- delegates -------------------------------------------------}
-
-var
-  refill,       { repopulates 'src' }
-  getnext,      { copy next token from 'src' to 'token' }
-  respond,
-  welcome
-  : thunk;
-
-  number : function : boolean;
-
 implementation
 
 
 {-- direct stack access from pascal ---------------------------}
 
-procedure pushdat( x:integer );
+procedure TImpForth.pushdat( x:integer );
 begin
   dec(sp); ram[sp] := x;
 end;
 
-procedure pushret( x:integer );
+procedure TImpForth.pushret( x:integer );
 begin
   dec(rp); ram[rp] := x;
 end;
@@ -99,11 +110,11 @@ end;
 
 {-- primitive control flow  -----------------------------------}
 
-procedure pass;
+procedure TImpForth.pass;
 begin
 end;
 
-procedure gosub;
+procedure TImpForth.gosub;
 begin
   pushret( ip ); ip := ram[ip];
 end;
@@ -111,7 +122,7 @@ end;
 
 {-- inner interpreter -----------------------------------------}
 
-procedure step;
+procedure TImpForth.step;
 var op : integer;
 begin
   op := ram[ip];
@@ -123,12 +134,12 @@ begin
   inc(ip);
 end;
 
-procedure execute;
+procedure TImpForth.execute;
 begin
   repeat step until ram[ip] = quit
 end;
 
-procedure interpret;
+procedure TImpForth.interpret;
 begin
   with words[which] do
     if code = prim then ops[data] { run primitive directly }
@@ -140,7 +151,7 @@ end;
 
 {-- outer interpreter -----------------------------------------}
 
-function lookup : boolean;
+function TImpForth.lookup : boolean;
   var found: boolean = false;
 begin
   which := numwds; found := false;
@@ -151,12 +162,12 @@ begin
   lookup := found;
 end;
 
-procedure notfound;
+procedure TImpForth.notfound;
 begin
   msg := token + '?';
 end;
 
-procedure mainloop;
+procedure TImpForth.mainloop;
 begin
   welcome;
   repeat
@@ -170,13 +181,13 @@ end;
 
 {-- default tokenizer -----------------------------------------}
 
-function default_number : boolean;
+function TImpForth.default_number : boolean;
 begin
   {  todo }
   default_number := false;
 end;
 
-procedure default_getnext;
+procedure TImpForth.default_getnext;
   function ignorable : boolean;
   begin
     ignorable := (inp > length(src)) or (src[inp] <= ' ')
@@ -192,19 +203,19 @@ end;
 
 {-- user interface --------------------------------------------}
 
-procedure default_refill;
+procedure TImpForth.default_refill;
 begin
   repeat write('> '); readln(src)
   until length(src) > 0;
 end;
 
-procedure default_respond;
+procedure TImpForth.default_respond;
 begin
   if msg <> '' then writeln(msg);
   msg := '';
 end;
 
-procedure default_welcome;
+procedure TImpForth.default_welcome;
 begin
   writeln(brand, ' ', verMaj, '.', verMin);
 end;
@@ -212,7 +223,7 @@ end;
 
 {-- dictionary-handlers ---------------------------------------}
 
-procedure createop( const iden : tokstr; code : thunk );
+procedure TImpForth.createop( const iden : tokstr; code : thunk );
 begin
   ops[numops] := code;
   with words[numwds] do begin
@@ -224,13 +235,17 @@ begin
   inc(numwds); inc(numops);
 end;
 
-var i : integer;
+constructor TImpForth.Create(aOwner : TComponent);
+  var i : integer;
+  begin
+    refill  := default_refill;
+    getnext := default_getnext;
+    respond := default_respond;
+    welcome := default_welcome;
+    number  := default_number;
+    for i := high(ops) downto low(ops) do ops[i] := pass;
+    for i := high(ram) downto low(ram) do ram[i] := 0;
+  end;
+
 begin
-  refill  := @default_refill;
-  getnext := @default_getnext;
-  respond := @default_respond;
-  welcome := @default_welcome;
-  number  := @default_number;
-  for i := high(ops) downto low(ops) do ops[i] := @pass;
-  for i := high(ram) downto low(ram) do ram[i] := 0;
 end.
