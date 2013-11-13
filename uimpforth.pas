@@ -1,6 +1,6 @@
 {$mode delphi}
 unit uimpforth;
-interface uses gqueue, classes;
+interface uses gqueue, classes, custapp;
 
 const
   tokLen = 15;
@@ -10,30 +10,21 @@ type
   cardinal  = address;
   integer   = int32;
   thunk	    = procedure of object;
-  indicator = function : boolean of object;
 
-  TLexicon  = class
-  end;	    
-
-  TCmd	    = class
-  end;
-
-  TCmdQueue = TQueue<TCmd>;
+  TCmdQueue = TQueue<integer>;
 
   TImpForth = class (TComponent)
     protected
+      msg : string[ 255 ]; // input and output buffers
       refill,       { repopulates 'src' }
-      getnext,      { copy next token from 'src' to 'token' }
-      respond,
-      welcome : thunk;
-      number  : indicator;
+      respond : thunk;
     public
 
       constructor Create(aOwner : TComponent); override;
 
       {-- main public inteface --}
-      procedure createop( const iden : tokstr; code : thunk );
-      procedure mainloop;
+      procedure AddOp( const iden : tokstr; code : thunk );
+      procedure Send( s : string );
 
       {-- these might wind up hidden... --}
       procedure pushdat( x:integer );
@@ -45,12 +36,23 @@ type
       procedure interpret;
       function lookup : boolean;
       procedure notfound;
-      function default_number : boolean;
-      procedure default_respond;
-      procedure default_getnext;
-      procedure default_welcome;
-      procedure default_refill;
+
+      function IsNumber : boolean;
     end;
+
+  TImpShellApp = class (TCustomApplication)
+    public
+      src  : string[255];
+      imp  : TImpForth;
+      procedure Initialize; override;
+      procedure AddOp( const iden : tokstr; code : thunk );
+      procedure DoRun; override;
+      procedure Welcome; virtual;
+      procedure GetNext; virtual;
+      procedure Refill; virtual;
+      procedure Respond; virtual;
+    end;
+
 
 const
   prim	 = 0;
@@ -81,10 +83,8 @@ var
   rp : integer  = 1024;
   ip : cardinal = 0;
 
-  src, msg : string[ 255 ]; // input and output buffers
   inp   : byte;             // pointer into src
   token : string[ tokLen ]; // temp buffer for token
-  done  : boolean = false;  // controls the outer interpreter
   which : cardinal;         // address of last looked-up word
 
   // for now, we're just using a simple array for the dictionary
@@ -93,6 +93,13 @@ var
   numops : cardinal = 0;
 
 implementation
+
+constructor TImpForth.Create(aOwner : TComponent);
+  var i : integer;
+  begin
+    for i := high(ops) downto low(ops) do ops[i] := pass;
+    for i := high(ram) downto low(ram) do ram[i] := 0;
+  end;
 
 
 {-- direct stack access from pascal ---------------------------}
@@ -167,27 +174,64 @@ begin
   msg := token + '?';
 end;
 
-procedure TImpForth.mainloop;
-begin
-  welcome;
-  repeat
-    getnext;
-    if lookup then interpret
-    else if number() then notfound;
-    respond
-  until done;
-end;
-
 
 {-- default tokenizer -----------------------------------------}
 
-function TImpForth.default_number : boolean;
+function TImpForth.IsNumber : boolean;
 begin
   {  todo }
-  default_number := false;
+  result := false;
 end;
 
-procedure TImpForth.default_getnext;
+
+
+{-- dictionary-handlers ---------------------------------------}
+
+procedure TImpForth.AddOp( const iden : tokstr; code : thunk );
+begin
+  ops[numops] := code;
+  with words[numwds] do begin
+    // prev := ... ;
+    word := iden;
+    code := prim;
+    data := numops;
+  end;
+  inc(numwds); inc(numops);
+end;
+
+procedure TImpForth.Send( s : string );
+  begin
+  end;
+
+{-- TImpShellApp ----------------------------------------------}
+
+procedure TImpShellApp.Initialize;
+begin
+  imp := TImpForth.Create(self);
+end;
+
+procedure TImpShellApp.AddOp( const iden : tokstr; code : thunk );
+begin
+  imp.AddOp(iden, code);
+end;
+
+procedure TImpShellApp.DoRun;
+begin
+  Welcome;
+  repeat
+    GetNext;
+    if imp.Lookup then imp.Interpret
+    else if not imp.IsNumber then imp.NotFound;
+    Respond
+  until terminated;
+end;
+
+procedure TImpShellApp.Welcome;
+begin
+  writeln(brand, ' ', verMaj, '.', verMin);
+end;
+
+procedure TImpShellApp.GetNext;
   function ignorable : boolean;
   begin
     ignorable := (inp > length(src)) or (src[inp] <= ' ')
@@ -200,52 +244,18 @@ begin
   repeat token := token + src[inp]; inc(inp)
   until ignorable or (inp > length(src));
 end;
-
-{-- user interface --------------------------------------------}
 
-procedure TImpForth.default_refill;
+procedure TImpShellApp.Refill;
 begin
   repeat write('> '); readln(src)
   until length(src) > 0;
 end;
 
-procedure TImpForth.default_respond;
+procedure TImpShellApp.Respond;
 begin
-  if msg <> '' then writeln(msg);
-  msg := '';
+  if imp.msg <> '' then writeln(imp.msg);
+  imp.msg := '';
 end;
-
-procedure TImpForth.default_welcome;
-begin
-  writeln(brand, ' ', verMaj, '.', verMin);
-end;
-
-
-{-- dictionary-handlers ---------------------------------------}
-
-procedure TImpForth.createop( const iden : tokstr; code : thunk );
-begin
-  ops[numops] := code;
-  with words[numwds] do begin
-    // prev := ... ;
-    word := iden;
-    code := prim;
-    data := numops;
-  end;
-  inc(numwds); inc(numops);
-end;
-
-constructor TImpForth.Create(aOwner : TComponent);
-  var i : integer;
-  begin
-    refill  := default_refill;
-    getnext := default_getnext;
-    respond := default_respond;
-    welcome := default_welcome;
-    number  := default_number;
-    for i := high(ops) downto low(ops) do ops[i] := pass;
-    for i := high(ram) downto low(ram) do ram[i] := 0;
-  end;
 
 begin
 end.

@@ -1,5 +1,5 @@
 {$i test_impforth.def }
-implementation uses impforth;
+implementation uses uimpforth;
 
 var imp : TImpForth;
   
