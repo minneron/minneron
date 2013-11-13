@@ -5,7 +5,7 @@ interface uses gqueue, classes, custapp;
 const
   tokLen = 15;
 type
-  tokstr    = string[toklen];
+  TTokStr   = string[toklen];
   address   = 0..65535;
   cardinal  = address;
   integer   = int32;
@@ -23,8 +23,9 @@ type
       constructor Create(aOwner : TComponent); override;
 
       {-- main public inteface --}
-      procedure AddOp( const iden : tokstr; code : thunk );
+      procedure AddOp( const iden : TTokStr; code : thunk );
       procedure Send( s : string );
+      procedure Eval;
 
       {-- these might wind up hidden... --}
       procedure pushdat( x:integer );
@@ -45,7 +46,7 @@ type
       src  : string[255];
       imp  : TImpForth;
       procedure Initialize; override;
-      procedure AddOp( const iden : tokstr; code : thunk );
+      procedure AddOp( const iden : TTokStr; code : thunk );
       procedure DoRun; override;
       procedure Welcome; virtual;
       procedure GetNext; virtual;
@@ -61,7 +62,7 @@ const
 type
   TWord	 = record
     // prev : address;
-    word : tokstr;
+    word : TTokStr;
     code : address;
     data : cardinal
   end;
@@ -187,7 +188,7 @@ end;
 
 {-- dictionary-handlers ---------------------------------------}
 
-procedure TImpForth.AddOp( const iden : tokstr; code : thunk );
+procedure TImpForth.AddOp( const iden : TTokStr; code : thunk );
 begin
   ops[numops] := code;
   with words[numwds] do begin
@@ -203,6 +204,13 @@ procedure TImpForth.Send( s : string );
   begin
   end;
 
+procedure TImpForth.Eval;
+  begin
+    if Lookup then Interpret
+    else if IsNumber then begin {TODO } end
+    else NotFound;
+  end;
+
 {-- TImpShellApp ----------------------------------------------}
 
 procedure TImpShellApp.Initialize;
@@ -210,7 +218,7 @@ begin
   imp := TImpForth.Create(self);
 end;
 
-procedure TImpShellApp.AddOp( const iden : tokstr; code : thunk );
+procedure TImpShellApp.AddOp( const iden : TTokStr; code : thunk );
 begin
   imp.AddOp(iden, code);
 end;
@@ -220,8 +228,7 @@ begin
   Welcome;
   repeat
     GetNext;
-    if imp.Lookup then imp.Interpret
-    else if not imp.IsNumber then imp.NotFound;
+    imp.Eval;
     Respond
   until terminated;
 end;
