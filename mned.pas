@@ -59,7 +59,7 @@ constructor TEditor.Create( aOwner : TComponent );
     filename := '';
     done := false;
     dirty := true;
-    self.led := ui.zinput.create;
+    self.led := ui.ZInput.Create(nil);
     self.ToTop;
     TellUser('welcome to minneron.');
   end;
