@@ -11,10 +11,18 @@ procedure setup;
 
 procedure test_send;
   begin
-    imp.Send('');
-    imp.Send(' ');
-    imp.Send('NOP');
-    imp.Send('BYE');
+    chk.equal('',      imp.NextToken);
+    imp.Send('test  the lexer');
+    chk.equal('test',  imp.NextToken);
+    chk.equal('the',   imp.NextToken);
+    chk.equal('lexer', imp.NextToken);
+    chk.equal('',      imp.NextToken);
+  end;
+
+procedure test_EvalNextToken;
+  begin
+    // if the buffer's empty it should still silently do nothing.
+    imp.EvalNextToken;
   end;
 
 finalization

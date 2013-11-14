@@ -1,6 +1,6 @@
 {$mode delphi}
 unit uimpforth;
-interface uses gqueue, classes, custapp;
+interface uses xpc, gqueue, classes, custapp, sysutils;
 
 const
   kTokLen = 15;
@@ -48,15 +48,20 @@ type
       // for now, we're just using a simple array for the dictionary
       words  : array[ 0 .. 1023 ] of TWord;
       numwds : cardinal;
+      src : string[255];
     public
+      NeedsInput, HasOutput : boolean;
+
       constructor Create(aOwner : TComponent); override;
 
       {-- main public inteface --}
       procedure AddOp( const iden : TTokStr; thunk : TThunk );
       procedure Send( s : string );
-      procedure Eval(const token : TTokStr);
+      procedure Eval( const token : TTokStr );
+      procedure EvalNextToken;
       procedure Interpret;
 
+      function NextToken : TTokStr; virtual;
       function Lookup  : boolean;
       function IsNumber : boolean;
       procedure NotFound;
@@ -64,14 +69,11 @@ type
 
   TImpShellApp = class (TCustomApplication)
     public
-      src : string[255];
-      inp : byte;             // pointer into src
       imp : TImpForth;
       procedure Initialize; override;
       procedure AddOp( const iden : TTokStr; thunk : TThunk );
       procedure DoRun; override;
       procedure Welcome; virtual;
-      function NextToken : TTokStr; virtual;
       procedure Refill; virtual;
       procedure Respond; virtual;
     end;
@@ -212,8 +214,36 @@ procedure TImpForth.AddOp( const iden : TTokStr; thunk : TThunk );
 
 procedure TImpForth.Send( s : string );
   begin
-    { TODO}
+    self.src += s;
+    self.NeedsInput := false;
   end;
+
+function TImpForth.NextToken : TTokStr;
+  var inp : cardinal = 1; // input pointer
+  function OutsideToken : boolean;
+    begin
+      result := (inp > length(src)) or (src[inp] <= ' ')
+    end;
+  function InsideString : boolean;
+    begin
+      result := (inp <= length(src))
+    end;
+  begin
+    self.tok := '';
+    // skip whitespace:
+    while InsideString and OutsideToken do inc(inp);
+    if InsideString then
+      begin // consume the next token
+        repeat
+          self.tok += src[inp];
+          inc(inp)
+        until OutsideToken;
+        self.src := RightStr(src, length(src) - inp);
+      end
+    else self.NeedsInput := true; // only saw whitespace
+    result := tok;
+  end;
+
 
 procedure TImpForth.Eval(const token : TTokStr);
   begin
@@ -221,6 +251,12 @@ procedure TImpForth.Eval(const token : TTokStr);
     if Lookup then Interpret
     else if IsNumber then begin {TODO } end
     else NotFound;
+  end;
+
+procedure TImpForth.EvalNextToken;
+  begin
+    NextToken;
+    Eval(tok);
   end;
 
 {-- TImpShellApp ----------------------------------------------}
@@ -239,8 +275,9 @@ procedure TImpShellApp.DoRun;
   begin
     Welcome;
     repeat
-      imp.Eval(NextToken);
-      Respond
+      if imp.NeedsInput then Refill;
+      imp.EvalNextToken;
+      if imp.HasOutput then Respond;
     until terminated;
   end;
 
@@ -249,24 +286,12 @@ procedure TImpShellApp.Welcome;
     writeln(brand, ' ', verMaj, '.', verMin);
   end;
 
-function TImpShellApp.NextToken : TTokStr;
-  function ignorable : boolean;
-  begin
-    ignorable := (inp > length(src)) or (src[inp] <= ' ')
-  end;
-begin
-  while ignorable do
-    if inp <= length(src) then inc(inp)
-    else begin refill; inp := 0; end;
-  result := '';
-  repeat result := result + src[inp]; inc(inp)
-  until ignorable or (inp > length(src));
-end;
-
 procedure TImpShellApp.Refill;
+  var s : string;
   begin
-    repeat write('> '); readln(src)
-    until length(src) > 0;
+    repeat write('> '); readln(s)
+    until length(s) > 0;
+    imp.send(s);
   end;
 
 procedure TImpShellApp.Respond;
