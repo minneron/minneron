@@ -44,8 +44,8 @@ procedure TMinApp.Initialize;
 procedure TMinApp.MakeKeyMap;
   begin
     km := TKeyMap.Create(self);
-    km.cmd[ ^L ] := self.redraw;
     ed.AddDefaultKeys( km );
+    km.cmd[ ^L ] := self.redraw;
   end;
 
 procedure TMinApp.DoRun;
@@ -59,6 +59,7 @@ procedure TMinApp.DoRun;
 procedure TMinApp.Redraw;
  begin
    bg('k'); fg('K'); fillscreen('!@#$%^&*(){}][/=+?-_;:');
+   ed.dirty := true;
  end;
 
 var app : TMinApp;
