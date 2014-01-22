@@ -29,7 +29,7 @@ type
 
 var
   dbc : udboutln.TDatabase;
-
+
 procedure TDbOutlnApp.Initialize;
   begin
     rsOutln := dbc.query(
@@ -64,7 +64,7 @@ procedure TDbOutlnApp.Initialize;
     Redraw;
   end;
 
-
+
 procedure TDbOutlnApp.Redraw;
   begin
     bg('k'); fg('K'); fillscreen('!@#$%^&*(){}][/=+?-_;:');
@@ -90,7 +90,7 @@ function incv(var i:integer):integer;
   begin
     i := i+1; result := i;
   end;
-
+
 procedure TDBOutLnApp.ChooseType;
   var rs : TRecordSet; f : TField; i : integer; c : TDbCursor;
   var done:boolean; ch : char; q : TSqlQuery;
@@ -162,7 +162,7 @@ procedure TDbOutlnApp.Quit;
   begin
     Terminate;
   end;
-
+
 var app : TDbOutlnApp;
 begin
   dbc := connect('minneron.sdb');
