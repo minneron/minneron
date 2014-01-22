@@ -13,6 +13,7 @@ type
       ed : TEditor;
       km : TKeyMap;
       b4 : TB4VM;
+      err: string;
     public
       procedure Initialize; override;
       procedure MakeKeyMap;
@@ -23,10 +24,7 @@ type
     end;
 
 procedure TMinApp.Initialize;
-  var
-    okay : boolean;
   begin
-
     ed := TEditor.Create(self);
     ed.x := 5;
     ed.y := 2;
@@ -35,14 +33,12 @@ procedure TMinApp.Initialize;
 
     b4 := TB4VM.Create(self);
 
-    okay := false;
     if ParamCount = 0 then
-      writeln( 'usage : min <filename> ')
+      err := 'usage : min <filename>'
     else if not ed.Load( ParamStr( 1 )) then
-      writeln( 'unable to load file: ', paramstr( 1 ))
-    else
-      okay := true;
-    if not okay then terminate else MakeKeyMap;
+      err := 'unable to load file: ' + paramstr( 1 )
+    else err := '';
+    if err = '' then MakeKeyMap else terminate
   end;
 
 procedure TMinApp.MakeKeyMap;
@@ -71,8 +67,11 @@ begin
   app := TMinApp.Create(nil);
   CustomApplication := app;
   app.Initialize;
-  bg('k'); fg('K'); fillscreen('!@#$%^&*(){}][/=+?-_;:');
-  app.Run;
-  app.Free;
-  fg(7); bg(0); clrscr; showcursor;
+  if app.err = '' then
+    begin
+      bg('k'); fg('K'); fillscreen('!@#$%^&*(){}][/=+?-_;:');
+      app.Run; app.Free;
+      fg('w'); bg('k'); clrscr; showcursor;
+    end
+  else writeln(app.err)
 end.

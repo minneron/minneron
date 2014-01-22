@@ -611,6 +611,7 @@ initialization
 
 finalization
   //world.Free; { nope. this will crash if we launch(world).}
-  cw.cwriteln( '|w|!k' );
-  kvm.ClrScr;
+  // I took this out because I wanted minneron to display error
+  // messages if it couldn't start up correctly:
+  // cw.cwriteln( '|w|!k' ); kvm.ClrScr;
 end.
