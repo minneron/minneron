@@ -1,7 +1,7 @@
 { editor widget for minneron }
 {$mode delphi}{$I xpc.inc}{$H+}
 unit mned;
-interface uses xpc, classes, fs, stri, num, cw, ui, kvm, kbd, fx,
+interface uses xpc, classes, fs, ustr, num, cw, ui, kvm, kbd, fx,
   tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld, cli,
   uminneron, custapp;
 

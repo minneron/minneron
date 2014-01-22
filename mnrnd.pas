@@ -3,7 +3,7 @@
 {$mode delphi}
 unit mnrnd;
 interface uses
-  xpc, fs, stri, num, cw, ui, kvm, kbd, cli,
+  xpc, fs, ustr, num, cw, ui, kvm, kbd, cli,
   tiles, vorunati, sysutils, mnml, mnbuf;
 
   var cmd_rnd : TCmdId;

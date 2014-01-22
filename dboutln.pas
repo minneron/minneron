@@ -1,7 +1,7 @@
 {$mode delphi}
 program dboutln;
 uses xpc, udboutln, custapp, classes, kvm, cw, uminneron,
-     stri, db, sqldb, fx, kbd, num;
+     ustr, db, sqldb, fx, kbd, num;
 
 const
   kCMD_CREATE_NODE = 00;
