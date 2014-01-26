@@ -13,6 +13,8 @@ type
   TRecordSet = class (TSqlQuery)
     constructor Create(dbc : TSqlConnection;  query : string); reintroduce;
     function Execute(q : string) : TRecordSet;
+    function Open: TRecordSet; reintroduce;
+    function First: TRecordSet; reintroduce;
   end;
   TDatabase = class (TSqlite3Connection)
     function Query(sql : string) : TRecordSet;
@@ -28,6 +30,16 @@ constructor TRecordSet.Create(dbc : TSQLConnection; query : string);
     inherited Create(dbc);
     self.database := dbc;
     self.sql.text := query;
+  end;
+
+function TRecordSet.Open : TRecordSet;
+  begin
+    inherited open; result := self;
+  end;
+
+function TRecordSet.First : TRecordSet;
+  begin
+    inherited first; result := self;
   end;
 
 function TRecordSet.Execute(q : string) : TRecordSet;
