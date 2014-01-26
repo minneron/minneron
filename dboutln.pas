@@ -1,37 +1,29 @@
 {$mode delphi}
 program dboutln;
-uses xpc, udb, custapp, classes, kvm, cw, uminneron,
+uses xpc, udb, uapp, classes, kvm, cw, uminneron,
      ustr, db, sqldb, fx, ukm, kbd, num;
 
-const
-  kCMD_CREATE_NODE = 00;
-  kCMD_CREATE_TYPE = 01;
-  kCMD_INSERT_NODE = 02;
-  kCMD_NUDGE_NEXT  = 03;
-  kCMD_NUDGE_PREV  = 04;
-
 type
-  TDbOutlnApp  = class(TCustomApplication)
+  TDbOutlnApp  = class(uapp.TCustomApp)
     protected
-      keys : TKeyMap;
+      dbc  : udb.TDatabase;
       curs : TDbCursor;
       view : TDbTreeGrid;
       rsOutln,
       rsKinds  : TRecordSet;
     public
-      procedure Initialize; override;
-      procedure DoRun; override;
-      procedure Quit;
+      function  init : boolean; override;
+      procedure keys(km : TKeyMap); override;
       procedure ChooseType;
       procedure Redraw;
       procedure OnCursorChange( Sender : TObject );
     end;
 
-var
-  dbc : udb.TDatabase;
 
-procedure TDbOutlnApp.Initialize;
+function TDbOutlnApp.init : boolean;
   begin
+    hidecursor;
+    dbc := udb.connect('minneron.sdb');
     rsOutln := dbc.query(
       'SELECT olid, nid, kind, node, depth, collapsed, hidden, leaf '+
         'FROM outline');
@@ -48,22 +40,25 @@ procedure TDbOutlnApp.Initialize;
     view.y := 5;
     view.datacursor := curs;
     curs.OnMarkChanged := self.OnCursorChange;
-    keys := TKeyMap.Create(dbc);
-    with keys do begin
-      cmd[ ^P ] := curs.Prev;
-      cmd[ ^N ] := curs.Next;
-      cmd['p'] := curs.Prev;
-      cmd['n'] := curs.Next;
-      cmd['['] := curs.ToTop;
-      cmd[']'] := curs.ToEnd;
-      cmd[ ^C ] := self.Quit;
-      cmd[ ^I ] := curs.Toggle;
-      cmd[ ^T ] := self.ChooseType;
-      cmd[ ^L ] := self.Redraw;
-    end;
-    Redraw;
+    self.redraw;
+    result := true;
   end;
 
+procedure TDbOutlnApp.keys(km : TKeyMap);
+  begin
+    km.cmd[ ^P ] := curs.Prev;
+    km.cmd[ ^N ] := curs.Next;
+    km.cmd['p'] := curs.Prev;
+    km.cmd['n'] := curs.Next;
+    km.cmd['['] := curs.ToTop;
+    km.cmd[']'] := curs.ToEnd;
+    km.cmd[ ^C ] := self.Quit;
+    km.cmd[ ^I ] := curs.Toggle;
+    km.cmd[ ^T ] := self.ChooseType;
+    km.cmd[ ^L ] := self.Redraw;
+  end;
+
+  
 
 procedure TDbOutlnApp.Redraw;
   begin
@@ -74,11 +69,6 @@ procedure TDbOutlnApp.Redraw;
 procedure TDbOutlnApp.OnCursorChange( Sender : TObject );
   begin
     view.Redraw;
-  end;
-
-procedure TDbOutlnApp.DoRun;
-  begin
-    keys.HandleKeys;
   end;
 
 function vinc(var i:integer):integer;
@@ -97,20 +87,16 @@ procedure TDBOutLnApp.ChooseType;
   const widths : array [0..1] of byte = (0, 16);
   begin
     clrscr;
-    rs := rsKinds;
-    rs.Open;
-    rs.First;
+    rs := rsKinds; rs.Open; rs.First;
 
     c := TDbCursor.Create(dbc);
-    c.RecordSet := rs;
-    c.KeyField := 'knd';
-    c.Mark := rs['knd'];
+    c.RecordSet := rs; c.KeyField := 'knd'; c.Mark := rs['knd'];
 
     repeat
       gotoxy(0,0);
 
       { draw column headers }
-      bg('K');fg('W');
+      bg('K'); fg('W');
       i := 0;
       for f in rs.fields do write(rfit(f.DisplayName, widths[vinc(i)]));
       WriteLn;
@@ -157,19 +143,7 @@ procedure TDBOutLnApp.ChooseType;
 
     Redraw;
   end;
-
-procedure TDbOutlnApp.Quit;
-  begin
-    Terminate;
-  end;
 
-var app : TDbOutlnApp;
 begin
-  dbc := connect('minneron.sdb');
-  App := TDbOutlnApp.Create(dbc);
-  hidecursor;
-  App.Initialize;
-  App.Run;
-  dbc.Free;
-  fg(7); bg(0); clrscr; showcursor;
+  uapp.run(TDbOutlnApp.Create);
 end.
