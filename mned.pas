@@ -2,8 +2,8 @@
 {$mode delphi}{$I xpc.inc}{$H+}
 unit mned;
 interface uses xpc, classes, fs, ustr, num, cw, ui, kvm, kbd, fx,
-  tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld, cli,
-  uminneron, custapp;
+  tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld, cli, ukm,
+  uminneron;
 
 type
   TEditor = class (TView)
@@ -277,7 +277,6 @@ procedure TEditor.AddDefaultKeys( km : TKeyMap );
   begin
     for ch := #0 to #225 do km.crt[ ch ] := DelegateKey;
     for ch := #$EE00  to #$EEFF do km.crt[ ch ] := DelegateKey;
-    km.cmd[ ^C ] := CustomApplication.Terminate;
     km.cmd[ ^N ] := NextLine;
     km.cmd[ ^P ] := PrevLine;
     km.cmd[ ^M ] := Newline;
