@@ -1,0 +1,31 @@
+#+title: dlex : definitions for abstract lexing interface
+
+* unit =dlex=
+
+This unit defines abstract data types for lexical analysis.
+
+For our purposes, a /token/ is a string located at a particular point in a text, with some kind of arbitrary semantic data attached.
+
+#+begin_src pascal :tangle ".gen/dlex.pas" :comments both :padline yes :noweb tangle
+  
+  {$mode delphi}
+  unit dlex;
+  interface uses xpc;
+  
+  type
+    <<interface:IToken/T>>
+  
+  implementation
+  end.
+  
+#+end_src
+
+* type =IToken<T>=
+
+#+name: interface:IToken/T
+#+begin_src pascal
+  IToken<T> = interface (IUnknown)
+    function tags : set32;
+    function data : T;
+  end;
+#+end_src
