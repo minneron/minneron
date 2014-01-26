@@ -6,10 +6,13 @@
 
   {$mode delphi}
   program tok;
-  uses uapp, mned;
+  uses uapp, mned, ukm;
 
   type TTokEd = class (uapp.TCustomApp)
+    ed : mned.TEditor;
     function init : boolean; override;
+    procedure step; override;
+    procedure keys(km : ukm.TKeyMap); override;
     procedure done; override;
   end;
 
@@ -22,25 +25,54 @@
 #+end_src
 
 
-* TODO init
+* init
 
 #+name: implementation
 #+begin_src pascal
 
   function TTokEd.init : boolean;
-  begin
-    result := true
-  end;
+    begin
+      ed := TEditor.Create(self);
+      result := true
+    end;
 
 #+end_src
 
-* TODO done
+* keys
+
+#+name: implementation
+#+begin_src pascal
+  
+  procedure TTokEd.keys(km : ukm.TKeyMap);
+    begin
+      ed.AddDefaultKeys(km);
+      km.cmd[ ^C ] := self.quit;
+    end;
+  
+#+end_src
+
+
+* step
+
+#+name: implementation
+#+begin_src pascal
+  
+  procedure TTokEd.step;
+    begin
+      ed.redraw;
+    end;
+  
+#+end_src
+
+* done
 
 #+name: implementation
 #+begin_src pascal
 
   procedure TTokEd.done;
-  begin
-  end;
+    begin
+    end;
 
 #+end_src
+
+* end
