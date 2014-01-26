@@ -54,12 +54,6 @@ type
       property OnStep : TNotifyEvent read fStep write fStep;
     end;
 
-  TData = class (TComponent)
-    protected
-      _kind : integer;
-    published
-      property kind : integer read _kind write _kind;
-    end;
 
 implementation
 
@@ -226,5 +220,4 @@ initialization
   RegisterClass(TTermView);
   RegisterClass(TDbTreeGrid);
   RegisterClass(TStepper);
-  RegisterClass(TData);
 end.
