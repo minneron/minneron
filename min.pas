@@ -4,7 +4,7 @@ Copyright (c) 2012 Michal J Wallace. All rights reserved.
 ---------------------------------------------------------------}
 {$mode delphi}{$i xpc.inc}{$H+}
 program min;
-uses xpc, mnml, mned, cw, cx, fx, kvm, sysutils, kbd,
+uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd,
   impworld, uminneron, cli, ub4vm, ukm, uapp;
 
 type
@@ -22,10 +22,7 @@ type
 function TMinApp.init : boolean;
   begin
     ed := TEditor.Create(self);
-    ed.x := 5;
-    ed.y := 2;
-    ed.h := ed.h div 2 + 1;
-    ed.w := 64;
+    ed.x := 5; ed.y := 2; ed.h := ed.h div 2 + 1; ed.w := 64;
     b4 := TB4VM.Create(self);
     if ParamCount = 0 then
       err := 'usage : min <filename>'
