@@ -13,8 +13,8 @@ ROOT      = ../
 FPC_PATH  = fpc
 RTL       = -Fu~/f/rtl/units/x86_64-linux
 FPC       = $(FPC_PATH) $(RTL) -gl -B -Fu$(GEN) -Fi$(GEN) \
-            -Fu$(IMP) \
-            -Fu$(XPL) -Fi$(XPL) -Fu./lib -FE$(GEN) -O-
+            -Fu$(IMP) -dDEBUG \
+            -Fu$(XPL) -Fi$(XPL) -Fu./lib -FE$(GEN)
 FCL-PAS = $(FCL)/fcl-passrc
 TANGLE    = ./etc/tangle.el
 
@@ -29,11 +29,16 @@ targets:
 	@echo
 
 min: *.pas
-	$(FPC) -Mobjfpc min.pas
+	$(FPC) min.pas
 	mv $(GEN)/min .$
 
 run: min
 	./min hello.min
+
+tok:
+	$(TANGLE) tok.org
+	$(FPC) $(GEN)/tok.pas
+	.gen/tok
 
 .tangled: pr.min.org st.min.org pk.min.org
 	cat pr.min.org st.min.org pk.min.org > .tangled

@@ -1,0 +1,46 @@
+#+title: tok : a simple token-centric editor
+
+* DONE An app with an editor.
+
+#+begin_src pascal :tangle ".gen/tok.pas" :comments both :padline yes :noweb tangle
+
+  {$mode delphi}
+  program tok;
+  uses uapp, mned;
+
+  type TTokEd = class (uapp.TCustomApp)
+    function init : boolean; override;
+    procedure done; override;
+  end;
+
+  <<implementation>>
+
+  begin
+    uapp.run(TTokEd.Create);
+  end.
+
+#+end_src
+
+
+* TODO init
+
+#+name: implementation
+#+begin_src pascal
+
+  function TTokEd.init : boolean;
+  begin
+    result := true
+  end;
+
+#+end_src
+
+* TODO done
+
+#+name: implementation
+#+begin_src pascal
+
+  procedure TTokEd.done;
+  begin
+  end;
+
+#+end_src
