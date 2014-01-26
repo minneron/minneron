@@ -1,7 +1,7 @@
 {$i xpc.inc}{$mode delphi}
 unit uminneron;
 interface
-uses classes, udboutln, kvm, xpc, cli, num, sqldb, custapp, cw, math;
+uses classes, udb, db, kvm, xpc, cli, num, sqldb, custapp, cw, math;
 
 type
   TView = class(TComponent)
@@ -37,7 +37,7 @@ type
 
   TDbCursor = class (TComponent) // TODO : ICursor
     protected
-      _rs : TRecordSet;
+      _rs : udb.TRecordSet;
       _kf : string;
       _mk : integer; // can't really use bookmarks because they disappear on refresh :/
       _hr : boolean; // allow hiding rows?
@@ -59,7 +59,7 @@ type
       function  GetItem(key : string): variant;
    published
       property OnMarkChanged : TNotifyEvent read fMarkChanged write fMarkChanged;
-      property RecordSet : TRecordSet read _rs write _rs;
+      property RecordSet : udb.TRecordSet read _rs write _rs;
       property KeyField : string  read _kf write _kf;
       property canHideRows : boolean  read _hr write _hr;
       property hideFlag : string  read _hf write _hf;
@@ -167,10 +167,10 @@ procedure TTermView.Resize(new_w, new_h : cardinal);
   end;
 
 procedure TTermView.Render(term : ITerm);
-  var endy, endx, x, y : byte; old : TTextAttr; cell : TTermCell;
+  var endy, endx, x, y : byte; cell : TTermCell;
   begin
-    endy := min(_h-1, term.maxY);
-    endx := min(_w-1, term.maxX);
+    endy := min(_h-1, term.yMax);
+    endx := min(_w-1, term.xMax);
     for y := 0 to endy do
       begin
 	term.gotoxy(_x, _y+y);
@@ -311,7 +311,7 @@ begin
           write(rs['node']);
 
           { fill in the rest of the line }
-          for i := 3 to kvm.work.maxx - (
+          for i := 3 to kvm.xMax - (
             length(rs['node']) + length(rs['kind'])
             + rs['depth'] * 2) do write(' ');
 
@@ -320,7 +320,7 @@ begin
       rs.Next;
     end;
   bg('k');
-  for i := count to kvm.maxy do
+  for i := count to kvm.yMax do
     begin
       gotoxy(0,i);
       clreol;

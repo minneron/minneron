@@ -4,7 +4,7 @@
 //
 //-----------------------------------------------------------------------
 {$mode delphi}{$i xpc.inc}
-unit udboutln;
+unit udb;
 interface
 uses db, sqldb, sqlite3conn,
   classes; // for TStringList

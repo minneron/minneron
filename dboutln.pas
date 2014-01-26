@@ -1,7 +1,7 @@
 {$mode delphi}
 program dboutln;
-uses xpc, udboutln, custapp, classes, kvm, cw, uminneron,
-     ustr, db, sqldb, fx, kbd, num;
+uses xpc, udb, custapp, classes, kvm, cw, uminneron,
+     ustr, db, sqldb, fx, ukm, kbd, num;
 
 const
   kCMD_CREATE_NODE = 00;
@@ -28,7 +28,7 @@ type
     end;
 
 var
-  dbc : udboutln.TDatabase;
+  dbc : udb.TDatabase;
 
 procedure TDbOutlnApp.Initialize;
   begin
