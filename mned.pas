@@ -1,5 +1,5 @@
 { editor widget for minneron }
-{$mode delphi}{$I xpc.inc}{$H+}
+{$mode delphi}{$i xpc.inc}{$H+}
 unit mned;
 interface uses xpc, classes, fs, ustr, num, cw, ui, kvm, kbd, fx,
   tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld, cli, ukm,
@@ -12,9 +12,9 @@ type
       filename          : string;
       status            : string;
       topline, position : cardinal;
-      led               : ui.zinput;  // led = (L)ine (ED)itor
       state             : vor;
     published { basic interface }
+      led               : ui.zinput;  // led = (L)ine (ED)itor
       constructor Create(aOwner : TComponent); override;
       function Load( path : string ) : boolean;
       procedure SaveAs( path : string );
@@ -24,7 +24,6 @@ type
     public {  morph interface (removing this) }
       done              : boolean;
       dirty             : boolean;
-      function OnKeyPress( ch : char ) : boolean;
       procedure Render( term : ITerm) ; override;
     public { cursor movement commands }
       procedure PrevLine;
@@ -59,7 +58,7 @@ constructor TEditor.Create( aOwner : TComponent );
     filename := '';
     done := false;
     dirty := true;
-    self.led := ui.ZInput.Create(nil);
+    self.led := ui.ZInput.Create(aOwner);
     self.ToTop;
     TellUser('welcome to minneron.');
   end;
@@ -290,13 +289,6 @@ procedure TEditor.AddDefaultKeys( km : TKeyMap );
     km.cmd[ kbd.END_ ] := ToEnd;
     km.cmd[ kbd.PgUp ] := PrevPage;
     km.cmd[ kbd.PgDn ] := NextPage;
-  end;
-
-function TEditor.OnKeyPress( ch : char ) : boolean;
-  begin
-    // ^R : begin HideCursor; mnml.launch(cmd_rnd); end;
-    // #0 : led.handlestripped( ReadKey );
-    // led.handle( ch );
   end;
 
 initialization
