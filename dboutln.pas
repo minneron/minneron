@@ -22,7 +22,6 @@ type
 
 function TDbOutlnApp.init : boolean;
   begin
-    hidecursor;
     dbc := udb.connect('minneron.sdb');
     rsOutln := dbc.query(
       'SELECT olid, nid, kind, node, depth, collapsed, hidden, leaf '+
@@ -31,16 +30,14 @@ function TDbOutlnApp.init : boolean;
 
     curs := TDbCursor.Create(dbc);
     curs.RecordSet := rsOutln;
-    curs.KeyField := 'nid';
-    curs.canHideRows := true;
-    curs.hideFlag := 'hidden';
-    curs.Mark := rsOutln['nid'];
-    view := TDbTreeGrid.Create(dbc);
-    view.x := 15;
-    view.y := 5;
-    view.datacursor := curs;
+    curs.KeyField := 'nid'; curs.Mark := rsOutln['nid'];
+    curs.canHideRows := true; curs.hideFlag := 'hidden';
     curs.OnMarkChanged := self.OnCursorChange;
-    self.redraw;
+
+    view := TDbTreeGrid.Create(dbc);
+    with view do begin x := 15; y := 5; datacursor := curs end;
+
+    hidecursor; self.redraw;
     result := true;
   end;
 
@@ -57,8 +54,6 @@ procedure TDbOutlnApp.keys(km : TKeyMap);
     km.cmd[ ^T ] := self.ChooseType;
     km.cmd[ ^L ] := self.Redraw;
   end;
-
-  
 
 procedure TDbOutlnApp.Redraw;
   begin
@@ -83,64 +78,41 @@ function incv(var i:integer):integer;
 
 procedure TDBOutLnApp.ChooseType;
   var rs : TRecordSet; f : TField; i : integer; c : TDbCursor;
-  var done:boolean; ch : char; q : TSqlQuery;
+  var done : boolean = false; skip : boolean = false; ch : char; q : TSqlQuery;
   const widths : array [0..1] of byte = (0, 16);
   begin
     clrscr;
     rs := rsKinds; rs.Open; rs.First;
-
     c := TDbCursor.Create(dbc);
     c.RecordSet := rs; c.KeyField := 'knd'; c.Mark := rs['knd'];
-
     repeat
-      gotoxy(0,0);
-
       { draw column headers }
-      bg('K'); fg('W');
-      i := 0;
-      for f in rs.fields do write(rfit(f.DisplayName, widths[vinc(i)]));
-      WriteLn;
+      gotoxy(0,0); bg('K'); fg('W');
+      i := 0; for f in rs.fields do write(rfit(f.DisplayName, widths[vinc(i)]));
 
       { draw rows }
-      fg('k');
-      rs.First;
-      while not rs.EOF do
-        begin
-          if c.AtMark then bg('B') else bg('w');
-          { draw fields }
-          i:=0;
-          for f in rs.fields do
-            write(rfit(f.DisplayText, widths[vinc(i)]));
-          WriteLn;
-          rs.Next;
-        end;
-
-      c.ToMark;
-      repeat until keypressed;
-      case readkey(ch) of
-        ^N : c.Next;
-        ^P : c.Prev;
-        'n': c.next;
-        'p': c.prev;
-        ^M : begin
-               done := true;
-             end;
-        ^C : done := true;
-        else cwritexy(15, 0, '|Gch: |g' +ch);
+      WriteLn; fg('k');
+      rs.First; while not rs.EOF do begin
+	if c.AtMark then bg('B') else bg('w');
+	i:=0; for f in rs.fields do write(rfit(f.DisplayText, widths[vinc(i)]));
+	WriteLn; rs.Next;
       end;
-    until done;
-    c.RecordSet := nil;
-    c.Free;
-
-    q := TSQLQuery.Create(nil);
-    q.Database := dbc;
-    q.Transaction := dbc.Transaction;
-    q.sql.text := 'UPDATE node SET knd=:knd WHERE nid=:nid';
-    q.ParamByName('knd').AsInteger := rsKinds['knd'];
-    q.ParamByName('nid').AsInteger := curs['nid'];
-    q.ExecSQL;
-    dbc.Transaction.Commit;
-
+      c.ToMark; repeat until keypressed;
+      case readkey(ch) of
+	'n', ^N : c.Next;    ^M : done := true;
+	'p', ^P : c.Prev;    ^G : skip := true;
+        else cwritexy(15, 0, '|Gch: |g' +ch)
+      end
+    until skip or done;
+    c.RecordSet := nil; c.Free;
+    if not skip then begin
+      q := TSQLQuery.Create(nil);
+      q.Database := dbc; q.Transaction := dbc.Transaction;
+      q.sql.text := 'UPDATE node SET knd=:knd WHERE nid=:nid';
+      q.ParamByName('knd').AsInteger := rsKinds['knd'];
+      q.ParamByName('nid').AsInteger := curs['nid'];
+      q.ExecSQL; dbc.Transaction.Commit;
+    end;
     Redraw;
   end;
 
