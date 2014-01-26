@@ -166,8 +166,8 @@ type
 
 
 var
-  world	: TWorld;
-  focus	: IMorph;
+  world : TWorld;
+  focus : IMorph;
 
 
 implementation
@@ -265,7 +265,7 @@ function TGroup.Send( msg: IMessage ):boolean;
     handled := false;
     while not handled and (i < self.children.length) do
       begin
-	handled := self.children[i].send(msg);
+        handled := self.children[i].send(msg);
         inc(i);
       end;
     result := handled
@@ -504,8 +504,8 @@ procedure TShellMorph.invoke( cmd : string );
       end
     else
       begin
-        gotoxy(0, maxY); writeln; { to scroll }
-        gotoxy(0, maxY-1);
+        gotoxy(0, kvm.yMax); writeln; { to scroll }
+        gotoxy(0, kvm.yMax-1);
         kvm.fg('r'); write('unknown command: ');
         kvm.fg('Y'); write(cmd); kvm.clreol; writeln;
       end;
@@ -540,9 +540,9 @@ function TShellMorph.OnKeyPress( ch : char ) : boolean;
 
 procedure TShellMorph.Draw;
   begin
-    cw.cxy($1e, 0, kvm.MaxY, '> ');
-    cw.cxy($1f, 2, kvm.MaxY, cmdstr); clreol;
-    kvm.gotoxy( 1 + curpos, kvm.MaxY );
+    cw.cxy($1e, 0, kvm.yMax, '> ');
+    cw.cxy($1f, 2, kvm.yMax, cmdstr); clreol;
+    kvm.gotoxy( 1 + curpos, kvm.yMax);
   end;
 
 destructor TShellMorph.Destroy;
@@ -563,11 +563,11 @@ procedure HandleKeys;
     if not keypressed then sleep(5);
     if keypressed then
       case kbd.ReadKey(ch) of
-	^C : halt;
+        ^C : halt;
       else
         msg := TEvent.Create(evt_keych, ch);
-	if assigned(focus) and not focus.send(msg) then
-	  pass; {--  TODO: global keymap --}
+        if assigned(focus) and not focus.send(msg) then
+          pass; {--  TODO: global keymap --}
       end; { case }
   end;
 
@@ -604,9 +604,9 @@ initialization
   clock := TClockMorph.Create;
   clock.bounds.x := kvm.width - 25;
   kvm.ClrScr;
-  world	:= TWorld.Create;
+  world := TWorld.Create;
   world.add(clock);
-  focus	:= world;
+  focus := world;
   launch(world);
 
 finalization

@@ -204,7 +204,7 @@ procedure TEditor.ToEnd;
   begin
     position := self.buf.length - 1;
     topline := position;
-    for i := kvm.maxY div 2 downto 1 do dec(topline);
+    for i := kvm.yMax div 2 downto 1 do dec(topline);
   end;
 
 procedure TEditor.PrevLine;
