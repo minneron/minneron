@@ -11,6 +11,8 @@ type
       _hf : string; // if so, use this field as a flag
       fMarkChanged : TNotifyEvent;
     public
+      constructor Create(aOwner : TComponent = Nil);
+      function Attach(rs : udb.TRecordSet; key : string) : TDbCursor;
       procedure ToTop;
       procedure ToEnd;
       function AtTop : boolean;
@@ -39,6 +41,17 @@ implementation
 {---------------------------------------------------------------}
 { TDbCursor                                                     }
 {---------------------------------------------------------------}
+constructor TDbCursor.Create(aOwner : TComponent = Nil);
+  begin
+    inherited Create(aOwner);
+  end;
+
+function TDbCursor.Attach(rs : TRecordSet;  key: string) : TDbCursor;
+  begin
+    self.RecordSet := rs; self.KeyField := key; self.Mark := rs[key];
+    result := self;
+  end;
+
 procedure TDbCursor.SetMark(id : integer );
   begin
     _mk := id;
