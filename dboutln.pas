@@ -1,13 +1,13 @@
 {$mode delphi}
 program dboutln;
-uses xpc, udb, uapp, classes, kvm, cw, uminneron,
+uses xpc, udb, udc, uapp, classes, kvm, cw, uminneron,
      ustr, db, sqldb, fx, ukm, kbd, num;
 
 type
   TDbOutlnApp  = class(uapp.TCustomApp)
     protected
       dbc  : udb.TDatabase;
-      curs : TDbCursor;
+      curs : udc.TDbCursor;
       view : TDbTreeGrid;
       rsOutln,
       rsKinds  : TRecordSet;
