@@ -28,7 +28,7 @@ function TMinApp.init : boolean;
       err := 'usage : min <filename>'
     else if not ed.Load( ParamStr( 1 )) then
       err := 'unable to load file: ' + paramstr( 1 )
-    else err := '';
+    else ed.status := 'welcome to minneron.';
     result := err = '';
   end;
 

@@ -7,10 +7,10 @@ interface uses xpc, classes, fs, ustr, num, cw, ui, kvm, kbd, fx,
 
 type
   TEditor = class (TView)
-   protected
+    protected
       buf               : TBuffer;
       filename          : string;
-      status            : string;
+      _status           : string;
       topline, position : cardinal;
       state             : vor;
     published { basic interface }
@@ -21,6 +21,7 @@ type
       procedure Save;
       procedure AddDefaultKeys( km : TKeyMap );
       procedure DelegateKey( ext : Boolean; ch : char);
+      function value : string;
     public {  morph interface (removing this) }
       done              : boolean;
       dirty             : boolean;
@@ -40,6 +41,8 @@ type
       procedure keepInput;
       procedure CursorMoved;
       procedure TellUser(msg : string);
+    public
+      property status : string read _status write TellUser;
     end;
 
 implementation
@@ -53,6 +56,7 @@ constructor TEditor.Create( aOwner : TComponent );
     w := kvm.width;
     h := kvm.height;
     self.buf := TBuffer.create(w, h - 1);
+    self.buf.addline('');
     topline := 0;
     position := 0;
     filename := '';
@@ -60,12 +64,16 @@ constructor TEditor.Create( aOwner : TComponent );
     dirty := true;
     self.led := ui.ZInput.Create(aOwner);
     self.ToTop;
-    TellUser('welcome to minneron.');
   end;
 
 procedure TEditor.TellUser(msg : string);
   begin
-    status := msg;
+    _status := msg;
+  end;
+
+function TEditor.value : string;
+  begin
+    result := self.buf.ToString;
   end;
 
 
@@ -144,18 +152,20 @@ procedure TEditor.Render( term : ITerm );
         draw_curpos;
         ypos := 1; // line 0 is for the status / cursor position
         line := topline;
-        repeat
-          draw_gutter( flushrt( n2s( line ), 3, ' ' ));
-          if line = position then PlaceEditor
-          else draw_line(buf[line]);
-          inc( ypos ); inc(line)
-        until ( ypos >= self.h ) or ( line = buf.length );
+	if buf.length > 0 then
+	  repeat
+	    draw_gutter( flushrt( n2s( line ), 3, ' ' ));
+	    if line = position then PlaceEditor
+	    else draw_line(buf[line]);
+	    inc( ypos ); inc(line)
+	  until ( ypos >= self.h ) or ( line = buf.length )
+	else ypos := 2;
         { fill in extra space if the file is too short }
         while ypos < self.h do begin
-          cwritexy( 0, ypos, '|!K|%' );
+          cwritexy( 0, ypos, '|!k|%' );
           inc( ypos )
         end;
-        led.show;
+	led.show;
         // ShowCursor;
       end;
   end;
