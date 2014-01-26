@@ -28,9 +28,7 @@ function TDbOutlnApp.init : boolean;
         'FROM outline');
     rsKinds := dbc.query('SELECT * FROM kinds ORDER BY kind');
 
-    curs := TDbCursor.Create(dbc);
-    curs.RecordSet := rsOutln;
-    curs.KeyField := 'nid'; curs.Mark := rsOutln['nid'];
+    curs := TDbCursor.Create(dbc).Attach(rsOutln, 'nid');
     curs.canHideRows := true; curs.hideFlag := 'hidden';
     curs.OnMarkChanged := self.OnCursorChange;
 
@@ -82,9 +80,7 @@ procedure TDBOutLnApp.ChooseType;
   const widths : array [0..1] of byte = (0, 16);
   begin
     clrscr;
-    rs := rsKinds; rs.Open; rs.First;
-    c := TDbCursor.Create(dbc);
-    c.RecordSet := rs; c.KeyField := 'knd'; c.Mark := rs['knd'];
+    rs := rsKinds.Open.First; c := TDbCursor.Create(dbc).Attach(rs, 'knd');
     repeat
       { draw column headers }
       gotoxy(0,0); bg('K'); fg('W');
