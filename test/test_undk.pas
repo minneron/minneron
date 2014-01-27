@@ -1,17 +1,18 @@
 {$mode delphi}{$H+}
 {$i test_undk.def }
-implementation uses undk, udb;
+implementation uses dndk, undk, udb;
 
 var
-  ndk  : undk.TNodak;
+  ndk	: dndk.IBase;
   eid,
-  nid  : cardinal;
-  node : undk.INode;
-  edge : undk.IEdge;
+  nid	: integer;
+  node	: dndk.INode;
+  edge	: dndk.IEdge;
+  nodes	: dndk.INodes;
+  edges	: dndk.IEdges;
 
 procedure setup;
   begin
-    if assigned(ndk) then begin ndk.close; ndk.free end;
     ndk := undk.open(':memory:')
   end;
 
@@ -25,21 +26,21 @@ procedure test_edge;
   begin
     ndk.e('a', 'b', 'c');
     eid  := ndk.e('a', 'b', 'c').eid;
-    edge := ndk[eid];
+    edge := ndk.edges[eid];
     chk.equal(eid, edge.eid);
-    chk.equal('a', edge.sub);
-    chk.equal('b', edge.rel);
-    chk.equal('c', edge.obj);
+    chk.equal('a', edge.sub.s);
+    chk.equal('b', edge.rel.s);
+    chk.equal('c', edge.obj.s);
   end;
 
 procedure test_query;
   begin
-    eid := ndk.e('a','b','c');
-    eid := ndk.e('x','y','z');
-    data := ndk.q('~','~','~');
-    chk.equal(2, length(data));
-    chk.equal('a', data[0].sub.val);
-    chk.equal('z', data[1].obj.val);
+    eid := ndk.e('a','b','c').eid;
+    eid := ndk.e('x','y','z').eid;
+    edges := ndk.q('~','~','~');
+    chk.equal(2, edges.len);
+    chk.equal('a', edges[0].sub.s);
+    chk.equal('z', edges[1].obj.s);
   end;
 
 { procedure test_erase;  todo}
@@ -48,8 +49,8 @@ procedure test_query;
 
 procedure test_put_node;
   begin
-    ndk.n('n0','v0');
-    chk(1, length(ndk.q('n0', ':=', 'v0')));
+    ndk.a('n0','v0');
+    chk.equal(1, ndk.q('n0', ':=', 'v0').len);
   end;
 
 procedure test_build_node;
@@ -59,25 +60,23 @@ procedure test_build_node;
        .e('boy','loves','girl')
        .e('girl','loves','boy');
     node := ndk['boy'];
-    chk.equal(node[':='].str, 'a boy (some assembly required)');
+    chk.equal(node[':='].s, 'a boy (some assembly required)');
     chk.equal(node.oe.len, 2);
     chk.equal(node.ie.len, 3);
-    chk.equal(node.oe[0].sub.str, 'boy');
-    chk.equal(node.oe[0].rel.str, ':=');
-    chk.equal(node.oe[0].obj.str, 'a boy (some assembly required)');
-    chk.equal(node.oe[1].rel.str, 'name');
-    chk.equal(node.oe[2].rel.str, 'loves');
-    chk.equal(node.ie[0].rel.str, 'loves');
+    chk.equal(node.oe[0].sub.s, 'boy');
+    chk.equal(node.oe[0].rel.s, ':=');
+    chk.equal(node.oe[0].obj.s, 'a boy (some assembly required)');
+    chk.equal(node.oe[1].rel.s, 'name');
+    chk.equal(node.oe[2].rel.s, 'loves');
+    chk.equal(node.ie[0].rel.s, 'loves');
   end;
 
 procedure test_build_empty;
   begin
     node := ndk['ghost'];
-    chk.equal(node[':='], null);
-    chk.equal(node.o.len, 0);
-    chk.equal(node.val, 'ghost');
+    chk.equal(node[':='].s, '');
+    chk.equal(node.oe.len, 0);
+    chk.equal(node.key.s, 'ghost');
   end;
 
-begin
-  if assigned(ndk) then ndk.free;
 end.
