@@ -5,6 +5,7 @@ create table if not exists node (
   name text unique );
 
 --
+
 create table if not exists edge (
    ID integer primary key,
    subID integer,
@@ -13,7 +14,9 @@ create table if not exists edge (
    seq   integer,
    began datetime default 'now',
    ended datetime default null );
+
 --
+
 create view if not exists trip as
   select
     arc.ID as ID,
@@ -25,23 +28,30 @@ create view if not exists trip as
     and arc.relID=rel.ID
     and arc.objID=obj.ID
     and ended is null;
+
 --
+
 -- management of the triplestore
+
 create table if not exists meta (
   id integer primary key,
   k text unique,
   v variant );
+
 --
+
 create trigger if not exists del_triple
   instead of delete on trip
   begin
     update edge set ended = 'now' where edge.id = old.id;
   end;
+
 --
+
 create trigger if not exists new_triple
   instead of insert on trip
   begin
-    replace into node (name) values (new.sub), (new.rel), (new.obj);
+    insert or ignore into node (name) values (new.sub), (new.rel), (new.obj);
     insert into edge (subID, relID, objID, began)
     select (select ID from node where name=new.sub) as subID, 
            (select ID from node where name=new.rel) as relID,
