@@ -55,10 +55,10 @@ procedure test_put_node;
 
 procedure test_build_node;
   begin
-    ndk.e('boy', ':=', 'boy (some assembly required)')
-       .e('boy','name','fred')
-       .e('boy','loves','girl')
-       .e('girl','loves','boy');
+    ndk.e('boy', ':=', 'boy (some assembly required)');
+    ndk.e('boy','name','fred');
+    ndk.e('boy','loves','girl');
+    ndk.e('girl','loves','boy');
     node := ndk['boy'];
     chk.equal(node[':='].s, 'a boy (some assembly required)');
     chk.equal(node.oe.len, 2);

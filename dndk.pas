@@ -19,7 +19,7 @@ unit dndk; interface type
     function b : boolean;
     function n : INode;
   end;
-  INode	= interface (IBase)
+  INode	= interface
     function nid : integer;                       // database row id for node
     function ie : IEdges;                         // incoming edges
     function oe : IEdges;                         // outgoing edges
@@ -30,13 +30,13 @@ unit dndk; interface type
     property any[s : string] : ICell  read q1; default;
     property all[s : string] : IEdges read qe;
   end;
-  IEdge	= interface (IBase)
+  IEdge	= interface
     function eid : integer;                       // database row id for edge
     function sub : ICell;                         // subject
     function rel : ICell;                         // relation
     function obj : ICell;                         // object
   end;
-  IList<T> = interface (IBase)
+  IList<T> = interface
     function len : cardinal;
     function get(idx : cardinal) : T;
     property data[idx : cardinal] : T read get; default;
