@@ -1,7 +1,10 @@
+-- the  comments are for sql2pas
+
 create table if not exists node (
   ID integer primary key,
   name text unique );
 
+--
 create table if not exists edge (
    ID integer primary key,
    subID integer,
@@ -10,7 +13,7 @@ create table if not exists edge (
    seq   integer,
    began datetime default 'now',
    ended datetime default null );
-
+--
 create view if not exists trip as
   select
     arc.ID as ID,
@@ -22,8 +25,7 @@ create view if not exists trip as
     and arc.relID=rel.ID
     and arc.objID=obj.ID
     and ended is null;
-
-
+--
 -- management of the triplestore
 
 create trigger if not exists del_triple
@@ -31,7 +33,7 @@ create trigger if not exists del_triple
   begin
     update edge set ended = 'now' where edge.id = old.id;
   end;
-
+--
 create trigger if not exists new_triple
   instead of insert on trip
   begin
@@ -42,4 +44,3 @@ create trigger if not exists new_triple
            (select ID from node where name=new.obj) as objID,
 	   'now' as began;
   end;
-

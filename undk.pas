@@ -11,6 +11,7 @@ type
     protected
       _dbc : udb.TDatabase;
     public
+      constructor New(ndkPath : string);
       function e(sub, rel, obj : string) : IEdge;   // store edge
       function f(eid : integer) : IEdge;            // fetch edge
       function q(sub,rel,obj : string) : IEdges;    // query edges
@@ -115,9 +116,18 @@ function TEdge.obj : ICell;
 
 {-- TNodakRepo --}
 
+constructor TNodakRepo.New(ndkPath : string);
+  begin
+    inherited Create(Nil);
+    _dbc := udb.connect(ndkPath); //  todo: error handling
+    {$i nodak-sql2pas.inc}
+  end;
+
 function TNodakRepo.e(sub, rel, obj : string) : IEdge;
   begin
-    result := TEdge.New(self, -MaxInt, 'sub', 'rel', 'obj');
+    _dbc.RunSQL('insert into trip (sub, rel, obj) '
+                +'values (:sub, :rel, :obj)', [sub, rel, obj]);
+    result := TEdge.New(self, -MaxInt, sub, rel, obj);
   end;
 
 function TNodakRepo.f(eid : integer) : IEdge;
@@ -149,7 +159,7 @@ function TNodakRepo.v(key : string) : ICell;
 
 function open(path : string) : dndk.IBase;
   begin
-    result := TNodakRepo.Create(Nil);
+    result := TNodakRepo.New(path);
   end;
 
 begin
