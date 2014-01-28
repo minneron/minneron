@@ -4,7 +4,7 @@ interface uses xpc, dndk;
 
   function open(path : string) : dndk.IBase;
 
-implementation uses classes, udb;
+implementation uses classes, udb, sysutils;
 
 type
   TNodakRepo = class (TComponent, IBase)
@@ -124,15 +124,23 @@ constructor TNodakRepo.New(ndkPath : string);
   end;
 
 function TNodakRepo.e(sub, rel, obj : string) : IEdge;
+  var rs : udb.TRecordset;
   begin
     _dbc.RunSQL('insert into trip (sub, rel, obj) '
                 +'values (:sub, :rel, :obj)', [sub, rel, obj]);
-    result := TEdge.New(self, -MaxInt, sub, rel, obj);
+    rs := _dbc.Query('select v from meta where k=:k',['last_insert_rowid']);
+    result := TEdge.New(self,rs['v'], sub, rel, obj);
+    rs.free;
   end;
 
 function TNodakRepo.f(eid : integer) : IEdge;
+  var rs : udb.TRecordset;
   begin
-    result := TEdge.New(self, -MaxInt, 'sub', 'rel', 'obj');
+    rs := _dbc.Query('select id,sub,rel,obj from trip where id=:eid',[eid]);
+    if rs.recordcount = 0 then
+      raise Exception.Create('no edge with eid=' + IntToStr(eid));
+    result := TEdge.New(self, rs['id'], rs['sub'], rs['rel'], rs['obj']);
+    rs.free;
   end;
 
 function TNodakRepo.q(sub,rel,obj : string) : IEdges;
