@@ -18,8 +18,13 @@ type
     function First: TRecordSet; reintroduce;
   end;
   TDatabase = class (TSqlite3Connection)
-    function Query(sql : string) : TRecordSet;
-    procedure RunSQL(sql : string; args : array of variant);
+  private
+    function PrepRs(sql : string; args : array of variant ) : TRecordSet;
+  public
+    function Query(sql : string) : TRecordSet; overload;
+    function Query(sql : string; args : array of variant) : TRecordSet; overload;
+    procedure RunSQL(sql : string); overload;
+    procedure RunSQL(sql : string; args : array of variant); overload;
   end;
   function connect(const path : string) : TDatabase;
 
@@ -53,27 +58,41 @@ function TRecordSet.Execute(q : string) : TRecordSet;
 
 //- - [ TDatabase ] - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-function TDatabase.Query(sql : string) : TRecordSet;
+function TDatabase.PrepRs(sql : string; args : array of variant ) : TRecordSet;
+  var c, i : cardinal;
   begin
     result := TRecordSet.Create(self, sql);
     result.Transaction := self.Transaction;
-    result.Open;
+    result.ParseSQL := true;
+    c := result.params.count;
+    if c <> length(args) then
+      raise Exception('query expects ' + IntToStr(c)
+		      +' but ' + IntToStr(length(args)) + ' were supplied');
+    if c > 0 then begin
+      for i := 0 to (c-1) do result.params[i].AsString := args[i];
+    end;
+  end;
+
+function TDatabase.Query(sql : string) : TRecordSet;
+  begin
+    result := self.Query(sql, []);
+  end;
+
+function TDatabase.Query(sql : string; args : array of variant) : TRecordSet;
+  begin
+    result := PrepRs(sql, args); result.Open;
+  end;
+
+procedure TDatabase.RunSQL(sql : string);
+  begin
+    self.RunSQL(sql, []);
   end;
 
 procedure TDatabase.RunSQL(sql : string; args : array of variant);
-  var param : TParam; c, i : cardinal; s : string; rs : TRecordSet;
+  var  rs : TRecordSet;
   begin
-    rs := TRecordSet.Create(self, sql);
-    rs.Transaction := self.Transaction;
-    rs.ParseSQL := true;
-    c := rs.params.count;
-    if c <> length(args) then
-      raise Exception('query expects ' + IntToStr(c)
-                    +' but ' + IntToStr(length(args)) + ' were supplied');
-    if c > 0 then begin
-      for i := 0 to (c-1) do rs.params[i].AsString := args[i];
-    end;
-    rs.ExecSQL;
+    rs := PrepRs(sql, args); rs.ExecSQL;
+    self.transaction.commit;
     rs.Free;
   end;
 
