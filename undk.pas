@@ -16,6 +16,7 @@ type
       function e(sub, rel, obj : string) : IEdge;   // store edge
       function f(eid : integer) : IEdge;            // fetch edge
       function q(sub,rel,obj : string) : TEdges;    // query edges
+      function w(sub,rel,obj : string) : TEdges;    // write edges (to debug)
       function n(key : string) : INode;             // node name -> nid
       function a(key, val : string) : IEdge;        // assign = e(key,':=',val)
       function v(key : string) : ICell;             // v(key) = n(key).val
@@ -157,7 +158,7 @@ function TNode.q1(s : string) : ICell;
   var edges : TEdges;
   begin
     edges := self.qe(s);
-    if length(edges) > 0 then result := TCell.New(edges[0])
+    if length(edges) > 0 then result := edges[0].obj
     else result := TCell.New('');
     //raise Exception.Create('No match for ('+_key+')['+s+']');
   end;
@@ -193,18 +194,17 @@ function TNodakRepo.f(eid : integer) : IEdge;
 
 function sqlEsc(s : string) : string;
   begin
-    result := ''''
-      + sysutils.StringReplace(s, '''', '''''', [rfReplaceAll])
-      + '''';
+    result:= ''''+sysutils.StringReplace(s,'''','''''',[rfReplaceAll])+'''';
   end;
 
 function TNodakRepo.q(sub,rel,obj : string) : TEdges;
   var sql : string = ''; rs : udb.TRecordSet; i : cardinal = 0;
   begin
-    sql := 'select id, sub, rel, obj from trip where 1';
+    sql := 'select id, sub, rel, obj from trip';
+    if (sub <> '~') or (rel <> '~') or (obj <> '~') then sql += ' where (1=1)';
     if sub <> '~' then sql += ' and sub=' + sqlEsc(sub);
-    if sub <> '~' then sql += ' and rel=' + sqlEsc(rel);
-    if sub <> '~' then sql += ' and obj=' + sqlEsc(obj);
+    if rel <> '~' then sql += ' and rel=' + sqlEsc(rel);
+    if obj <> '~' then sql += ' and obj=' + sqlEsc(obj);
     sql += ' order by id';
     rs := _dbc.Query(sql,[]);
     SetLength(result, rs.RecordCount);
@@ -214,6 +214,21 @@ function TNodakRepo.q(sub,rel,obj : string) : TEdges;
         rs.Next; i += 1;
       end;
     rs.Free;
+  end;
+  
+function TNodakRepo.w(sub,rel,obj : string) : TEdges;
+  var i : cardinal = 0;
+  begin
+    result := self.q(sub,rel,obj);
+    writeln;
+    writeln(format('-- ("%s","%s","%s")? --', [sub,rel,obj]));
+    while i < length(result) do
+      begin
+        writeln(format('  "%s","%s","%s"',
+                       [result[i].sub.s,result[i].rel.s,result[i].obj.s]));
+        i += 1
+      end;
+    writeln('-- end of results.');
   end;
 
 function TNodakRepo.n(key : string) : INode;

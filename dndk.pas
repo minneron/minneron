@@ -7,6 +7,7 @@ unit dndk; interface type
     function e(sub, rel, obj : string) : IEdge;   // store edge
     function f(eid : integer) : IEdge;            // fetch edge
     function q(sub,rel,obj : string) : TEdges;    // query edges
+    function w(sub,rel,obj : string) : TEdges;    // write edges (to debug)
     function n(key : string) : INode;             // node name -> nid
     function a(key, val : string) : IEdge;        // assign = e(key,':=',val)
     function v(key : string) : ICell;             // v(key) = n(key).val
