@@ -54,7 +54,7 @@ procedure test_put_node;
 
 procedure test_build_node;
   begin
-    ndk.e('boy', ':=', 'boy (some assembly required)');
+    ndk.a('boy','a boy (some assembly required)');
     ndk.e('boy','name','fred');
     ndk.e('boy','loves','girl');
     ndk.e('girl','loves','boy');

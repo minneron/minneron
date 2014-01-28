@@ -20,7 +20,7 @@ type
       function a(key, val : string) : IEdge;        // assign = e(key,':=',val)
       function v(key : string) : ICell;             // v(key) = n(key).val
     end;
-  
+
 
   TBase	= class (TComponent, IBase)
     protected
@@ -31,7 +31,6 @@ type
     end;
 
 type
-
   TCell	= class (TBase, ICell)
     protected
       _value : variant;
@@ -53,6 +52,21 @@ type
       function sub : ICell;
       function rel : ICell;
       function obj : ICell;
+    end;
+
+  TNode = class (TBase, INode)
+    protected
+      _nid : integer; _key : string;
+    public
+      constructor New(aBase: IBase; aKey : string);
+      function nid : integer;
+      function key : ICell;
+      function val : ICell;
+      function ie : TEdges;
+      function oe : TEdges;
+      function qe(s : string) : TEdges;
+      function q1(s : string) : ICell;
+      property any[s : string] : ICell  read q1; default;
     end;
 
 {-- TCell --}
@@ -79,7 +93,7 @@ function TCell.b : boolean;
 
 function TCell.n : INode;
   begin
-    result := _base[_value]
+    result := _base[self.s]
   end;
 
 
@@ -119,6 +133,34 @@ function TEdge.obj : ICell;
     result := _base.v(_obj)
   end;
 
+
+{-- TNode --}
+
+constructor TNode.New(aBase: IBase; aKey : string);
+  begin
+    _base := aBase; _key := aKey;
+  end;
+
+function TNode.nid : integer; begin result := _nid; end;
+function TNode.key : ICell; begin result := TCell.New(_key) end;
+function TNode.val : ICell; begin result := self[':='] end;
+
+function TNode.ie : TEdges; begin result := _base.q('~', '~', _key); end;
+function TNode.oe : TEdges; begin result := _base.q(_key, '~', '~'); end;
+
+function TNode.qe(s : string) : TEdges;
+  begin
+    result := _base.q(_key, s, '~');
+  end;
+
+function TNode.q1(s : string) : ICell;
+  var edges : TEdges;
+  begin
+    edges := self.qe(s);
+    if length(edges) > 0 then result := TCell.New(edges[0])
+    else result := TCell.New('');
+    //raise Exception.Create('No match for ('+_key+')['+s+']');
+  end;
 
 {-- TNodakRepo --}
 
@@ -176,12 +218,12 @@ function TNodakRepo.q(sub,rel,obj : string) : TEdges;
 
 function TNodakRepo.n(key : string) : INode;
   begin
-    result := nil
+    result := TNode.New(self, key)
   end;
 
 function TNodakRepo.a(key, val : string) : IEdge;
   begin
-    result := self.e(key, '', val);
+    result := self.e(key, ':=', val)
   end;
 
 function TNodakRepo.v(key : string) : ICell;

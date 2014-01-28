@@ -21,12 +21,12 @@ unit dndk; interface type
   end;
   INode	= interface
     function nid : integer;                       // database row id for node
+    function key : ICell;
+    function val : ICell;
     function ie : TEdges;                         // incoming edges
     function oe : TEdges;                         // outgoing edges
     function qe(s : String) : TEdges;             // query edges
     function q1(s : String) : ICell;              // q1(s) = qe(s)[0].val
-    function key : ICell;
-    function val : ICell;
     property any[s : string] : ICell  read q1; default;
     property all[s : string] : TEdges read qe;
   end;
