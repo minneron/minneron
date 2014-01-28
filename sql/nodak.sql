@@ -29,7 +29,7 @@ create view if not exists trip as
 -- management of the triplestore
 
 create trigger if not exists del_triple
-  instead of insert on trip
+  instead of delete on trip
   begin
     update edge set ended = 'now' where edge.id = old.id;
   end;
