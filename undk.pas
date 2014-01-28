@@ -169,7 +169,7 @@ function TNodakRepo.q(sub,rel,obj : string) : TEdges;
     while not rs.EOF do
       begin
         result[i] := TEdge.New(self, rs['id'], rs['sub'], rs['rel'], rs['obj']);
-        rs.Next;
+        rs.Next; i += 1;
       end;
     rs.Free;
   end;
