@@ -8,8 +8,7 @@ var
   nid	: integer;
   node	: dndk.INode;
   edge	: dndk.IEdge;
-  nodes	: dndk.INodes;
-  edges	: dndk.IEdges;
+  edges	: dndk.TEdges;
 
 procedure setup;
   begin
@@ -35,10 +34,10 @@ procedure test_edge;
 
 procedure test_query;
   begin
-    eid := ndk.e('a','b','c').eid;
-    eid := ndk.e('x','y','z').eid;
+    ndk.e('a','b','c');
+    ndk.e('x','y','z');
     edges := ndk.q('~','~','~');
-    chk.equal(2, edges.len);
+    chk.equal(2, length(edges));
     chk.equal('a', edges[0].sub.s);
     chk.equal('z', edges[1].obj.s);
   end;
@@ -50,7 +49,7 @@ procedure test_query;
 procedure test_put_node;
   begin
     ndk.a('n0','v0');
-    chk.equal(1, ndk.q('n0', ':=', 'v0').len);
+    chk.equal(1, length(ndk.q('n0', ':=', 'v0')));
   end;
 
 procedure test_build_node;
@@ -61,8 +60,8 @@ procedure test_build_node;
     ndk.e('girl','loves','boy');
     node := ndk['boy'];
     chk.equal(node[':='].s, 'a boy (some assembly required)');
-    chk.equal(node.oe.len, 2);
-    chk.equal(node.ie.len, 3);
+    chk.equal(length(node.oe), 2);
+    chk.equal(length(node.ie), 3);
     chk.equal(node.oe[0].sub.s, 'boy');
     chk.equal(node.oe[0].rel.s, ':=');
     chk.equal(node.oe[0].obj.s, 'a boy (some assembly required)');
@@ -75,7 +74,7 @@ procedure test_build_empty;
   begin
     node := ndk['ghost'];
     chk.equal(node[':='].s, '');
-    chk.equal(node.oe.len, 0);
+    chk.equal(length(node.oe), 0);
     chk.equal(node.key.s, 'ghost');
   end;
 
