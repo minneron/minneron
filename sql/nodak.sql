@@ -27,7 +27,11 @@ create view if not exists trip as
     and ended is null;
 --
 -- management of the triplestore
-
+create table if not exists meta (
+  id integer primary key,
+  k text unique,
+  v variant );
+--
 create trigger if not exists del_triple
   instead of delete on trip
   begin
@@ -43,4 +47,6 @@ create trigger if not exists new_triple
            (select ID from node where name=new.rel) as relID,
            (select ID from node where name=new.obj) as objID,
 	   'now' as began;
+    replace into meta ('k','v')
+      values ('last_insert_rowid', last_insert_rowid());
   end;
