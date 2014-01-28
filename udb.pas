@@ -6,7 +6,7 @@
 {$mode delphi}{$i xpc.inc}
 unit udb;
 interface
-uses db, sqldb, sqlite3conn,
+uses xpc, db, sqldb, sqlite3conn,
   sysutils, // for exceptions
   classes; // for TStringList
 
@@ -19,12 +19,14 @@ type
   end;
   TDatabase = class (TSqlite3Connection)
   private
+    _trace : boolean;
     function PrepRs(sql : string; args : array of variant ) : TRecordSet;
   public
     function Query(sql : string) : TRecordSet; overload;
     function Query(sql : string; args : array of variant) : TRecordSet; overload;
     procedure RunSQL(sql : string); overload;
     procedure RunSQL(sql : string; args : array of variant); overload;
+    property trace : boolean read _trace write _trace;
   end;
   function connect(const path : string) : TDatabase;
 
@@ -68,9 +70,12 @@ function TDatabase.PrepRs(sql : string; args : array of variant ) : TRecordSet;
     if c <> length(args) then
       raise Exception('query expects ' + IntToStr(c)
 		      +' but ' + IntToStr(length(args)) + ' were supplied');
-    if c > 0 then begin
-      for i := 0 to (c-1) do result.params[i].AsString := args[i];
-    end;
+    if c > 0 then for i := 0 to (c-1) do result.params[i].AsString := args[i];
+    if _trace then
+      begin write(sql);
+	if c > 0 then for i := 0 to (c-1) do write(' ',args[i]); writeln
+      end
+    else pass;
   end;
 
 function TDatabase.Query(sql : string) : TRecordSet;
