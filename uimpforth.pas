@@ -1,9 +1,15 @@
 {$mode delphi}
 unit uimpforth;
-interface uses xpc, gqueue, classes, custapp, sysutils;
+interface uses xpc, gqueue, classes, sysutils;
 
 const
   kTokLen = 15;
+  prim	 = 0;
+  quit	 : integer = -1;
+  brand	 : string  = 'ImpForth';
+  verMaj : byte  = 0;
+  verMin : byte = 1;
+
 type
   address   = 0..65535;
   cardinal  = address;
@@ -11,7 +17,7 @@ type
   TThunk    = procedure of object;
 
   TCmdQueue = TQueue<integer>;
-
+
   TInnerVM = class  (TComponent)
     protected
       sp, rp : integer;
@@ -29,7 +35,7 @@ type
       procedure Step;
       procedure Execute;
     end;
-
+
   TTokStr   = string[kToklen];
 
   TWord	 = record
@@ -38,7 +44,7 @@ type
     code : address;
     data : cardinal
   end;
-
+
   TImpForth = class (TComponent)
     protected
       vm  : TInnerVM;
@@ -66,25 +72,6 @@ type
       function IsNumber : boolean;
       procedure NotFound;
     end;
-
-  TImpShellApp = class (TCustomApplication)
-    public
-      imp : TImpForth;
-      procedure Initialize; override;
-      procedure AddOp( const iden : TTokStr; thunk : TThunk );
-      procedure DoRun; override;
-      procedure Welcome; virtual;
-      procedure Refill; virtual;
-      procedure Respond; virtual;
-    end;
-
-
-const
-  prim	 = 0;
-  quit	 : integer = -1;
-  brand	 : string  = 'ImpForth';
-  verMaj : byte  = 0;
-  verMin : byte = 1;
 
 
 implementation
@@ -217,7 +204,7 @@ procedure TImpForth.Send( s : string );
     self.src += s;
     self.NeedsInput := false;
   end;
-
+
 function TImpForth.NextToken : TTokStr;
   var inp : cardinal = 1; // input pointer
   function OutsideToken : boolean;
@@ -244,60 +231,20 @@ function TImpForth.NextToken : TTokStr;
     result := tok;
   end;
 
-
+
 procedure TImpForth.Eval(const token : TTokStr);
   begin
     tok := token;
     if Lookup then Interpret
     else if IsNumber then begin {TODO } end
-    else NotFound;
+    else if tok <> '' then NotFound;
+    if msg<>'' then begin writeln(msg); msg := '' end;
   end;
 
 procedure TImpForth.EvalNextToken;
   begin
     NextToken;
     Eval(tok);
-  end;
-
-{-- TImpShellApp ----------------------------------------------}
-
-procedure TImpShellApp.Initialize;
-  begin
-    imp := TImpForth.Create(self);
-  end;
-
-procedure TImpShellApp.AddOp( const iden : TTokStr; thunk : TThunk );
-  begin
-    imp.AddOp(iden, thunk);
-  end;
-
-procedure TImpShellApp.DoRun;
-  begin
-    Welcome;
-    repeat
-      if imp.NeedsInput then Refill;
-      imp.EvalNextToken;
-      if imp.HasOutput then Respond;
-    until terminated;
-  end;
-
-procedure TImpShellApp.Welcome;
-  begin
-    writeln(brand, ' ', verMaj, '.', verMin);
-  end;
-
-procedure TImpShellApp.Refill;
-  var s : string;
-  begin
-    repeat write('> '); readln(s)
-    until length(s) > 0;
-    imp.send(s);
-  end;
-
-procedure TImpShellApp.Respond;
-  begin
-    if imp.msg <> '' then writeln(imp.msg);
-    imp.msg := '';
   end;
 
 begin

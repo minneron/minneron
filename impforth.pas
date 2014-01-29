@@ -1,45 +1,45 @@
 {$mode delphi}
 program impforth;
-uses custapp, uimpforth, ui, uminneron, cw, kvm,cli;
+uses uapp, ukm, uimpforth, ui, uminneron, cw, kvm,cli;
 
 type
-  TForthApp = class (TCustomApplication)
+  TForthApp = class (uapp.TCustomApp)
     public
       cmd : ui.ZInput;
       imp : TImpForth;
-      km  : TKeyMap;
-      procedure Initialize; override;
-      procedure DoRun; override;
-      procedure OnCmdAccept( s :  string );
+      function  init : boolean; override;
+      procedure keys(km : ukm.TKeyMap); override;
+      procedure step; override;
+      procedure prompt;
       procedure DelegateKey( ext : boolean; ch : char );
+      procedure OnCmdAccept( s :  string );
     end;
-
-procedure TForthApp.Initialize;
-  var ch : char;
+
+function TForthApp.init : boolean;
   begin
-    km := TKeyMap.Create(self);
-    for ch := #0 to #225 do km.crt[ ch ] := DelegateKey;
-    km.cmd[ ^C ] := Terminate;
-
     imp := TImpForth.Create(self);
     imp.AddOp('bye', Terminate);
     imp.AddOp('clear', kvm.work.ClrScr);
-
+    kvm.clrscr; 
     cmd := ui.ZInput.Create(self);
     cmd.OnAccept := self.OnCmdAccept;
-    cmd.y := kvm.maxy;
+    cmd.y := kvm.yMax; cmd.is_dirty:=true;
+    gotoxy(0,kvm.yMax-1); prompt;
+    result := true;
+  end;
 
-    kvm.ClrScr;
-    cw.cxy(37, 0, kvm.maxy-1, 'ok');
+procedure TForthApp.keys(km : ukm.TKeyMap);
+  var ch : char;
+  begin
+    for ch := #0 to #225 do km.crt[ ch ] := DelegateKey;
+    km.cmd[ ^C ] := Terminate;
   end;
 
 procedure TForthApp.OnCmdAccept( s : string );
   begin
-    imp.Send(s);
-    cmd.work := '';
-    writeln;
+    imp.Send(s); prompt;
   end;
-
+
 //  !! copied directly from TEditor.DelegateKey :/
 procedure TForthApp.DelegateKey( ext : boolean; ch : char );
   begin
@@ -47,8 +47,12 @@ procedure TForthApp.DelegateKey( ext : boolean; ch : char );
     else cmd.handle(ch);
   end;
 
-var stepcount : cardinal = 0;
-procedure TForthApp.DoRun;
+procedure TForthApp.prompt;
+  begin
+    cmd.work := ''; writeln; cwriteln('|cok|w')
+  end;
+
+procedure TForthApp.step;
   begin
     km.HandleKeys;
     if cmd.is_dirty then cmd.Show;
@@ -57,8 +61,5 @@ procedure TForthApp.DoRun;
 
 var app : TForthApp;
 begin
-  app := TForthApp.Create(Nil);
-  app.Initialize;
-  app.Run;
-  app.Free;
+  uapp.Run(TForthApp.Create);
 end.
