@@ -4,7 +4,7 @@
 
 {$mode delphi}
 program impshell;
-uses uimpforth;
+uses uimpshell;
 var app : TImpShellApp; // TForthApp;
 begin
   app := TImpShellApp.Create(Nil);

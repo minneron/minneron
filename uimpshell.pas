@@ -1,4 +1,5 @@
-unit uimpshell
+{$mode delphi}
+unit uimpshell;
 interface uses custapp, uimpforth;
 
 type
