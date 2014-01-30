@@ -48,7 +48,6 @@ type
   TImpForth = class (TComponent)
     protected
       vm  : TInnerVM;
-      msg : string[ 255 ]; // input and output buffers
       tok : TTokStr;
       which : cardinal;    // address of last looked-up word
       // for now, we're just using a simple array for the dictionary
@@ -57,6 +56,7 @@ type
       src : string[255];
     public
       NeedsInput, HasOutput : boolean;
+      msg : string[ 255 ]; // input and output buffers
 
       constructor Create(aOwner : TComponent); override;
 

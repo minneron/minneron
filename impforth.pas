@@ -7,7 +7,7 @@ type
     public
       cmd : ui.ZInput;
       imp : TImpForth;
-      function  init : boolean; override;
+      procedure init; override;
       procedure keys(km : ukm.TKeyMap); override;
       procedure step; override;
       procedure prompt;
@@ -15,24 +15,23 @@ type
       procedure OnCmdAccept( s :  string );
     end;
 
-function TForthApp.init : boolean;
+procedure TForthApp.init;
   begin
     imp := TImpForth.Create(self);
-    imp.AddOp('bye', Terminate);
+    imp.AddOp('bye', quit);
     imp.AddOp('clear', kvm.work.ClrScr);
     kvm.clrscr; 
     cmd := ui.ZInput.Create(self);
     cmd.OnAccept := self.OnCmdAccept;
     cmd.y := kvm.yMax; cmd.is_dirty:=true;
     gotoxy(0,kvm.yMax-1); prompt;
-    result := true;
   end;
 
 procedure TForthApp.keys(km : ukm.TKeyMap);
   var ch : char;
   begin
     for ch := #0 to #225 do km.crt[ ch ] := DelegateKey;
-    km.cmd[ ^C ] := Terminate;
+    km.cmd[ ^C ] := quit;
   end;
 
 procedure TForthApp.OnCmdAccept( s : string );
@@ -54,12 +53,11 @@ procedure TForthApp.prompt;
 
 procedure TForthApp.step;
   begin
-    km.HandleKeys;
     if cmd.is_dirty then cmd.Show;
     if not imp.NeedsInput then imp.EvalNextToken;
   end;
 
 var app : TForthApp;
 begin
-  uapp.Run(TForthApp.Create);
+  uapp.Run(TForthApp);
 end.

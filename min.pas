@@ -13,23 +13,21 @@ type
       ed : TEditor;
       b4 : TB4VM;
     public
-      function  init : boolean; override;
+      procedure init; override;
       procedure step; override;
       procedure draw; override;
       procedure keys(km : ukm.TKeyMap); override;
     end;
 
-function TMinApp.init : boolean;
+procedure TMinApp.init;
   begin
     ed := TEditor.Create(self);
     ed.x := 5; ed.y := 2; ed.h := ed.h div 2 + 1; ed.w := 64;
     b4 := TB4VM.Create(self);
-    if ParamCount = 0 then
-      err := 'usage : min <filename>'
+    if ParamCount = 0 then fail('usage : min <filename>')
     else if not ed.Load( ParamStr( 1 )) then
-      err := 'unable to load file: ' + paramstr( 1 )
+      fail('unable to load file: ' + paramstr( 1 ))
     else ed.status := 'welcome to minneron.';
-    result := err = '';
   end;
 
 procedure TMinApp.keys(km : ukm.TKeyMap);
@@ -43,7 +41,7 @@ procedure TMinApp.step;
   begin
     if ed.dirty then ed.Redraw;
     mnml.step;
-    if ed.done and mnml.done then Terminate;
+    if ed.done and mnml.done then quit;
   end;
 
 procedure TMinApp.draw;
@@ -54,5 +52,5 @@ procedure TMinApp.draw;
 
 begin
   impworld.world.manageKeyboard := false;
-  uapp.run(TMinApp.Create);
+  uapp.run(TMinApp);
 end.

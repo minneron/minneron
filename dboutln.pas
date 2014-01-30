@@ -12,7 +12,7 @@ type
       rsOutln,
       rsKinds  : TRecordSet;
     public
-      function  init : boolean; override;
+      procedure init; override;
       procedure keys(km : TKeyMap); override;
       procedure ChooseType;
       procedure Redraw;
@@ -20,7 +20,7 @@ type
     end;
 
 
-function TDbOutlnApp.init : boolean;
+procedure TDbOutlnApp.init;
   begin
     dbc := udb.connect('minneron.sdb');
     rsOutln := dbc.query(
@@ -36,7 +36,6 @@ function TDbOutlnApp.init : boolean;
     with view do begin x := 15; y := 5; datacursor := curs end;
 
     hidecursor; self.redraw;
-    result := true;
   end;
 
 procedure TDbOutlnApp.keys(km : TKeyMap);
@@ -113,5 +112,5 @@ procedure TDBOutLnApp.ChooseType;
   end;
 
 begin
-  uapp.run(TDbOutlnApp.Create);
+  uapp.run(TDbOutlnApp);
 end.
