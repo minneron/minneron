@@ -1,3 +1,4 @@
+{$mode delphi}
 unit uww;
 interface uses classes, ugeom2d;
 
