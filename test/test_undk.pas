@@ -4,8 +4,7 @@ implementation uses dndk, undk, udb;
 
 var
   ndk	: dndk.IBase;
-  eid,
-  nid	: integer;
+  eid	: integer;
   node	: dndk.INode;
   edge	: dndk.IEdge;
   edges	: dndk.TEdges;
