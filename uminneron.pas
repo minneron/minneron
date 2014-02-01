@@ -1,15 +1,21 @@
 {$i xpc.inc}{$mode delphi}
 unit uminneron;
 interface
-uses xpc, classes, udb, udc, kvm, cli, num, sqldb, cw, math, ustr;
+uses xpc, classes, udb, udc, kvm, cli, ugeom2d,
+     num, sqldb, cw, math, ustr;
 
 type
-  TView = class(TComponent)
+  TView = class(TComponent, IPoint2D, ISize2D, IBounds2D)
     protected
-      _x, _y, _w, _h : cardinal;
+      _x, _y : integer;
+      _w, _h : cardinal;
       _bg, _fg : byte;
-      procedure SetX(value : cardinal);
-      procedure SetY(value : cardinal);
+      function GetX : integer;
+      function GetY : integer;
+      function GetW : cardinal;
+      function GetH : cardinal;
+      procedure SetX(value : integer);
+      procedure SetY(value : integer);
       procedure SetW(value : cardinal);
       procedure SetH(value : cardinal);
     published
@@ -17,8 +23,8 @@ type
       procedure Redraw;
       procedure Render(term :  ITerm); virtual;
       procedure Resize(new_w, new_h : cardinal); virtual;
-      property x : cardinal read _x write SetX;
-      property y : cardinal read _y write SetY;
+      property x : integer read _x write SetX;
+      property y : integer read _y write SetY;
       property w : cardinal read _w write SetW;
       property h : cardinal read _h write SetH;
       constructor Create( aOwner : TComponent ); override;
@@ -64,25 +70,15 @@ constructor TView.Create( aOwner : TComponent );
     _bg := $FC; _fg := $0;
   end;
 
-procedure TView.SetX(value : cardinal);
-  begin
-    _x := value;
-  end;
+procedure TView.SetX(value : integer); begin _x := value; end;
+procedure TView.SetY(value : integer); begin _y := value; end;
+procedure TView.SetW(value : cardinal); begin _w := value; end;
+procedure TView.SetH(value : cardinal); begin _h := value; end;
 
-procedure TView.SetY(value : cardinal);
-  begin
-    _y := value;
-  end;
-
-procedure TView.SetW(value : cardinal);
-  begin
-    _w := value;
-  end;
-
-procedure TView.SetH(value : cardinal);
-  begin
-    _h := value;
-  end;
+function TView.GetX : integer; begin result := _x end;
+function TView.GetY : integer; begin result := _y end;
+function TView.GetW : cardinal; begin result := _w end;
+function TView.GetH : cardinal; begin result := _h end;
 
 procedure TView.Nudge(dx, dy : integer);
   begin
@@ -149,7 +145,6 @@ procedure TTermView.Render(term : ITerm);
 procedure TDbTreeGrid.Render(term : ITerm);
   var
     sigil : char = ' ';
-    i     : integer;
     count : cardinal =  0;
     rs    : TRecordSet;
 begin
