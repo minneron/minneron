@@ -33,11 +33,10 @@ min: *.pas
 	mv $(GEN)/min .$
 
 run: min
-	./min hello.min
+	./min hello.mi
 
-tok:
-	$(TANGLE) tok.org
-	$(FPC) $(GEN)/tok.pas
+tok: tok.pas
+	$(FPC) tok.pas
 	.gen/tok
 
 .tangled: pr.min.org st.min.org pk.min.org
