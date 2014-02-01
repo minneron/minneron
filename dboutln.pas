@@ -33,8 +33,9 @@ procedure TDbOutlnApp.init;
     curs.OnMarkChanged := self.OnCursorChange;
 
     view := TDbTreeGrid.Create(dbc);
-    with view do begin x := 15; y := 5; datacursor := curs end;
-
+    with view do
+      begin x := 5; y := 2; h := 32; datacursor := curs
+      end;
     hidecursor; self.redraw;
   end;
 
@@ -73,34 +74,49 @@ function incv(var i:integer):integer;
     i := i+1; result := i;
   end;
 
-procedure TDBOutLnApp.ChooseType;
-  var rs : TRecordSet; f : TField; i : integer; c : TDbCursor;
-  var done : boolean = false; skip : boolean = false; ch : char; q : TSqlQuery;
-  const widths : array [0..1] of byte = (0, 16);
+type tbytes = array of byte;
+function bytes(data : array of byte):tbytes;
+  var i :integer;
   begin
-    clrscr;
-    rs := rsKinds.Open.First; c := TDbCursor.Create(dbc).Attach(rs, 'knd');
+    setlength(result, length(data));
+    for i := 0 to high(data) do result[i]:=data[i];
+  end;
+procedure TDBOutLnApp.ChooseType;
+  var
+    {@loop} done:boolean=false; cancel:boolean = false; ch : char;
+      {@loop} _cr : TDbCursor;
+      {@draw} _rs : TRecordSet;
+      {@draw} _ws : array of byte;
+      {@draw} i : integer; f : TField;
+    {@save} q : TSqlQuery;
+  begin
+    {+init} _rs := rsKinds.Open.First;
+            _cr := TDbCursor.Create(self).Attach(_rs, 'knd');
+    {-init} _ws := bytes([0, 16]);
+    {+loop}
     repeat
-      { draw column headers }
-      gotoxy(0,0); bg('K'); fg('W');
-      i := 0; for f in rs.fields do write(rfit(f.DisplayName, widths[vinc(i)]));
-
-      { draw rows }
-      WriteLn; fg('k');
-      rs.First; while not rs.EOF do begin
-	if c.AtMark then bg('B') else bg('w');
-	i:=0; for f in rs.fields do write(rfit(f.DisplayText, widths[vinc(i)]));
-	WriteLn; rs.Next;
-      end;
-      c.ToMark; repeat until keypressed;
+      {+draw} cwrite('|@0000|!K|W|$'); i := 0;
+      {=head} for f in _rs.fields do
+	        write(rfit(f.DisplayName, _ws[vinc(i)]));
+      {+body}   _rs.First; while not _rs.EOF do begin
+      {+line}   i:=0; cwriteln('|k');
+                if _cr.AtMark then bg('B') else bg('w');
+      {=each}   for f in _rs.fields do
+                  write(rfit(f.DisplayText, _ws[vinc(i)]));
+      {-line}   _rs.Next;
+      {-body} end;
+      {-draw} _cr.ToMark;
+      repeat until keypressed;
       case readkey(ch) of
-	'n', ^N : c.Next;    ^M : done := true;
-	'p', ^P : c.Prev;    ^G : skip := true;
+	'n', ^N : _cr.Next;    ^M : done := true;
+	'p', ^P : _cr.Prev;    ^C: cancel := true;
         else cwritexy(15, 0, '|Gch: |g' +ch)
       end
-    until skip or done;
-    c.RecordSet := nil; c.Free;
-    if not skip then begin
+    until cancel or done;
+    {-loop}
+    {=free} _cr.RecordSet:=nil; _cr.Free; _rs:=nil;
+    {+save}
+    if not cancel then begin
       q := TSQLQuery.Create(nil);
       q.Database := dbc; q.Transaction := dbc.Transaction;
       q.sql.text := 'UPDATE node SET knd=:knd WHERE nid=:nid';
@@ -108,6 +124,7 @@ procedure TDBOutLnApp.ChooseType;
       q.ParamByName('nid').AsInteger := curs['nid'];
       q.ExecSQL; dbc.Transaction.Commit;
     end;
+    {-save}
     Redraw;
   end;
 

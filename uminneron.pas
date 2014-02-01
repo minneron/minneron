@@ -1,7 +1,7 @@
 {$i xpc.inc}{$mode delphi}
 unit uminneron;
 interface
-uses xpc, classes, udb, udc, kvm, cli, num, sqldb, cw, math;
+uses xpc, classes, udb, udc, kvm, cli, num, sqldb, cw, math, ustr;
 
 type
   TView = class(TComponent)
@@ -83,7 +83,7 @@ procedure TView.SetH(value : cardinal);
   begin
     _h := value;
   end;
-  
+
 procedure TView.Nudge(dx, dy : integer);
   begin
     _x += dx;
@@ -148,55 +148,37 @@ procedure TTermView.Render(term : ITerm);
 {---------------------------------------------------------------}
 procedure TDbTreeGrid.Render(term : ITerm);
   var
-    depth : integer = -1;
     sigil : char = ' ';
     i     : integer;
     count : cardinal =  0;
     rs    : TRecordSet;
 begin
   bg('b'); fg('W');
-
-  rs := _cur.RecordSet;
-  rs.open;
-  rs.first;
-  while not rs.eof do
+  rs := _cur.RecordSet.open.first;
+  while (count < yMax) and not rs.eof do
     begin
-      if rs['depth'] > depth then pass
-      else if rs['depth'] < depth then pass
-      else pass;
-      depth := rs['depth'];
-
-      if rs['collapsed']=1 then sigil := '+'
-      else if rs['leaf']=1 then sigil := ' '
+      if rs['leaf'] then sigil := ' '
+      else if rs['collapsed'] then sigil := '+'
       else sigil := '-';
-
-      if rs['hidden'] = 0 then
-        begin
-          if _cur.AtMark then bg('b') else bg('k');
-          gotoxy(0,count);
-          { draw the outline controls }
-          if rs['depth'] > 0 then
-            for i := 1 to rs['depth'] do write('  ');
-          write(sigil +  ' ');
-          { draw the node itself }
-          fg('c'); write(rs['kind'],' ');
-          fg('W');
-          write(rs['node']);
-
-          { fill in the rest of the line }
-          for i := 3 to kvm.xMax - (
-            length(rs['node']) + length(rs['kind'])
-            + rs['depth'] * 2) do write(' ');
-
-          inc(count);
-        end;
+      { draw visible nodes }
+      if rs['hidden']=1 then pass
+      else begin
+        if _cur.AtMark then bg('b') else bg('k'); gotoxy(0,count);
+        { draw the outline controls }
+	if rs['depth']>0 then write(ntimes(' ', rs['depth']*2));
+	fg('r'); write(sigil +  ' ');
+        { draw the node itself }
+        fg('c'); write(rs['kind'],' ');
+	fg('W'); write(rs['node']);
+        { clear the rest of the line }
+	clreol; inc(count);
+      end;
       rs.Next;
     end;
   bg('k');
-  for i := count to kvm.yMax do
+  while count < kvm.yMax do
     begin
-      gotoxy(0,i);
-      clreol;
+      gotoxy(0,count); clreol; inc(count);
     end;
 end;
 
