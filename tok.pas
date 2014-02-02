@@ -1,19 +1,24 @@
 { this is a token-centric editor. }
 {$i xpc.inc}{$mode delphi}
 program tok;
-uses uapp, mned, ukm, utok, ui, kvm,
+uses xpc, uapp, mned, ukm, utok, ui, kvm, ugeom2d, uww,
      dndk, undk, udb, udc, uminneron, mnbuf, classes;
 
+type TToken = record
+		x, y : cardinal; c : word;
+	      end;
 type TTokEd = class (uapp.TCustomApp)
   protected
     ndk : dndk.IBase;
     cmd : ui.ZInput;
     here : string;
     hist : array of string;
+    wrap : uww.TWordWrap;
     page : mnbuf.TBuffer;
     dirty: boolean;
   public
     procedure init; override;
+    procedure done; override;
     procedure step; override;
     procedure draw; override;
     procedure keys(km : ukm.TKeyMap); override;
@@ -24,13 +29,19 @@ type TTokEd = class (uapp.TCustomApp)
 
 procedure TTokEd.init;
   begin
-    page := TBuffer.Create(64, kvm.height);
     ndk := undk.open('stuff.ndk');
     cmd := ui.ZInput.Create(self);
     cmd.x := xMax div 2 - 16; cmd.y := yMax div 2;
     cmd.dlen := 32; cmd.maxlen := cmd.dlen;
     cmd.tcol := $11f3; cmd.work := '';
     cmd.OnAccept := self.OnCmdAccept;
+    page := TBuffer.Create(64, kvm.height);
+    wrap := uww.TWordWrap.Create(self); wrap.width := kvm.width;
+  end;
+
+procedure TTokEd.done;
+  begin
+    wrap.Free;
   end;
 
 procedure TTokEd.keys(km : ukm.TKeyMap);
@@ -49,29 +60,36 @@ procedure TTokEd.DelegateKey( ext : boolean; ch : char );
 
 procedure TTokEd.OnCmdAccept( s : string );
   begin
-    page.addline(s); dirty := true;
+    page.addline(s); cmd.work := ''; dirty := true;
   end;
   
 procedure TTokEd.onspace;
-  var tmp : string;
   begin
-    tmp := cmd.work; cmd.reset;
-    oncmdaccept(tmp);
-    draw;
+    oncmdaccept(cmd.work);
   end;
 
 procedure TTokEd.step;
   begin
+    if dirty then begin cmd.is_dirty := true; draw end;
     if cmd.is_dirty then cmd.Show;
   end;
 
 
+
 procedure TTokEd.draw;
-  var line : string;
+  var word : string; y : byte = 0;
+      tok : ugeom2d.IBounds2D;
   begin
-    gotoxy(0,0); clrscr;
-    for line in page.tostrings do write(line);
-    if dirty then begin end; dirty := false;
+    gotoxy(0,y); clrscr; wrap.reset;
+    tok := uminneron.TView.Create(Nil); tok.h := 1;
+    for word in page.tostrings do begin
+      tok.w := length(word); wrap.place(tok);
+      if tok.y > y then begin y := tok.y; gotoxy(0,y) end
+      else if tok.x = 0 then ok
+      else write(' ');
+      write(word)
+    end; wrap.debugdraw;
+    if dirty then begin dirty := false; end;
   end;
   
 begin
