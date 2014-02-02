@@ -60,7 +60,7 @@ procedure TTokEd.DelegateKey( ext : boolean; ch : char );
 
 procedure TTokEd.OnCmdAccept( s : string );
   begin
-    page.addline(s); cmd.work := ''; dirty := true;
+    page.addline(s); cmd.reset; dirty := true;
   end;
   
 procedure TTokEd.onspace;
