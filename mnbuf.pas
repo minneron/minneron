@@ -97,7 +97,7 @@ function TBuffer.ToStrings : TStrings;
   var i : cardinal;
   begin
     result := TStringList.Create;
-    for i := 0 to self.length -1 do result.Add(self[i]);
+    if length > 0 then for i := 0 to self.length -1 do result.Add(self[i]);
   end;
 
 function TBuffer.ToString : string;
