@@ -26,7 +26,7 @@ type TTokEd = class (uapp.TCustomApp)
     procedure OnCmdAccept( s :  string );
     procedure OnSpace;
   end;
-
+
 procedure TTokEd.init;
   begin
     ndk := undk.open('stuff.ndk');
@@ -43,7 +43,7 @@ procedure TTokEd.done;
   begin
     wrap.Free;
   end;
-
+
 procedure TTokEd.keys(km : ukm.TKeyMap);
   var ch: char;
   begin
@@ -51,7 +51,7 @@ procedure TTokEd.keys(km : ukm.TKeyMap);
     km.cmd[ ^C ] := self.quit;
     km.cmd[ #32 ] := self.OnSpace;
   end;
-
+
 //  !! copied directly from TEditor.DelegateKey :/
 procedure TTokEd.DelegateKey( ext : boolean; ch : char );
   begin
@@ -68,13 +68,12 @@ procedure TTokEd.onspace;
     oncmdaccept(cmd.work);
   end;
 
+
 procedure TTokEd.step;
   begin
     if dirty then begin cmd.is_dirty := true; draw end;
     if cmd.is_dirty then cmd.Show;
   end;
-
-
 
 procedure TTokEd.draw;
   var word : string; y : byte = 0;
