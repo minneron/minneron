@@ -1,7 +1,7 @@
 {$mode delphi}
 program dboutln;
-uses xpc, udb, udc, uapp, classes, kvm, cw, uminneron,
-     ustr, db, sqldb, fx, ukm, kbd, num;
+uses xpc, cli, udb, udc, uapp, classes, kvm, cw, uminneron,
+     ustr, db, sqldb, fx, ukm, kbd, num, undk, fs;
 
 type
   TDbOutlnApp  = class(uapp.TCustomApp)
@@ -22,13 +22,13 @@ type
 
 procedure TDbOutlnApp.init;
   begin
+    if not fs.exists('minneron.sdb') then undk.open('minneron.sdb');
     dbc := udb.connect('minneron.sdb');
     rsOutln := dbc.query(
       'SELECT olid, nid, kind, node, depth, collapsed, hidden, leaf '+
         'FROM outline');
     rsKinds := dbc.query('SELECT * FROM kinds ORDER BY kind');
-
-    curs := TDbCursor.Create(dbc).Attach(rsOutln, 'nid');
+    curs := udc.TDbCursor.Create(dbc).Attach(rsOutln, 'nid');
     curs.canHideRows := true; curs.hideFlag := 'hidden';
     curs.OnMarkChanged := self.OnCursorChange;
 
