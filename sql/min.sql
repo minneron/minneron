@@ -57,10 +57,10 @@ create trigger if not exists new_triple
 
 
 -- -- type system. system nodes have keys <= 0
-create table kind (
+create table if not exists kind (
   knd integer primary key,
   foreign key (knd) references node (nid) );
-begin;
+--
   insert into node (nid, knd, val) values
      -- meta stuff --
      (0, -2, 'null'), (-1, -1, 'kind'), (-2, -1, 'void'),
@@ -78,10 +78,10 @@ begin;
      (-112, -1, 'tok' ), (-113, -1, 'skip'), (-114, -1, 'node'),
      (-115, -1, 'hide'), (-116, -1, 'lift'), (-117, -1, 'virt');
 --
-create view kinds as
+create view if not exists kinds as
   select nid as knd, val as kind from node where nid in kind;
 --
-create trigger new_kind instead of insert on kinds
+create trigger if not exists new_kind instead of insert on kinds
   begin
     insert into node (knd, val) values (-1, new.kind);
     insert into kind values(last_insert_rowid());
