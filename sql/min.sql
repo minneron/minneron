@@ -38,18 +38,18 @@ create table if not exists meta (
 create trigger if not exists del_triple
   instead of delete on trip
   begin
-    update edge set ended = 'now' where edge.id = old.id;
+    update edge set ended = 'now' where edge.eid = old.eid;
   end;
 
 --
 create trigger if not exists new_triple
   instead of insert on trip
   begin
-    insert or ignore into node (name) values (new.sub), (new.rel), (new.obj);
-    insert into edge (subID, relID, objID, began)
-    select (select ID from node where val=new.sub) as subID,
-           (select ID from node where val=new.rel) as relID,
-           (select ID from node where val=new.obj) as objID,
+    insert or ignore into node (val) values (new.sub), (new.rel), (new.obj);
+    insert into edge (sub, rel, obj, began)
+    select (select nid from node where val=new.sub) as subID,
+           (select nid from node where val=new.rel) as relID,
+           (select nid from node where val=new.obj) as objID,
 	   'now' as began;
     replace into meta ('k','v')
       values ('last_insert_rowid', last_insert_rowid());

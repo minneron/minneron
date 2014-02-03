@@ -30,6 +30,8 @@ FPC       = $(FPC_PATH) $(RTL) -gl -B -Fu$(GEN) -Fi$(GEN) \
 FCL-PAS = $(FCL)/fcl-passrc
 TANGLE    = ./etc/tangle.el
 
+# ucomment this to enable tracing on the tests
+# TRACE     = --trace
 
 
 #-- core rules ---
@@ -57,8 +59,8 @@ build : init
 
 test: always min minsql $(GEN)/run-tests.pas
 	@cd test; python $(XPL)/../test/gen-tests.py ../$(GEN)
-	$(FPC) -Mobjfpc -vn -gl -B $(GEN)/run-tests.pas -Fu./test -otest-min
-	$(GEN)/test-min
+	$(FPC) -vn -B $(GEN)/run-tests.pas -Fu./test -otest-min
+	$(GEN)/test-min $(TRACE)
 
 #-- helper rules --
 
@@ -71,7 +73,7 @@ init : lib/xpl/Makefile
 	$(TANGLE) .tangled
 
 minsql: $(GEN)/min-sql2pas.inc
-$(GEN)/min-sql2pas.inc: sql/min.sql
+$(GEN)/min-sql2pas.inc: sql/min.sql sql2pas.py
 	python3 sql2pas.py sql/min.sql > $(GEN)/min-sql2pas.inc
 
 

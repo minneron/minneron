@@ -169,7 +169,7 @@ constructor TNodakRepo.New(ndkPath : string);
   begin
     inherited Create(Nil);
     _dbc := udb.connect(ndkPath); //  todo: error handling
-    {$i nodak-sql2pas.inc}
+    {$i min-sql2pas.inc}
   end;
 
 function TNodakRepo.e(sub, rel, obj : string) : IEdge;
@@ -185,10 +185,10 @@ function TNodakRepo.e(sub, rel, obj : string) : IEdge;
 function TNodakRepo.f(eid : integer) : IEdge;
   var rs : udb.TRecordset;
   begin
-    rs := _dbc.Query('select id,sub,rel,obj from trip where id=:eid',[eid]);
+    rs := _dbc.Query('select eid,sub,rel,obj from trip where eid=:eid',[eid]);
     if rs.recordcount = 0 then
       raise Exception.Create('no edge with eid=' + IntToStr(eid));
-    result := TEdge.New(self, rs['id'], rs['sub'], rs['rel'], rs['obj']);
+    result := TEdge.New(self, rs['eid'], rs['sub'], rs['rel'], rs['obj']);
     rs.Free;
   end;
 
@@ -200,17 +200,17 @@ function sqlEsc(s : string) : string;
 function TNodakRepo.q(sub,rel,obj : string) : TEdges;
   var sql : string = ''; rs : udb.TRecordSet; i : cardinal = 0;
   begin
-    sql := 'select id, sub, rel, obj from trip';
+    sql := 'select eid, sub, rel, obj from trip';
     if (sub <> '~') or (rel <> '~') or (obj <> '~') then sql += ' where (1=1)';
     if sub <> '~' then sql += ' and sub=' + sqlEsc(sub);
     if rel <> '~' then sql += ' and rel=' + sqlEsc(rel);
     if obj <> '~' then sql += ' and obj=' + sqlEsc(obj);
-    sql += ' order by id';
+    sql += ' order by eid';
     rs := _dbc.Query(sql,[]);
     SetLength(result, rs.RecordCount);
     while not rs.EOF do
       begin
-        result[i] := TEdge.New(self, rs['id'], rs['sub'], rs['rel'], rs['obj']);
+        result[i] := TEdge.New(self, rs['eid'], rs['sub'], rs['rel'], rs['obj']);
         rs.Next; i += 1;
       end;
     rs.Free;
