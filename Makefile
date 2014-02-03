@@ -1,4 +1,16 @@
-# directory paths, relative to this directory:
+#-- minneron makefile ---------------------------------
+
+targets:
+	@echo 'available targets:'
+	@echo '--------------------------'
+	@echo 'make test  -> run all tests'
+	@echo 'make min   -> build ./min'
+	@echo 'make run   -> build and run'
+	@echo
+
+#------------------------------------------------------
+
+# directory paths (relative to this directory):
 XPL       = ~/x/code
 IMP       = ~/i
 GEN	  = ./.gen
@@ -18,15 +30,13 @@ FPC       = $(FPC_PATH) $(RTL) -gl -B -Fu$(GEN) -Fi$(GEN) \
 FCL-PAS = $(FCL)/fcl-passrc
 TANGLE    = ./etc/tangle.el
 
-#------------------------------------------------------
 
-targets:
-	@echo 'available targets:'
-	@echo '--------------------------'
-	@echo 'make test  -> run all tests'
-	@echo 'make min   -> build ./min'
-	@echo 'make run   -> build and run'
-	@echo
+
+#-- core rules ---
+
+clean:
+	delp $(GEN)
+	rm -f min .tangled
 
 min: *.pas
 	$(FPC) min.pas
@@ -37,29 +47,37 @@ run: min
 
 tok: tok.pas
 	$(FPC) tok.pas
-	.gen/tok
+	$(GEN)/tok
+
+dboutln: minsql
+	$(FPC) dboutln.pas
+	$(GEN)/dboutln
+
+build : init
+
+test: always min minsql $(GEN)/run-tests.pas
+	@cd test; python $(XPL)/../test/gen-tests.py ../$(GEN)
+	$(FPC) -Mobjfpc -vn -gl -B $(GEN)/run-tests.pas -Fu./test -otest-min
+	$(GEN)/test-min
+
+#-- helper rules --
+
+init : lib/xpl/Makefile
+	@mkdir -p $(GEN)
+	@rm -f $(GEN)/library $(GEN)/retroImage
 
 .tangled: pr.min.org st.min.org pk.min.org
 	cat pr.min.org st.min.org pk.min.org > .tangled
 	$(TANGLE) .tangled
 
-clean:
-	delp $(GEN)
-	rm -f min .tangled
+minsql: $(GEN)/min-sql2pas.inc
+$(GEN)/min-sql2pas.inc: sql/min.sql
+	python3 sql2pas.py sql/min.sql > $(GEN)/min-sql2pas.inc
+
 
 $(GEN)/run-tests.pas:
 	cd $(GEN); ln -F -s $(XPL)/../test/run-tests.pas
 
-test: always min $(GEN)/run-tests.pas
-	@cd test; python $(XPL)/../test/gen-tests.py ../$(GEN)
-	$(FPC) -Mobjfpc -vn -gl -B $(GEN)/run-tests.pas -Fu./test -otest-min
-	$(GEN)/test-min
-
-build : init
-
-init : lib/xpl/Makefile
-	@mkdir -p $(GEN)
-	@rm -f $(GEN)/library $(GEN)/retroImage
 
 # you don't want to run 'git submodule update' every time you run
 # the tests, because git will shove any changes you've made off
@@ -67,9 +85,5 @@ init : lib/xpl/Makefile
 lib/xpl/Makefile:
 	@git submodule init
 	@git submodule update
-
-
-#obtangle:
-#	@$(FPC) obtangle.pas
 
 always: .PHONY
