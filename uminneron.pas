@@ -29,7 +29,7 @@ type
       property h : cardinal read _h write SetH;
       constructor Create( aOwner : TComponent ); override;
     end;
-  
+
   // A class with its own video ram buffer:
   TTermView = class (TView, ITerm)
     protected
@@ -40,7 +40,7 @@ type
       procedure Render(term :  ITerm); override;
       procedure Resize(new_w, new_h : cardinal); override;
     end;
-
+
   TDbTreeGrid = class (TView)
     protected
       _top : cardinal;
@@ -82,10 +82,8 @@ function TView.GetH : cardinal; begin result := _h end;
 
 procedure TView.Nudge(dx, dy : integer);
   begin
-    _x += dx;
-    _y += dy;
+    _x += dx; _y += dy;
   end;
-
 
 procedure TView.Redraw;
   var term : kvm.ITerm;
@@ -93,22 +91,18 @@ procedure TView.Redraw;
     term := kvm.work;
     kvm.work := kvm.TSubTerm.Create(term, _x, _y, _w, _h);
     bg(_bg); fg(_fg);
-    try
-      self.Render(term);
-    finally
-      kvm.work := term;
-    end
+    try self.Render(term);
+    finally kvm.work := term end
   end;
 
 procedure TView.Render(term : ITerm);
   begin
-    ClrScr;
+    ClrScr
   end;
 
 procedure TView.Resize(new_w, new_h : cardinal);
   begin
-    _w := new_w;
-    _h := new_h;
+    _w := new_w; _h := new_h
   end;
 
 constructor TTermView.Create( aOwner : TComponent );
@@ -148,8 +142,7 @@ procedure TDbTreeGrid.Render(term : ITerm);
     count : cardinal =  0;
     rs    : TRecordSet;
 begin
-  bg('b'); fg('W');
-  rs := _cur.RecordSet.open.first;
+  bg('b'); fg('W');   rs := _cur.RecordSet.open.first;
   while (count < yMax) and not rs.eof do
     begin
       if rs['leaf'] then sigil := ' '
@@ -171,12 +164,11 @@ begin
       rs.Next;
     end;
   bg('k');
-  while count < kvm.yMax do
-    begin
-      gotoxy(0,count); clreol; inc(count);
-    end;
+  while count < kvm.yMax do begin
+    gotoxy(0,count); clreol; inc(count)
+  end
 end;
-
+
 
 procedure TStepper.DoStep;
   begin
