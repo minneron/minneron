@@ -7,7 +7,7 @@
 unit uoutdoc;
 interface
 uses classes, xpc, rings, kvm, kbd, sax, sax_xml, dom, cw,
-     stri, cx, stacks, xmlwrite, sysutils;
+     stri, stacks, xmlwrite, sysutils;
 
 type
 
