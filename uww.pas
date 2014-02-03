@@ -1,6 +1,6 @@
 {$i xpc.inc}{$mode delphi}
 unit uww;
-interface uses xpc, classes, ugeom2d, cw{for debug};
+interface uses xpc, classes, ug2d, cw{for debug};
 
 type
   TWordWrap = class (TComponent)
@@ -11,7 +11,7 @@ type
     published
       constructor create(aOwner : TComponent); override;
       procedure reset;
-      procedure place(item : ugeom2d.IBounds2D);
+      procedure place(item : ug2d.IBounds2D);
       procedure debugdraw;
       property width : cardinal read _ww write _ww;
       property gapw : cardinal read _gw write _gw;
@@ -30,7 +30,7 @@ procedure TWordWrap.Reset;
     _cx := 0; _cy := 0;
   end;
 
-procedure TWordWrap.Place(item : ugeom2d.IBounds2D);
+procedure TWordWrap.Place(item : ug2d.IBounds2D);
   var gap, newx : cardinal;
   begin //  prove this word wrap algorithm works
     if _cx = 0 then gap := 0 else gap := _gw;

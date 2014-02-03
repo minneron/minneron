@@ -1,9 +1,9 @@
 {$mode delphi}{$H+}
 {$i test_uww.def }
-implementation uses uww, ugeom2d, umin;
+implementation uses uww, ug2d, umin;
 
 var
-  g2 : ugeom2d.IBounds2D;
+  g2 : ug2d.IBounds2D;
   ww : uww.TWordWrap;
 
 procedure setup;

@@ -1,7 +1,7 @@
 { this is a token-centric editor. }
 {$i xpc.inc}{$mode delphi}
 program tok;
-uses xpc, uapp, mned, ukm, utok, ui, kvm, ugeom2d, uww,
+uses xpc, uapp, mned, ukm, utok, ui, kvm, ug2d, uww,
      dndk, undk, udb, udc, umin, mnbuf, classes;
 
 type TToken = record
@@ -77,7 +77,7 @@ procedure TTokEd.step;
 
 procedure TTokEd.draw;
   var word : string; y : byte = 0;
-      tok : ugeom2d.IBounds2D;
+      tok : ug2d.IBounds2D;
   begin
     gotoxy(0,y); clrscr; wrap.reset;
     tok := umin.TView.Create(Nil); tok.h := 1;

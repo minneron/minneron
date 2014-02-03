@@ -2,12 +2,12 @@
   used in minneron's text display system }
 {$mode objfpc}{$h+}
 unit tiles;
-interface uses ugeom2d;
+interface uses ug2d;
 
 type
 
   // a 2d rectangle made of strings
-  ITextTile = interface (ugeom2d.ISize2D)
+  ITextTile = interface (ug2d.ISize2D)
     function GetColorString( i : cardinal ) : string;
     function  GetLine( i : cardinal ) : string;
     procedure SetLine( i : cardinal; s : string );
@@ -25,7 +25,7 @@ type
       read GetColorString;
   end;
 
-  TTile = class (TInterfacedObject, ugeom2d.ISize2D)
+  TTile = class (TInterfacedObject, ug2d.ISize2D)
     private
        _w, _h : cardinal;
     public

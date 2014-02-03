@@ -1,7 +1,7 @@
 {$i xpc.inc}{$mode delphi}
 unit umin;
 interface
-uses xpc, classes, udb, udc, kvm, cli, ugeom2d,
+uses xpc, classes, udb, udc, kvm, cli, ug2d,
      num, sqldb, cw, math, ustr;
 
 type
