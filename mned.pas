@@ -173,7 +173,7 @@ procedure TEditor.Render( term : ITerm );
 procedure TEditor.updatecamera;
   var screenline : word;
   begin
-    assert(topline <= position );
+    while topline > position do dec(topline);
     screenline := position - topline;
     if ( screenline < 5 ) and ( topline > 1 ) then
       begin
@@ -202,7 +202,7 @@ procedure TEditor.ToTop;
 procedure TEditor.ToEnd;
   var i : byte;
   begin
-    position := self.buf.length - 1;
+    position := max(0, self.buf.length - 1);
     topline := position;
     for i := kvm.yMax div 2 downto 1 do dec(topline);
   end;
