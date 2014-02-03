@@ -45,7 +45,7 @@ min: *.pas
 	mv $(GEN)/min .$
 
 run: min
-	./min hello.mi
+	./min hello.min
 
 tok: tok.pas
 	$(FPC) tok.pas

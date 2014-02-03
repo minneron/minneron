@@ -73,7 +73,7 @@ procedure TBuffer.LoadFromFile( path : string );
         end;
         close( txt );
       end
-    else raise EFileNotFound(path)
+    else raise EFileNotFound.Create(path)
   end;
 
 procedure TBuffer.SaveToFile( path : string );
