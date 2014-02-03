@@ -14,6 +14,7 @@ type
       procedure place(item : ugeom2d.IBounds2D);
       procedure debugdraw;
       property width : cardinal read _ww write _ww;
+      property gapw : cardinal read _gw write _gw;
     end;
 
 implementation
@@ -30,16 +31,18 @@ procedure TWordWrap.Reset;
   end;
 
 procedure TWordWrap.Place(item : ugeom2d.IBounds2D);
-  var gap : byte;
+  var gap, newx : cardinal;
   begin //  prove this word wrap algorithm works
     if _cx = 0 then gap := 0 else gap := _gw;
-    if (item.w + gap) >= (_ww - _cx - 1) then
-      begin { item is wider than distance to edge, so wrap. }
+    newx := gap + _cx + item.w;
+    if newx > _ww then
+      begin
 	if (_cx = 0) then ok else _cy += _lh;
-	_cx := 0; item.x := 0; item.y := _cy;
+	item.y := _cy;
+	_cx := 0; item.x := 0;
       end
     else item.x := _cx + gap;
-    _cx += item.w + gap;
+    _cx := newx
   end;
 
 procedure TWordWrap.debugdraw;
