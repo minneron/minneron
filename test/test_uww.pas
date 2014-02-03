@@ -1,6 +1,6 @@
 {$mode delphi}{$H+}
 {$i test_uww.def }
-implementation uses uww, ugeom2d, uminneron;
+implementation uses uww, ugeom2d, umin;
 
 var
   g2 : ugeom2d.IBounds2D;

@@ -2,7 +2,7 @@
 {$i xpc.inc}{$mode delphi}
 program tok;
 uses xpc, uapp, mned, ukm, utok, ui, kvm, ugeom2d, uww,
-     dndk, undk, udb, udc, uminneron, mnbuf, classes;
+     dndk, undk, udb, udc, umin, mnbuf, classes;
 
 type TToken = record
 		x, y : cardinal; c : word;
@@ -80,7 +80,7 @@ procedure TTokEd.draw;
       tok : ugeom2d.IBounds2D;
   begin
     gotoxy(0,y); clrscr; wrap.reset;
-    tok := uminneron.TView.Create(Nil); tok.h := 1;
+    tok := umin.TView.Create(Nil); tok.h := 1;
     for word in page.tostrings do begin
       tok.w := length(word); wrap.place(tok);
       if tok.y > y then begin y := tok.y; gotoxy(0,y) end

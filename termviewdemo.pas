@@ -1,6 +1,6 @@
 {$mode objfpc}
 program termviewdemo;
-uses uminneron, kvm, kbd, custapp;
+uses umin, kvm, kbd, custapp;
 
 type
   TTermViewApp	= class(TCustomApplication)

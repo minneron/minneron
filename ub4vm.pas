@@ -1,6 +1,6 @@
 {$mode delphi}
 unit ub4vm;
-interface uses classes, arrays, uminneron, kvm;
+interface uses classes, arrays, umin, kvm;
 
 type
 

@@ -1,6 +1,6 @@
 {$mode delphi}
 program dboutln;
-uses xpc, cli, udb, udc, uapp, classes, kvm, cw, uminneron,
+uses xpc, cli, udb, udc, uapp, classes, kvm, cw, umin,
      ustr, db, sqldb, fx, ukm, kbd, num, undk, fs;
 
 type

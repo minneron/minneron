@@ -57,11 +57,11 @@
 
 * Units
 | ~/r/minneron | uoutdoc.pas   |
-| ~/r/minneron | uminneron.pas |
+| ~/r/minneron | umin.pas      |
   
 * Hierarchy
 | um.TView         | is        | TComponent          |   |
-|                  | in        | uminneron           |   |
+|                  | in        | umin                |   |
 |                  | .cardinal | x                   | 0 |
 |                  | .cardinal | y                   | 1 |
 |                  | .cardinal | w                   | 2 |
