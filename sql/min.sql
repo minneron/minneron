@@ -8,27 +8,6 @@ create table if not exists node (
   foreign key(knd) references kind deferrable initially deferred );
 
 --
-create view if not exists trip as
-  select eid,
-    s.knd as subknd, s.nid as subnid, s.val as sub,
-    r.knd as relknd, r.nid as relnid, r.val as rel,
-    o.knd as objknd, o.nid as objnid, o.val as obj
-  from edge, node as s, node as r, node as o
-  where edge.sub = s.nid
-    and edge.rel = r.nid
-    and edge.obj = o.nid;
-
---
-create view outline as
-  select olid, nid, tw.depth, tw.kind, tw.node,
-    exists(select collapse from outline_collapse oc
-           where oc.olid=om.olid and collapse=nid) as collapsed,
-    exists(select hide from outline_hidden oh
-           where oh.olid=om.olid and hide=nid) as hidden,
-    exists(select leaf from tree_leaf where leaf=nid) as leaf
-  from outline_master om natural join tree_walk tw;
-
--- -- management of the triplestore  ---
 create table if not exists edge (
   eid integer primary key,
   sub integer references node,
@@ -39,6 +18,17 @@ create table if not exists edge (
   ended datetime default null );
 
 --
+create view if not exists trip as
+  select eid,
+    s.knd as subknd, s.nid as subnid, s.val as sub,
+    r.knd as relknd, r.nid as relnid, r.val as rel,
+    o.knd as objknd, o.nid as objnid, o.val as obj
+  from edge, node as s, node as r, node as o
+  where edge.sub = s.nid
+    and edge.rel = r.nid
+    and edge.obj = o.nid;
+
+-- -- management of the triplestore  ---
 create table if not exists meta (
   id integer primary key,
   k text unique,
@@ -66,7 +56,7 @@ create trigger if not exists new_triple
   end;
 
 
--- type system. system nodes have keys <= 0
+-- -- type system. system nodes have keys <= 0
 create table kind (
   knd integer primary key,
   foreign key (knd) references node (nid) );
@@ -100,32 +90,32 @@ create trigger new_kind instead of insert on kinds
 replace into kind (knd) -- TODO: auto-maintain with a trigger
   select nid from node where knd=-1;
 --
-commit;
---
- pragma foreign_keys=1;
+pragma foreign_keys=1;
 
 -----------------------------------------------------------
--- trees
+-- -- trees
 -----------------------------------------------------------
 create table trees ( tree primary key );
 
+--
 create table tree_data (
   tree   integer references trees,
   parent integer references node,
   child  integer references node,
   seq    integer );
 
+--
 create table tree_path ( -- auto-generated subtree information
   tree   integer references trees,
   above  integer references node,
   below  integer references node,
   steps  integer not null default 0 );
 
--- temp tables (sqlite prohibits create/drop inside a trigger)
+-- -- temp tables (sqlite prohibits create/drop inside a trigger)
 create table subtree (nid integer);
 create table flags ( flag text primary key );
 
--- tree triggers : insert/update
+-- -- tree triggers : insert/update
 
 create trigger tree_add_node after insert on tree_data
   begin
@@ -154,7 +144,7 @@ create trigger tree_prevent_tree_mod before update of tree on tree_data
       'update of tree_data.tree prohibited. delete and re-add instead.');
   end;
 
--- tree triggers : delete
+-- -- tree triggers : delete
 
 create trigger tree_del_node after delete on tree_data
   when not exists(select * from flags
@@ -189,7 +179,7 @@ create trigger tree_del_node after delete on tree_data
     delete from subtree;
   end;
 
--- tree triggers : moving nodes
+-- -- tree triggers : moving nodes
 
 create trigger tree_move_node after update of parent on tree_data
   when new.parent is not null begin
@@ -223,7 +213,7 @@ create trigger tree_move_node after update of parent on tree_data
      delete from subtree;
   end;
 
--- tree_crumbs shows breadcrumb trail for a path.
+-- -- tree_crumbs shows breadcrumb trail for a path.
 -- also sorts results in depth-first walk order.
 --
 -- !! if your tree has nodes with more than 10000 child
@@ -240,15 +230,15 @@ create view tree_crumbs as
     order by tp.tree, target, steps desc )
   group by tree, target;
 
--- a view to give you the depth of any node
+-- -- a view to give you the depth of any node
 create view tree_depth as
   select tree, below as nid, max(steps) as depth
   from tree_path
   group by tree, below;
 
--- this combines tree_crumbs with depth, node and type data
--- so you can just select from this table and get
--- everything you need for a walk of the tree.
+-- -- this combines tree_crumbs with depth, node and 
+-- type data so you can just select from this table and 
+-- get everything you need for a walk of the tree.
 create view tree_walk as
   select tc.tree,
      k.nid as knd, k.val as kind,
@@ -261,14 +251,14 @@ create view tree_walk as
     left join node k on (n.knd=k.nid)
   order by crumbs;
 
--- a view to give you the leaves of a tree
+-- -- a view to give you the leaves of a tree
 create view tree_leaf as
   select tree, above as leaf
   from tree_path
   group by tree, above
   having count(below) = 1;
 
--- and the 'roots' (or rather all top-level nodes)
+-- -- and the 'roots' (or rather all top-level nodes)
 create view tree_root as
   select tree, below as root
   from tree_path
@@ -276,9 +266,9 @@ create view tree_root as
   having count(above) = 1;
 
 
------------------------------------------------------------
--- outlines (collapsed/expand view of a particular tree)
------------------------------------------------------------
+-------------------------------------------------------
+-- -- outlines (collapsed/expanded view of a tree)
+-------------------------------------------------------
 create table outline_master (
   olid integer primary key,
   tree  integer references trees );
@@ -293,6 +283,16 @@ create view outline_hidden as
   select olid, below as hide from outline_collapse oc
   inner join tree_path tp on oc.collapse=tp.above
   where tp.steps <> 0;
+
+--
+create view outline as
+  select olid, nid, tw.depth, tw.kind, tw.node,
+    exists(select collapse from outline_collapse oc
+           where oc.olid=om.olid and collapse=nid) as collapsed,
+    exists(select hide from outline_hidden oh
+           where oh.olid=om.olid and hide=nid) as hidden,
+    exists(select leaf from tree_leaf where leaf=nid) as leaf
+  from outline_master om natural join tree_walk tw;
 
 
 -----------------------------------------------------------
