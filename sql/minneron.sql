@@ -1,60 +1,53 @@
--- these three tables should be enough to track basic outlines.
-
 ------------------------------------------------------------------
 -- basic data type
 ------------------------------------------------------------------
-
-create table kind (
-  knd integer primary key,
-  foreign key (knd) references node (nid)
-);
-
 create table node (
   nid integer primary key,
   knd integer references kind,
   val, -- (can be any of the sqlite primitive types)
-  foreign key(knd) references kind deferrable initially deferred
-);
+  foreign key(knd) references kind deferrable initially deferred );
 
--- built-in types and nodes all have non-positive primary keys
+create table edge (
+  eid integer primary key,
+  sub integer references node,
+  rel integer references node,
+  obj integer references node,
+  seq integer,
+  began datetime,
+  ended datetime );
+
+create view facts as
+  select eid,
+    s.knd as subknd, s.nid as subnid, s.val as sub,
+    r.knd as relknd, r.nid as relnid, r.val as rel,
+    o.knd as objknd, o.nid as objnid, o.val as obj
+  from edge, node as s, node as r, node as o
+  where edge.sub = s.nid
+    and edge.rel = r.nid
+    and edge.obj = o.nid;
+
+
+ -- type system. system nodes have keys <= 0
+create table kind (
+  knd integer primary key,
+  foreign key (knd) references node (nid) );
 begin;
   insert into node (nid, knd, val) values
      -- meta stuff --
-     (   0, -2, 'null'),
-     (  -1, -1, 'kind'),
-     (  -2, -1, 'void'),
+     (0, -2, 'null'), (-1, -1, 'kind'), (-2, -1, 'void'),
      -- primitive types --
-     (  -3, -1, 'Str'),
-     (  -4, -1, 'Int'),
-     (  -5, -1, 'Num'),
-     (  -6, -1, 'Set'),
+     (-3, -1, 'Str'), (-4, -1, 'Int'), (-5, -1, 'Num'),
+     (-6, -1, 'Set'),
      -- compound types --
-     (  -7, -1, 'Tuple'),
-     (  -8, -1, 'List'),
-     (  -9, -1, 'Tree'),
-     ( -10, -1, 'Grid'),
-     ( -11, -1, 'Dict'),
+     (-7, -1, 'Tuple'), (-8, -1, 'List'), (-9, -1, 'Tree'),
+     (-10, -1, 'Grid'), (-11, -1, 'Dict'),
      -- grammar combinators --
-     (-100, -1, 'Grammar'),
-     (-101, -1, 'nul' ),
-     (-102, -1, 'any' ),
-     (-103, -1, 'lit' ),
-     (-104, -1, 'alt' ),
-     (-105, -1, 'seq' ),
-     (-106, -1, 'rep' ),
-     (-107, -1, 'neg' ),
-     (-108, -1, 'opt' ),
-     (-109, -1, 'orp' ),
-     (-110, -1, 'def' ),
-     (-111, -1, 'act' ),
-     (-112, -1, 'tok' ),
-     (-113, -1, 'skip'),
-     (-114, -1, 'node'),
-     (-115, -1, 'hide'),
-     (-116, -1, 'lift'),
-     (-117, -1, 'virt');
-commit;
-
+     (-100, -1, 'Grammar'), (-101, -1, 'nul' ), (-102, -1, 'any' ),
+     (-103, -1, 'lit' ), (-104, -1, 'alt' ), (-105, -1, 'seq' ),
+     (-106, -1, 'rep' ), (-107, -1, 'neg' ), (-108, -1, 'opt' ),
+     (-109, -1, 'orp' ), (-110, -1, 'def' ), (-111, -1, 'act' ),
+     (-112, -1, 'tok' ), (-113, -1, 'skip'), (-114, -1, 'node'),
+     (-115, -1, 'hide'), (-116, -1, 'lift'), (-117, -1, 'virt');
 
 create view kinds as
   select nid as knd, val as kind from node where nid in kind;
@@ -65,38 +58,33 @@ create trigger new_kind instead of insert on kinds
     insert into kind values(last_insert_rowid());
   end;
 
--- TODO: auto-maintain the kind table with a trigger
-replace into kind (knd)
+replace into kind (knd) -- TODO: auto-maintain with a trigger
   select nid from node where knd=-1;
 
-pragma foreign_keys=1;
+commit; pragma foreign_keys=1;
+
+-----------------------------------------------------------
+-- trees
+-----------------------------------------------------------
+create table trees ( tree primary key );
 
-
-create table trees (
-  tree primary key
-);
-
--- tree_data contains the core data for ordered trees.
 create table tree_data (
   tree   integer references trees,
   parent integer references node,
   child  integer references node,
   seq    integer );
 
--- tree_path contains automatically generated information
--- about each node's full subtree.
-create table tree_path (
+create table tree_path ( -- auto-generated subtree information
   tree   integer references trees,
   above  integer references node,
   below  integer references node,
-  steps  integer not null default 0
-);
+  steps  integer not null default 0 );
 
-
--- this is used by tree_del_node
-create table flags (
-  flag text primary key
-);
+-- temp tables (sqlite prohibits create/drop inside a trigger)
+create table subtree (nid integer);
+create table flags ( flag text primary key );
+
+-- tree triggers : insert/update
 
 create trigger tree_add_node after insert on tree_data
   begin
@@ -111,10 +99,19 @@ create trigger tree_add_node after insert on tree_data
           and tree = new.tree;
   end;
 
--- i would have preferred to have this get created and
--- destroyed inside the triggers, but sqlite doesn't
--- allow create/drop statements inside triggers.
-create table subtree (nid integer);
+create trigger tree_prevent_child_mod before update of child on tree_data
+  begin
+    select raise (abort,
+      'update of tree_data.child prohibited. delete and re-add instead.');
+  end;
+
+create trigger tree_prevent_tree_mod before update of tree on tree_data
+  begin
+    select raise (abort,
+      'update of tree_data.tree prohibited. delete and re-add instead.');
+  end;
+
+-- tree triggers : delete
 
 create trigger tree_del_node after delete on tree_data
   when not exists(select * from flags
@@ -148,38 +145,27 @@ create trigger tree_del_node after delete on tree_data
     delete from flags where flag = 'recursive-tree-delete';
     delete from subtree;
   end;
-
-create trigger tree_prevent_child_mod before update of child on tree_data
-  begin
-    select raise (abort,
-      'update of tree_data.child prohibited. delete and re-add instead.');
-  end;
-
-create trigger tree_prevent_tree_mod before update of tree on tree_data
-  begin
-    select raise (abort,
-      'update of tree_data.tree prohibited. delete and re-add instead.');
-  end;
+
+-- tree triggers : moving nodes
 
 create trigger tree_move_node after update of parent on tree_data
-  when new.parent is not null
-  begin
-    -- this technique is derived from:
-    --       http://jdobbie.blogspot.com/2009/07/closure-trees.html
-    --   and http://www.mysqlperformanceblog.com/2011/02/14/moving-subtrees-in-closure-table/
-    -- but adapted for sqlite, which seems to have a more flexible syntax than mysql.
+  when new.parent is not null begin
+ -- techniques adapted from :
+ --  http://jdobbie.blogspot.com/2009/07/closure-trees.html and
+ --  www.mysqlperformanceblog.com/2011/02/14/moving-subtrees-in-closure-table/
+
     delete from subtree;
     insert into subtree
       select below from tree_path
       where tree=old.tree and above=old.child;
 
-    -- first we delete any 'old' ancestors for our subtree:
+    -- first delete any 'old' ancestors for our subtree:
     delete from tree_path
       where tree = old.tree
         and above in (select below from subtree)
         and below not in (select below from subtree);
 
-    -- now, create some new ancestors in their place:
+    -- create new ancestors in their place:
     insert into tree_path (above, below, steps)
     select up.above,
            dn.below,
@@ -193,19 +179,18 @@ create trigger tree_move_node after update of parent on tree_data
      -- clean up:
      delete from subtree;
   end;
-
--- A view that shows the 'breadcrumb trail' for a path.
--- this also sorts the results in the correct order for
--- performing a depth-first walk of the tree.
+
+-- tree_crumbs shows breadcrumb trail for a path.
+-- also sorts results in depth-first walk order.
 --
--- !! if your tree has nodes with more than 1000 child
+-- !! if your tree has nodes with more than 10000 child
 --    nodes, you will need to change the call to substr()
 --    to include more digits, or the nodes will not be
 --    sorted correctly.
 create view tree_crumbs as
   select tree, target, group_concat(crumb, ':') as crumbs
   from (
-    select tp.tree, tp.below as target, substr('0000'||seq, -3) as crumb
+    select tp.tree, tp.below as target, substr('00000'||seq, -4) as crumb
     from tree_path tp
       left join tree_data td on (tp.tree=td.tree and tp.above=td.child)
       left join node n on (above=n.nid)
@@ -217,7 +202,7 @@ create view tree_depth as
   select tree, below as nid, max(steps) as depth
   from tree_path
   group by tree, below;
-
+
 -- this combines tree_crumbs with depth, node and type data
 -- so you can just select from this table and get
 -- everything you need for a walk of the tree.
@@ -247,16 +232,17 @@ create view tree_root as
   group by tree, below
   having count(above) = 1;
 
-
+
+-----------------------------------------------------------
+-- outlines (extend trees with collapse/expand ability)
+-----------------------------------------------------------
 create table outline_master (
   olid integer primary key,
-  tree  integer references trees
-);
+  tree  integer references trees );
 
 create table outline_collapse (
   olid integer references outline_master,
-  collapse integer references node
-);
+  collapse integer references node );
 
 create view outline_hidden as
   select olid, below as hide from outline_collapse oc
@@ -272,8 +258,7 @@ create view outline as
     exists(select leaf from tree_leaf where leaf=nid) as leaf
   from outline_master om natural join tree_walk tw;
 
-
-
+
 -----------------------------------------------------------
 -- grammar type system
 -----------------------------------------------------------
@@ -309,54 +294,27 @@ insert into tree_data (tree, parent, child, seq) values
   (  -1,   -100,   -115,  15),    -- hide
   (  -1,   -100,   -116,  16),    -- lift
   (  -1,   -100,   -117,  17);    -- virt
-
+
 ------------------------------------------------------
--- amoeba-style graph database
-------------------------------------------------------
-create table edge (
-  eid integer primary key,
-  sub integer references node,
-  rel integer references node,
-  obj integer references node,
-  seq integer,
-  began datetime,
-  ended datetime
-);
-
-create view facts as
-  select eid,
-    s.knd as subknd, s.nid as subnid, s.val as sub,
-    r.knd as relknd, r.nid as relnid, r.val as rel,
-    o.knd as objknd, o.nid as objnid, o.val as obj
-  from edge, node as s, node as r, node as o
-  where edge.sub = s.nid
-    and edge.rel = r.nid
-    and edge.obj = o.nid;
-
-
-------------------------------------------------------
--- arbitrary data structures
+-- support for arbitrary data structures
 ------------------------------------------------------
 create table list (
   lid integer references node,
   nid integer references node,
-  seq integer
-);
+  seq integer );
 
 create table dict (
   did    integer references node,
   keynid integer references node,
-  valnid integer references node
-);
+  valnid integer references node );
 
 create table grid (
   nid integer references node,
   knd integer references kind,
   x   integer,
   y   integer,
-  val integer
-);
-
+  val integer );
+
 ------------------------------------------------------------------
 -- help / docs table
 ------------------------------------------------------------------
