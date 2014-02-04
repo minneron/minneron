@@ -17,6 +17,7 @@ type
       _path  : string;
     public
       constructor Create( w, h : cardinal );
+      function  NewCursor:IRingCursor<string>;
     public
       procedure LoadFromFile(path:string);
       procedure SaveToFile(path:string);
@@ -57,6 +58,12 @@ constructor TBuffer.Create( w, h : cardinal );
     inherited Create( w, h );
     nodes := TTextNodes.Create;
   end;
+
+function TBuffer.NewCursor:IRingCursor<string>;
+  begin
+    result := nodes.MakeCursor
+  end;
+
 
 
 procedure TBuffer.LoadFromFile( path : string );
