@@ -13,20 +13,22 @@ create table if not exists edge (
   sub integer references node,
   rel integer references node,
   obj integer references node,
-  seq integer,
+  seq integer not null default 0,
   began datetime default 'now',
   ended datetime default null );
+--  unique (sub, rel, obj, seq) );
 
 --
 create view if not exists trip as
-  select eid,
+  select eid, seq,
     s.knd as subknd, s.nid as subnid, s.val as sub,
     r.knd as relknd, r.nid as relnid, r.val as rel,
     o.knd as objknd, o.nid as objnid, o.val as obj
   from edge, node as s, node as r, node as o
   where edge.sub = s.nid
     and edge.rel = r.nid
-    and edge.obj = o.nid;
+    and edge.obj = o.nid ;
+
 
 -- -- management of the triplestore  ---
 create table if not exists meta (
@@ -69,14 +71,20 @@ insert or ignore into node (nid, knd, val) values
    (-6, -1, 'Set'),
    -- compound types --
    (-7, -1, 'Tuple'), (-8, -1, 'List'), (-9, -1, 'Tree'),
-   (-10, -1, 'Grid'), (-11, -1, 'Dict'),
+   (-10, -1, 'Grid'), (-11, -1, 'Dict'), (-12, -1, 'Page'),
    -- grammar combinators --
    (-100, -1, 'Grammar'), (-101, -1, 'nul' ), (-102, -1, 'any' ),
    (-103, -1, 'lit' ), (-104, -1, 'alt' ), (-105, -1, 'seq' ),
    (-106, -1, 'rep' ), (-107, -1, 'neg' ), (-108, -1, 'opt' ),
    (-109, -1, 'orp' ), (-110, -1, 'def' ), (-111, -1, 'act' ),
    (-112, -1, 'tok' ), (-113, -1, 'skip'), (-114, -1, 'node'),
-   (-115, -1, 'hide'), (-116, -1, 'lift'), (-117, -1, 'virt');
+   (-115, -1, 'hide'), (-116, -1, 'lift'), (-117, -1, 'virt'),
+   -- edge types --
+   (-200, -1, 'edge'), (-201, -200, '::'), (-202, -200, ':='),
+   (-203, -200, './'), (-204, -200, '->'), (-205, -200, '<-'),
+   (-206, -200, '[wd]'),
+   -- home page --
+   (-1000, -12, 'home');
 --
 create view if not exists kinds as
   select nid as knd, val as kind from node where nid in kind;
@@ -302,7 +310,7 @@ create view if not exists outline as
 -- grammar type system
 -----------------------------------------------------------
 --
-insert or ignore into trees values (-1);              -- kinds
+insert or ignore into trees values (-1),(-12),(-1000); -- kinds, pages, home
 --
 insert or ignore into outline_master values (-1,-1);
 --
@@ -336,6 +344,29 @@ insert or ignore into tree_data (tree, parent, child, seq) values
   (  -1,   -100,   -115,  15),    -- hide
   (  -1,   -100,   -116,  16),    -- lift
   (  -1,   -100,   -117,  17);    -- virt
+
+-----------------------------------------------------------
+-- pages
+-----------------------------------------------------------
+--
+insert or ignore into node (nid, knd, val)
+  values (-1001, -3, 'hello'), (-1002, -3, 'world');
+--
+create view if not exists init as select '' as step;
+--
+create trigger if not exists init0 instead of insert on init
+ when new.step=0
+   and not exists(select * from trip where sub='home' and rel='[wd]')
+ begin
+   insert into trip (sub, rel, obj, seq)
+     select 'home', '[wd]', obj, seq
+     from (select  0 as seq, 'hello' as obj
+     union select  1,        'world');
+ end;
+--
+insert into init(step) values (0);
+--
+drop view init;
 
 ------------------------------------------------------
 -- support for arbitrary data structures

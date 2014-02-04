@@ -14,12 +14,6 @@ procedure setup;
     ndk := undk.open(':memory:')
   end;
 
-procedure test_add;
-  begin
-    chk.equal(ndk.e('a','b','c').eid, 1);
-    chk.equal(ndk.e('a','b','c').eid, 2);
-  end;
-
 procedure test_edge;
   begin
     ndk.e('a', 'b', 'c');
@@ -32,11 +26,15 @@ procedure test_edge;
   end;
 
 procedure test_query;
+  var builtin_count : integer;
   begin
-    ndk.e('a','b','c');
-    ndk.e('x','y','z');
     edges := ndk.q('~','~','~');
-    chk.equal(2, length(edges));
+    builtin_count := length(edges);
+    ndk.e('a','test-query','c');
+    ndk.e('x','test-query','z');
+    edges := ndk.q('~','~','~');
+    chk.equal(2, length(edges)-builtin_count);
+    edges := ndk.q('~','test-query','~');
     chk.equal('a', edges[0].sub.s);
     chk.equal('z', edges[1].obj.s);
   end;
