@@ -47,7 +47,7 @@ min: *.pas
 run: min
 	./min hello.min
 
-tok: tok.pas
+tok: tok.pas minsql
 	$(FPC) tok.pas
 	$(GEN)/tok
 
