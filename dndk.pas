@@ -4,7 +4,7 @@ unit dndk; interface type
   INode=interface; IEdge=interface; ICell=interface;
   TEdges = array of IEdge;
   IBase	= interface
-    function e(sub, rel, obj : string) : IEdge;   // store edge
+    function e(sub, rel, obj : string; seq:integer=0) : IEdge;   // store edge
     function f(eid : integer) : IEdge;            // fetch edge
     function q(sub,rel,obj : string) : TEdges;    // query edges
     function w(sub,rel,obj : string) : TEdges;    // write edges (to debug)
@@ -36,6 +36,9 @@ unit dndk; interface type
     function sub : ICell;                         // subject
     function rel : ICell;                         // relation
     function obj : ICell;                         // object
+    function GetSeq : integer;                    // sequence
+    procedure SetSeq(val : integer);
+    property seq : integer read GetSeq write SetSeq;
   end;
 implementation
 end.

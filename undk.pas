@@ -1,10 +1,8 @@
 {$i xpc.inc}{$mode delphi}{$H+}
 unit undk;
-interface uses xpc, dndk;
+interface uses xpc, dndk, classes, udb, sysutils;
 
   function open(path : string) : dndk.IBase;
-
-implementation uses classes, udb, sysutils;
 
 type
 
@@ -13,7 +11,7 @@ type
       _dbc : udb.TDatabase;
     public
       constructor New(ndkPath : string);
-      function e(sub, rel, obj : string) : IEdge;   // store edge
+      function e(sub, rel, obj : string; seq:integer=0) : IEdge;   // store edge
       function f(eid : integer) : IEdge;            // fetch edge
       function q(sub,rel,obj : string) : TEdges;    // query edges
       function w(sub,rel,obj : string) : TEdges;    // write edges (to debug)
@@ -45,16 +43,18 @@ type
 
   TEdge = class (TBase, IEdge)
     protected
-      _eid : integer;
+      _eid, _seq : integer;
       _sub, _rel, _obj : string;
     public
-      constructor New(aBase: IBase; aEid : integer; aSub, aRel, aObj : string);
+      constructor New(aBase: IBase; aEid,aSeq : integer; aSub, aRel, aObj : string);
       function eid : integer;
       function sub : ICell;
       function rel : ICell;
       function obj : ICell;
+      function GetSeq : integer;
+      procedure SetSeq(val : integer);
     end;
-
+
   TNode = class (TBase, INode)
     protected
       _nid : integer; _key : string;
@@ -69,6 +69,8 @@ type
       function q1(s : string) : ICell;
       property any[s : string] : ICell  read q1; default;
     end;
+
+implementation
 
 {-- TCell --}
 
@@ -108,9 +110,9 @@ constructor TBase.New(aBase: IBase);
 
 {-- TEdge --}
 
-constructor TEdge.New(aBase: IBase; aEid : integer; aSub, aRel, aObj : string);
+constructor TEdge.New(aBase: IBase; aEid, aSeq : integer; aSub, aRel, aObj : string);
   begin
-    _eid := aEid; _sub := aSub; _rel := aRel; _obj := aObj;
+    _eid := aEid; _seq := aSeq; _sub := aSub; _rel := aRel; _obj := aObj;
     inherited New(aBase)
   end;
 
@@ -119,21 +121,21 @@ function TEdge.eid : integer;
     result := _eid
   end;
 
-function TEdge.sub : ICell;
+function TEdge.sub : ICell; begin result := _base.v(_sub) end;
+function TEdge.rel : ICell; begin result := _base.v(_rel) end;
+function TEdge.obj : ICell; begin result := _base.v(_obj) end;
+
+function TEdge.GetSeq : integer;
   begin
-    result := _base.v(_sub)
+    result := _seq
   end;
 
-function TEdge.rel : ICell;
+procedure TEdge.SetSeq( val : integer );
   begin
-    result := _base.v(_rel)
+    _seq := val;
+    with _base as TNodakRepo do
+      _dbc.RunSQL('update edge set seq=:seq where eid=:eid', [_seq, _eid]);
   end;
-
-function TEdge.obj : ICell;
-  begin
-    result := _base.v(_obj)
-  end;
-
 
 {-- TNode --}
 
@@ -172,23 +174,24 @@ constructor TNodakRepo.New(ndkPath : string);
     {$i min-sql2pas.inc}
   end;
 
-function TNodakRepo.e(sub, rel, obj : string) : IEdge;
+function TNodakRepo.e(sub, rel, obj : string; seq : integer=0) : IEdge;
   var rs : udb.TRecordset;
   begin
-    _dbc.RunSQL('insert into trip (sub, rel, obj) '
-                +'values (:sub, :rel, :obj)', [sub, rel, obj]);
+    _dbc.RunSQL('insert into trip (sub, rel, obj, seq) '
+		+'values (:sub, :rel, :obj, :seq)', [sub, rel, obj, seq]);
     rs := _dbc.Query('select v from meta where k=:k',['last_insert_rowid']);
-    result := TEdge.New(self,rs['v'], sub, rel, obj);
+    result := TEdge.New(self, rs['v'], seq, sub, rel, obj);
     rs.Free;
   end;
 
 function TNodakRepo.f(eid : integer) : IEdge;
   var rs : udb.TRecordset;
   begin
-    rs := _dbc.Query('select eid,sub,rel,obj from trip where eid=:eid',[eid]);
+    rs := _dbc.Query('select eid,sub,rel,obj,seq from trip where eid=:eid',[eid]);
     if rs.recordcount = 0 then
       raise Exception.Create('no edge with eid=' + IntToStr(eid));
-    result := TEdge.New(self, rs['eid'], rs['sub'], rs['rel'], rs['obj']);
+    result := TEdge.New(self, rs['eid'], rs['seq'],
+			rs['sub'], rs['rel'], rs['obj']);
     rs.Free;
   end;
 
@@ -200,17 +203,18 @@ function sqlEsc(s : string) : string;
 function TNodakRepo.q(sub,rel,obj : string) : TEdges;
   var sql : string = ''; rs : udb.TRecordSet; i : cardinal = 0;
   begin
-    sql := 'select eid, sub, rel, obj from trip';
+    sql := 'select eid, sub, rel, obj, seq from trip';
     if (sub <> '~') or (rel <> '~') or (obj <> '~') then sql += ' where (1=1)';
     if sub <> '~' then sql += ' and sub=' + sqlEsc(sub);
     if rel <> '~' then sql += ' and rel=' + sqlEsc(rel);
     if obj <> '~' then sql += ' and obj=' + sqlEsc(obj);
-    sql += ' order by eid';
+    sql += ' order by seq, eid';
     rs := _dbc.Query(sql,[]);
     SetLength(result, rs.RecordCount);
     while not rs.EOF do
       begin
-        result[i] := TEdge.New(self, rs['eid'], rs['sub'], rs['rel'], rs['obj']);
+	result[i] := TEdge.New(self, rs['eid'], rs['seq'],
+			       rs['sub'], rs['rel'], rs['obj']);
         rs.Next; i += 1;
       end;
     rs.Free;
