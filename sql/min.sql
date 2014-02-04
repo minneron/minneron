@@ -61,22 +61,22 @@ create table if not exists kind (
   knd integer primary key,
   foreign key (knd) references node (nid) );
 --
-  insert into node (nid, knd, val) values
-     -- meta stuff --
-     (0, -2, 'null'), (-1, -1, 'kind'), (-2, -1, 'void'),
-     -- primitive types --
-     (-3, -1, 'Str'), (-4, -1, 'Int'), (-5, -1, 'Num'),
-     (-6, -1, 'Set'),
-     -- compound types --
-     (-7, -1, 'Tuple'), (-8, -1, 'List'), (-9, -1, 'Tree'),
-     (-10, -1, 'Grid'), (-11, -1, 'Dict'),
-     -- grammar combinators --
-     (-100, -1, 'Grammar'), (-101, -1, 'nul' ), (-102, -1, 'any' ),
-     (-103, -1, 'lit' ), (-104, -1, 'alt' ), (-105, -1, 'seq' ),
-     (-106, -1, 'rep' ), (-107, -1, 'neg' ), (-108, -1, 'opt' ),
-     (-109, -1, 'orp' ), (-110, -1, 'def' ), (-111, -1, 'act' ),
-     (-112, -1, 'tok' ), (-113, -1, 'skip'), (-114, -1, 'node'),
-     (-115, -1, 'hide'), (-116, -1, 'lift'), (-117, -1, 'virt');
+insert or ignore into node (nid, knd, val) values
+   -- meta stuff --
+   (0, -2, 'null'), (-1, -1, 'kind'), (-2, -1, 'void'),
+   -- primitive types --
+   (-3, -1, 'Str'), (-4, -1, 'Int'), (-5, -1, 'Num'),
+   (-6, -1, 'Set'),
+   -- compound types --
+   (-7, -1, 'Tuple'), (-8, -1, 'List'), (-9, -1, 'Tree'),
+   (-10, -1, 'Grid'), (-11, -1, 'Dict'),
+   -- grammar combinators --
+   (-100, -1, 'Grammar'), (-101, -1, 'nul' ), (-102, -1, 'any' ),
+   (-103, -1, 'lit' ), (-104, -1, 'alt' ), (-105, -1, 'seq' ),
+   (-106, -1, 'rep' ), (-107, -1, 'neg' ), (-108, -1, 'opt' ),
+   (-109, -1, 'orp' ), (-110, -1, 'def' ), (-111, -1, 'act' ),
+   (-112, -1, 'tok' ), (-113, -1, 'skip'), (-114, -1, 'node'),
+   (-115, -1, 'hide'), (-116, -1, 'lift'), (-117, -1, 'virt');
 --
 create view if not exists kinds as
   select nid as knd, val as kind from node where nid in kind;
@@ -87,37 +87,37 @@ create trigger if not exists new_kind instead of insert on kinds
     insert into kind values(last_insert_rowid());
   end;
 --
-replace into kind (knd) -- TODO: auto-maintain with a trigger
+insert or ignore into kind (knd) -- TODO: auto-maintain with a trigger
   select nid from node where knd=-1;
 --
 pragma foreign_keys=1;
 
------------------------------------------------------------
+----------------------------------------------------------
 -- -- trees
 -----------------------------------------------------------
-create table trees ( tree primary key );
+create table if not exists trees ( tree primary key );
 
 --
-create table tree_data (
+create table if not exists tree_data (
   tree   integer references trees,
   parent integer references node,
   child  integer references node,
   seq    integer );
 
 --
-create table tree_path ( -- auto-generated subtree information
+create table if not exists tree_path ( -- auto-generated subtree information
   tree   integer references trees,
   above  integer references node,
   below  integer references node,
   steps  integer not null default 0 );
 
 -- -- temp tables (sqlite prohibits create/drop inside a trigger)
-create table subtree (nid integer);
-create table flags ( flag text primary key );
+create table if not exists subtree (nid integer);
+create table if not exists flags ( flag text primary key );
 
 -- -- tree triggers : insert/update
 
-create trigger tree_add_node after insert on tree_data
+create trigger if not exists tree_add_node after insert on tree_data
   begin
     insert into tree_path (tree, above, below, steps)
         -- create a new path to itself:
@@ -131,14 +131,16 @@ create trigger tree_add_node after insert on tree_data
   end;
 
 --
-create trigger tree_prevent_child_mod before update of child on tree_data
+create trigger if not exists tree_prevent_child_mod
+  before update of child on tree_data
   begin
     select raise (abort,
       'update of tree_data.child prohibited. delete and re-add instead.');
   end;
 
 --
-create trigger tree_prevent_tree_mod before update of tree on tree_data
+create trigger if not exists tree_prevent_tree_mod
+  before update of tree on tree_data
   begin
     select raise (abort,
       'update of tree_data.tree prohibited. delete and re-add instead.');
@@ -146,7 +148,7 @@ create trigger tree_prevent_tree_mod before update of tree on tree_data
 
 -- -- tree triggers : delete
 
-create trigger tree_del_node after delete on tree_data
+create trigger if not exists tree_del_node after delete on tree_data
   when not exists(select * from flags
                   where flag='recursive-tree-delete')
   begin
@@ -181,8 +183,9 @@ create trigger tree_del_node after delete on tree_data
 
 -- -- tree triggers : moving nodes
 
-create trigger tree_move_node after update of parent on tree_data
-  when new.parent is not null begin
+create trigger if not exists tree_move_node
+  after update of parent on tree_data when new.parent is not null
+  begin
  -- techniques adapted from :
  --  http://jdobbie.blogspot.com/2009/07/closure-trees.html and
  --  www.mysqlperformanceblog.com/2011/02/14/moving-subtrees-in-closure-table/
@@ -220,7 +223,7 @@ create trigger tree_move_node after update of parent on tree_data
 --    nodes, you will need to change the call to substr()
 --    to include more digits, or the nodes will not be
 --    sorted correctly.
-create view tree_crumbs as
+create view if not exists tree_crumbs as
   select tree, target, group_concat(crumb, ':') as crumbs
   from (
     select tp.tree, tp.below as target, substr('00000'||seq, -4) as crumb
@@ -231,15 +234,15 @@ create view tree_crumbs as
   group by tree, target;
 
 -- -- a view to give you the depth of any node
-create view tree_depth as
+create view if not exists tree_depth as
   select tree, below as nid, max(steps) as depth
   from tree_path
   group by tree, below;
 
--- -- this combines tree_crumbs with depth, node and 
--- type data so you can just select from this table and 
+-- -- this combines tree_crumbs with depth, node and
+-- type data so you can just select from this table and
 -- get everything you need for a walk of the tree.
-create view tree_walk as
+create view if not exists tree_walk as
   select tc.tree,
      k.nid as knd, k.val as kind,
      n.nid, n.val as node,
@@ -252,14 +255,14 @@ create view tree_walk as
   order by crumbs;
 
 -- -- a view to give you the leaves of a tree
-create view tree_leaf as
+create view if not exists tree_leaf as
   select tree, above as leaf
   from tree_path
   group by tree, above
   having count(below) = 1;
 
 -- -- and the 'roots' (or rather all top-level nodes)
-create view tree_root as
+create view if not exists tree_root as
   select tree, below as root
   from tree_path
   group by tree, below
@@ -269,23 +272,23 @@ create view tree_root as
 -------------------------------------------------------
 -- -- outlines (collapsed/expanded view of a tree)
 -------------------------------------------------------
-create table outline_master (
+create table if not exists outline_master (
   olid integer primary key,
   tree  integer references trees );
 
 --
-create table outline_collapse (
+create table if not exists outline_collapse (
   olid integer references outline_master,
   collapse integer references node );
 
 --
-create view outline_hidden as
+create view if not exists outline_hidden as
   select olid, below as hide from outline_collapse oc
   inner join tree_path tp on oc.collapse=tp.above
   where tp.steps <> 0;
 
 --
-create view outline as
+create view if not exists outline as
   select olid, nid, tw.depth, tw.kind, tw.node,
     exists(select collapse from outline_collapse oc
            where oc.olid=om.olid and collapse=nid) as collapsed,
@@ -299,11 +302,11 @@ create view outline as
 -- grammar type system
 -----------------------------------------------------------
 --
-insert into trees values (-1);              -- kinds
+insert or ignore into trees values (-1);              -- kinds
 --
-insert into outline_master values (-1,-1);
+insert or ignore into outline_master values (-1,-1);
 --
-insert into tree_data (tree, parent, child, seq) values
+insert or ignore into tree_data (tree, parent, child, seq) values
   (  -1,      0,     -1,   1), -- kind
   (  -1,     -1,     -2,   2), -- void
   (  -1,     -1,     -3,   3), -- Str
@@ -338,19 +341,19 @@ insert into tree_data (tree, parent, child, seq) values
 -- support for arbitrary data structures
 ------------------------------------------------------
 --
-create table list (
+create table if not exists list (
   lid integer references node,
   nid integer references node,
   seq integer );
 
 --
-create table dict (
+create table if not exists dict (
   did    integer references node,
   keynid integer references node,
   valnid integer references node );
 
 --
-create table grid (
+create table if not exists grid (
   nid integer references node,
   knd integer references kind,
   x   integer,
@@ -361,15 +364,15 @@ create table grid (
 -- help / docs table
 ------------------------------------------------------------------
 --
-create table db_meta (name string unique, purpose string);
+create table if not exists db_meta (name string unique, purpose string);
 --
-create view tables as
+create view if not exists tables as
   select master.name, master.type, meta.purpose
   from sqlite_master as master
     left natural join db_meta as meta
   where type in ('table', 'view');
 --
-insert into db_meta (name, purpose) values
+insert or ignore into db_meta (name, purpose) values
    ('db_meta', 'the table containing these descriptions'),
    ('edge', 'arbitrary relations between nodes'),
    ('flags', '(helper table used by triggers)'),
