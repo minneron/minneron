@@ -1,4 +1,4 @@
-{$mode objfpc}
+{$mode objfpc}{$i xpc.inc}
 program termviewdemo;
 uses umin, kvm, kbd, custapp;
 
