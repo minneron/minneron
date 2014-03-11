@@ -22,7 +22,7 @@ type
 procedure TMinApp.init;
   begin
     ed := TEditor.Create(self);
-    ed.x := 5; ed.y := 2; ed.h := ed.h div 2 + 1; ed.w := 64;
+    ed.x := 5; ed.y := 2; ed.h := ed.h div 2 + 1; ed.w := 75;
     b4 := TB4VM.Create(self);
     if ParamCount = 0 then fail( 'usage : min <filename>' )
     else if not ed.Load( ParamStr( 1 )) then
@@ -46,9 +46,9 @@ procedure TMinApp.step;
 
 procedure TMinApp.draw;
   begin
-    //fx.fillscreen($e819, '░'); //#$2591); //'░'
-    bg($e8); fg($13); fx.fillscreen('#!@#$%^&*(){}][/=+?-_;:');
-    fx.txtline(0, 1, kvm.xmax, 1, $43);
+    fx.fillscreen($e819, '░'); //#$2591); //'░'
+    //bg($e8); fg($13); fx.fillscreen('#!@#$%^&*(){}][/=+?-_;:');
+    fx.txtline(0, 0, kvm.xMax, 0, $43);
     ed.dirty := true;
   end;
 
