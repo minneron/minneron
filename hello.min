@@ -25,7 +25,7 @@ The current keybindings are similar to those in emacs and bash:
   ^S : save
   ^C : exit
 
-If you don't like these keybindings, you can edit them in |gmin.pas|w.
+You can edit these keybindings in |gmin.pas|w.
 
 (Sorry, no config file yet, but stay tuned!)
 
