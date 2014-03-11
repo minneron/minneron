@@ -1,6 +1,6 @@
-{$mode delphi}
+{$mode delphi}{$i xpc.inc}
 program impforth;
-uses uapp, ukm, uimpforth, ui, umin, cw, kvm,cli;
+uses xpc, uapp, ukm, uimpforth, ui, umin, cw, kvm,cli;
 
 type
   TForthApp = class (uapp.TCustomApp)
@@ -11,7 +11,7 @@ type
       procedure keys(km : ukm.TKeyMap); override;
       procedure step; override;
       procedure prompt;
-      procedure DelegateKey( ext : boolean; ch : char );
+      procedure DelegateKey( ext : boolean; ch : TChr );
       procedure OnCmdAccept( s :  string );
     end;
 
