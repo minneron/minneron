@@ -1,13 +1,16 @@
+// mnbuf : abstract multi-line text buffer for minneron
+//
+// Copyright © 2014 Michal J Wallace http://tangentstorm.com/
+// Available for use under the MIT license. See LICENSE.txt
+//
 {$mode delphi}{$i xpc.inc}{$H+}
 unit mnbuf;
 interface uses xpc, rings, tiles, sysutils, fs, classes;
 type
   token = string;
   anchor = TObject;
-
   EFileNotFound = class(Exception)
   end;
-
   TMessageEvent = procedure (sender: TObject; s:string) of object;
   TBuffer = class (TTextTile)
     private type

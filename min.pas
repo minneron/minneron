@@ -1,6 +1,6 @@
 { minneron
 ----------------------------------------------------------------
-Copyright (c) 2012 Michal J Wallace. All rights reserved.
+Copyright (c) 2014 Michal J Wallace. All rights reserved.
 ---------------------------------------------------------------}
 {$mode delphi}{$i xpc.inc}{$H+}
 program min;

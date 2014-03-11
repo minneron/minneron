@@ -1,3 +1,8 @@
+// umin : contains various components for minneron
+//
+// Copyright © 2014 Michal J Wallace http://tangentstorm.com/
+// Available for use under the MIT license. See LICENSE.txt
+//
 {$i xpc.inc}{$mode delphi}
 unit umin;
 interface

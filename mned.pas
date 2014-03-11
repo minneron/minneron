@@ -1,10 +1,13 @@
-{ editor widget for minneron }
+// mned : console mode text editor widget for minneron.
+//
+// Copyright © 2014 Michal J Wallace http://tangentstorm.com/
+// Available for use under the MIT license. See LICENSE.txt
 {$mode delphi}{$i xpc.inc}{$H+}
 unit mned;
 interface uses xpc, classes, fs, ustr, num, cw, ui, kvm, kbd, fx,
   tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld, cli, ukm,
   umin;
-
+
 type
   TEditor = class (TView)
     protected
@@ -141,8 +144,8 @@ procedure TEditor.Render( term : ITerm );
     begin
       cwrite(s + '|!k|%' );
     end;
-
-  begin { TEditor.draw }
+
+  begin { TEditor.Render }
     if dirty then
       begin
         dirty := false;
@@ -169,7 +172,7 @@ procedure TEditor.Render( term : ITerm );
         // ShowCursor;
       end;
   end;
-
+
 procedure TEditor.updatecamera;
   var screenline : word;
   begin
