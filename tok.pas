@@ -1,5 +1,5 @@
 { this is a token-centric editor. }
-{$i xpc.inc}{$mode delphi}
+{$mode delphiunicode}{$i xpc.inc}
 program tok;
 uses xpc, uapp, mned, ukm, utok, ui, kvm, ug2d, uww, num,
      dndk, undk, udb, udc, umin, mnbuf, classes, cw, cli;
