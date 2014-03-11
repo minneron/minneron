@@ -136,8 +136,8 @@ procedure TEditor.Render( term : ITerm );
       with self.led do begin
 	x := term.wherex - self.x;
 	y := term.wherey - self.y;
-        tcol := $080f;
-	dlen := self.w - gutw;
+	tcol := $080f; acol := $0800; // text/arrows
+	dlen := self.w - gutw - 1; // 1 extra for the '»'
       end;
     end;
 
