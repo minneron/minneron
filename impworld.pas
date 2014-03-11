@@ -32,7 +32,7 @@ type
     property alive:boolean read GetAlive;
     procedure Halt;
     procedure Draw;
-    function ToString : String;
+    function ToString : TStr;
   end;
   IGroup = interface (IActor)
     procedure Add( child : IActor );
@@ -67,7 +67,7 @@ type
 
   TSymbol = class(TTagged)
     public
-      name : string[32];
+      name : TStr;
     end;
 
   TToken = class(TTagged)
@@ -125,7 +125,7 @@ type
     function GetExists : boolean;
     function GetActive : boolean;
     function GetAlive : boolean;
-    function ToString : string; override;
+    function ToString : TStr; reintroduce;
   end;
 
   TGroup = class (TActor, IGroup)
@@ -152,7 +152,7 @@ type
     constructor Create;
     procedure Draw; override;
     function Send( msg : IMessage ):boolean; override;
-    function OnKeyPress( ch :  char ):boolean; virtual;
+    function OnKeyPress( ch : TChr ):boolean; virtual;
   end;
 
   TWorld = class (TMorph)
@@ -300,7 +300,7 @@ function TMorph.Send( msg : IMessage ):boolean;
       end;
   end; { TMorph.Send }
 
-function TMorph.OnKeyPress( ch : char ):boolean;
+function TMorph.OnKeyPress( ch : TChr ):boolean;
   begin
     result := false
   end;
@@ -310,10 +310,10 @@ function TMorph.OnKeyPress( ch : char ):boolean;
 type
   TClockMorph = class ( TMorph )
     dirty : boolean;
-    color, last, text : string;
+    color, last, text : TStr;
     constructor Create;
     procedure Draw; override;
-    function ToString:string; override;
+    function ToString:TStr; reintroduce;
   end;
 
 constructor TClockMorph.Create;
@@ -323,9 +323,9 @@ constructor TClockMorph.Create;
     dirty := true;
   end;
 
-function TClockMorph.ToString: string;
+function TClockMorph.ToString: TStr;
   begin
-    result := FormatDateTime('MM.DD.YY HH:mm', Now);
+    result := Utf8Decode(FormatDateTime('MM.DD.YY HH:mm', Now));
   end;
 
 procedure TClockMorph.Draw;
@@ -424,14 +424,14 @@ type
       nextdict : TDict;
       latest   : TEntry;
       constructor Create;
-      procedure Define( name : string; value : TObject);
-      function Lookup( s : string; var item : TObject ): boolean;
+      procedure Define( name : TStr; value : TObject);
+      function Lookup( s : TStr; var item : TObject ): boolean;
     end;
 
   TEntry = class
     public
       prev : TEntry;
-      name : string[32];
+      name : TStr;
       item : TObject;
     end;
 
@@ -441,7 +441,7 @@ constructor TDict.Create;
     latest := nil;
   end;
 
-procedure TDict.Define( name: string; value : TObject);
+procedure TDict.Define( name: TStr; value : TObject);
   var en : TEntry;
   begin
     en := TEntry.Create;
@@ -451,7 +451,7 @@ procedure TDict.Define( name: string; value : TObject);
     latest := en;
   end;
 
-function TDict.Lookup( s : string; var item : TObject): boolean;
+function TDict.Lookup( s : TStr; var item : TObject): boolean;
   var en : TEntry; found : boolean;
   begin
     en := latest;
@@ -473,13 +473,13 @@ function TDict.Lookup( s : string; var item : TObject): boolean;
 type
   TShellMorph = class( TMorph )
     curpos : byte;
-    cmdstr : string;
+    cmdstr : TStr;
     clock  : TClockMorph;
     words  : TDict;
     constructor Create;
-    procedure Invoke( cmd : string );
+    procedure Invoke( cmd : TStr );
     procedure Clear;
-    function OnKeyPress( ch : char ):boolean; override;
+    function OnKeyPress( ch : TChr ):boolean; override;
     procedure Draw; override;
     destructor Destroy; override;
   end;
@@ -494,7 +494,7 @@ constructor TShellMorph.Create;
     words := TDIct.Create;
   end;
 
-procedure TShellMorph.invoke( cmd : string );
+procedure TShellMorph.invoke( cmd : TStr );
   var o : TObject;
   begin
     if words.Lookup(cmd, o) then
@@ -518,23 +518,19 @@ procedure TShellMorph.Clear;
     curpos := 1;
   end;
 
-function TShellMorph.OnKeyPress( ch : char ) : boolean;
+function TShellMorph.OnKeyPress( ch : TChr ) : boolean;
   begin
     result := true;
     case ch of
       ^C : _alive := false;
       ^H : if length(cmdstr) > 0 then
-           begin
-             SetLength(cmdstr, length(cmdstr)-1);
-             dec(curpos);
-           end
-           else pass;
-      ^M : begin
-             self.Invoke(cmdstr); self.Clear
-           end;
+             begin SetLength(cmdstr, length(cmdstr)-1);
+               dec(curpos);
+	     end
+           else ok;
+      ^M : begin self.Invoke(cmdstr); self.Clear end;
       else
-        cmdstr := cmdstr + ch;
-        inc(curpos)
+        cmdstr := cmdstr + ch; inc(curpos)
     end
   end;
 
@@ -556,7 +552,7 @@ destructor TShellMorph.Destroy;
 
 
 procedure HandleKeys;
-  var ch : char; msg:IMessage;
+  var ch : TChr; msg:IMessage;
   begin
     // TODO: without this next line (at least on freebsd)
     // it won't readkey. why not!?!
@@ -567,7 +563,7 @@ procedure HandleKeys;
       else
         msg := TEvent.Create(evt_keych, ch);
         if assigned(focus) and not focus.send(msg) then
-          pass; {--  TODO: global keymap --}
+          ok; {--  TODO: global keymap --}
       end; { case }
   end;
 

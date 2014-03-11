@@ -154,7 +154,7 @@ begin
       else if rs['collapsed'] then sigil := '+'
       else sigil := '-';
       { draw visible nodes }
-      if rs['hidden']=1 then pass
+      if rs['hidden']=1 then ok
       else begin
         if _cur.AtMark then bg('b') else bg('k'); gotoxy(0,count);
         { draw the outline controls }

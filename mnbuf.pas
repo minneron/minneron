@@ -3,40 +3,39 @@
 // Copyright © 2014 Michal J Wallace http://tangentstorm.com/
 // Available for use under the MIT license. See LICENSE.txt
 //
-{$mode delphi}{$i xpc.inc}{$H+}
+{$mode delphiunicode}{$i xpc.inc}{$H+}
 unit mnbuf;
 interface uses xpc, rings, tiles, sysutils, fs, classes;
 type
-  token = string;
+  token = TStr;
   anchor = TObject;
   EFileNotFound = class(Exception)
   end;
-  TMessageEvent = procedure (sender: TObject; s:string) of object;
+  TMessageEvent = procedure (sender: TObject; s:TStr) of object;
   TBuffer = class (TTextTile)
     private type
-      TTextNodes = GRing<string>;
+      TTextNodes = GRing<TStr>;
     private
       nodes  : TTextNodes;
-      _path  : string;
     public
       constructor Create( w, h : cardinal );
-      function  NewCursor:IRingCursor<string>;
+      function  NewCursor:IRingCursor<TStr>;
     public
-      procedure LoadFromFile(path:string);
-      procedure SaveToFile(path:string);
+      procedure LoadFromFile(path:TStr);
+      procedure SaveToFile(path:TStr);
       procedure LoadFromStrings( strings : TStrings );
       function ToStrings : TStrings;
-      function ToString : string; override;
+      function ToString : TStr; reintroduce;
     public
       procedure Clear;
       function  GetLength : cardinal; override;
-      function  GetLine(i:cardinal) : string; override;
-      procedure SetLine(i:cardinal; s:string); override;
-      procedure InsLine(i:cardinal; s:string); override;
-      procedure AddLine(s:string); override;
+      function  GetLine(i:cardinal) : TStr; override;
+      procedure SetLine(i:cardinal; s:TStr); override;
+      procedure InsLine(i:cardinal; s:TStr); override;
+      procedure AddLine(s:TStr); override;
       procedure DelLine(i:cardinal); override;
       property length : cardinal read GetLength;
-      property lines[i:cardinal]:string
+      property lines[i:cardinal]:TStr
         read GetLine write SetLine; default;
       property strings : TStrings read ToStrings write LoadFromStrings;
     end;
@@ -62,15 +61,15 @@ constructor TBuffer.Create( w, h : cardinal );
     nodes := TTextNodes.Create;
   end;
 
-function TBuffer.NewCursor:IRingCursor<string>;
+function TBuffer.NewCursor:IRingCursor<TStr>;
   begin
     result := nodes.MakeCursor
   end;
 
 
 
-procedure TBuffer.LoadFromFile( path : string );
-  var txt : text; line: string;
+procedure TBuffer.LoadFromFile( path : TStr );
+  var txt : text; line: TStr;
   begin
     if fs.exists( path ) then
       begin
@@ -83,10 +82,10 @@ procedure TBuffer.LoadFromFile( path : string );
         end;
         close( txt );
       end
-    else raise EFileNotFound.Create(path)
+    else raise EFileNotFound.Create(utf8encode(path))
   end;
 
-procedure TBuffer.SaveToFile( path : string );
+procedure TBuffer.SaveToFile( path : TStr );
   var txt: text; i : cardinal;
   begin
     assign( txt, path );
@@ -98,25 +97,26 @@ procedure TBuffer.SaveToFile( path : string );
 { TStrings conversion routines (.strings property) }
 
 procedure TBuffer.LoadFromStrings( strings : TStrings );
-  var line: string;
+  var line: ansistring;
   begin
-    for line in strings do self.AddLine(line);
+    for line in strings do self.AddLine(utf8decode(line));
   end;
 
 function TBuffer.ToStrings : TStrings;
   var i : cardinal;
   begin
     result := TStringList.Create;
-    if length > 0 then for i := 0 to self.length -1 do result.Add(self[i]);
+    if length > 0 then for i := 0 to self.length -1 do
+      result.Add(utf8encode(self[i]));
   end;
 
-function TBuffer.ToString : string;
+function TBuffer.ToString : TStr;
   var i, len : cardinal;
   begin
     len := self.length;
     if len > 0 then result := self[0] else result := '';
     if len > 1 then
-      for i := 1 to self.length -1 do appendstr(result, self[i]);
+      for i := 1 to self.length -1 do result += self[i];
   end;
 
 procedure TBuffer.Clear;
@@ -130,22 +130,22 @@ function TBuffer.GetLength : cardinal;
     result := nodes.Length;
   end;
 
-function TBuffer.GetLine(i:cardinal) : string;
+function TBuffer.GetLine(i:cardinal) : TStr;
   begin
     result := nodes[i];
   end;
 
-procedure TBuffer.SetLine(i:cardinal; s:string);
+procedure TBuffer.SetLine(i:cardinal; s:TStr);
   begin
     nodes[i] := s;
   end;
 
-procedure TBuffer.AddLine(s:string);
+procedure TBuffer.AddLine(s:TStr);
   begin
     nodes.append(s)
   end;
 
-procedure TBuffer.InsLine(i:cardinal; s:string);
+procedure TBuffer.InsLine(i:cardinal; s:TStr);
   begin
     nodes.InsertAt(i, s)
   end;

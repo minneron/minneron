@@ -14,7 +14,7 @@ implementation
   procedure EmitRandomChars;
   var x, y : byte;
   begin
-    x := kvm.maxX div 2 + 1
+    x := kvm.xMax div 2 + 1
          + round((random-0.5) * (random( kvm.Width )));
     { random * random will give a strong bias to top of screen }
     y := round(random * random * random( kvm.Width ));

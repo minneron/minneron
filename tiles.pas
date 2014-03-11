@@ -1,6 +1,6 @@
 { This unit sets up the base types and interfaces
   used in minneron's text display system }
-{$mode objfpc}{$h+}
+{$mode delphiunicode}{$h+}
 unit tiles;
 interface uses ug2d;
 

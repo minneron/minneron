@@ -25,10 +25,10 @@ type
       procedure AddDefaultKeys( km : TKeyMap );
       procedure DelegateKey( ext : Boolean; ch : char);
       function value : string;
+      procedure Render( term : ITerm) ; override;
     public {  morph interface (removing this) }
       done              : boolean;
       dirty             : boolean;
-      procedure Render( term : ITerm) ; override;
     public { cursor movement commands }
       procedure PrevLine;
       procedure NextLine;
@@ -111,22 +111,23 @@ procedure TEditor.SaveAs( path : string );
  { drawing routine }
 procedure TEditor.Render( term : ITerm );
   var ypos, line : cardinal;
+  const gutw = 3;
   procedure draw_curpos;
     begin
       cwritexy( 0, 0,
                '|!b' +
                '|B[|C' + flushrt( n2s( self.position ), 6, '.' ) +
                '|w/|c' + flushrt( n2s( self.buf.length ), 6, '.' ) +
-               '|B]|Y ' + self.status +
+	       '|B]|Y ' + cwpad(self.status, self.w - 15, ' ') +
                '|%' );
       self.status := '';
     end;
 
-  procedure draw_gutter( s : string );
+  procedure draw_gutter( num : cardinal );
     var color : char = 'c';
     begin
       if line = position then color := 'C';
-      cwritexy( 0, ypos, '|k|!' + color + s + '|!k|w' );
+      cwritexy( 0, ypos, '|k|!' + color + flushrt( n2s( num ), gutw, ' ' ));
     end;
 
   procedure PlaceEditor;
@@ -136,28 +137,23 @@ procedure TEditor.Render( term : ITerm );
 	x := term.wherex - self.x;
 	y := term.wherey - self.y;
         tcol := $080f;
-	dlen := self.w - x;
+	dlen := self.w - gutw;
       end;
     end;
 
   procedure draw_line(s:string);
     begin
-      cwrite(s + '|!k|%' );
+      cwrite(cwpad('|!k|w' + s + '|!k', self.w));
     end;
 
   begin { TEditor.Render }
     if dirty then
       begin
-        dirty := false;
-        HideCursor;
-        cwrite('|w|!b');
-        //todo  fillbox( 1, 1, kvm.maxX, kvm.maxY, $0F20 );
-        draw_curpos;
-        ypos := 1; // line 0 is for the status / cursor position
-        line := topline;
+        dirty := false; HideCursor; cwrite('|w|!b'); draw_curpos;
+	line := topline; ypos := 1; // line 0 is status bar
 	if buf.length > 0 then
 	  repeat
-	    draw_gutter( flushrt( n2s( line ), 3, ' ' ));
+	    draw_gutter( line );
 	    if line = position then PlaceEditor
 	    else draw_line(buf[line]);
 	    inc( ypos ); inc(line)
@@ -169,7 +165,7 @@ procedure TEditor.Render( term : ITerm );
           inc( ypos )
         end;
 	led.show;
-        // ShowCursor;
+        ShowCursor;
       end;
   end;
 

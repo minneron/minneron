@@ -2,7 +2,7 @@
 ----------------------------------------------------------------
 Copyright (c) 2014 Michal J Wallace. All rights reserved.
 ---------------------------------------------------------------}
-{$mode delphi}{$i xpc.inc}{$H+}
+{$mode delphiunicode}{$i xpc.inc}
 program min;
 uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd,
   impworld, umin, cli, ub4vm, ukm, uapp;
@@ -24,9 +24,9 @@ procedure TMinApp.init;
     ed := TEditor.Create(self);
     ed.x := 5; ed.y := 2; ed.h := ed.h div 2 + 1; ed.w := 64;
     b4 := TB4VM.Create(self);
-    if ParamCount = 0 then fail('usage : min <filename>')
+    if ParamCount = 0 then fail( 'usage : min <filename>' )
     else if not ed.Load( ParamStr( 1 )) then
-      fail('unable to load file: ' + paramstr( 1 ))
+      fail( utf8encode('unable to load file: ' + utf8decode(ansistring(paramstr( 1 )))))
     else ed.status := 'welcome to minneron.';
   end;
 
@@ -45,10 +45,12 @@ procedure TMinApp.step;
   end;
 
 procedure TMinApp.draw;
- begin
-   bg('k'); fg('K'); fillscreen('!@#$%^&*(){}][/=+?-_;:');
-   ed.dirty := true;
- end;
+  begin
+    //fx.fillscreen($e819, '░'); //#$2591); //'░'
+    bg($e8); fg($13); fx.fillscreen('#!@#$%^&*(){}][/=+?-_;:');
+    fx.txtline(0, 1, kvm.xmax, 1, $43);
+    ed.dirty := true;
+  end;
 
 begin
   impworld.world.manageKeyboard := false;

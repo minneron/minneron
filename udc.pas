@@ -1,18 +1,18 @@
-{$i xpc.inc}{$mode delphi}
+{$i xpc.inc}{$mode delphiunicode}
 unit udc;
 interface uses xpc, classes, sqldb, udb, num;
 type
   TDbCursor = class (TComponent) // TODO : ICursor
     protected
       _rs : udb.TRecordSet;
-      _kf : string;
+      _kf : TStr;
       _mk : integer; // can't really use bookmarks because they disappear on refresh :/
       _hr : boolean; // allow hiding rows?
-      _hf : string; // if so, use this field as a flag
+      _hf : TStr; // if so, use this field as a flag
       fMarkChanged : TNotifyEvent;
     public
-      constructor Create(aOwner : TComponent = Nil);
-      function Attach(rs : udb.TRecordSet; key : string) : TDbCursor;
+      constructor Create(aOwner : TComponent = Nil); override;
+      function Attach(rs : udb.TRecordSet; key : TStr) : TDbCursor;
       procedure ToTop;
       procedure ToEnd;
       function AtTop : boolean;
@@ -24,16 +24,16 @@ type
       procedure ToMark;
       procedure Toggle;
       procedure SetMark(id : integer);
-      procedure SetItem(key : string; value: variant);
-      function  GetItem(key : string): variant;
+      procedure SetItem(key : TStr; value: variant);
+      function  GetItem(key : TStr): variant;
    published
       property OnMarkChanged : TNotifyEvent read fMarkChanged write fMarkChanged;
       property RecordSet : udb.TRecordSet read _rs write _rs;
-      property KeyField : string  read _kf write _kf;
+      property KeyField : TStr  read _kf write _kf;
       property canHideRows : boolean  read _hr write _hr;
-      property hideFlag : string  read _hf write _hf;
+      property hideFlag : TStr  read _hf write _hf;
       property Mark : integer read _mk write SetMark;
-      property Item[ key : string ] : variant
+      property Item[ key : TStr ] : variant
          read GetItem write SetItem; default;
     end;
 
@@ -46,7 +46,7 @@ constructor TDbCursor.Create(aOwner : TComponent = Nil);
     inherited Create(aOwner);
   end;
 
-function TDbCursor.Attach(rs : TRecordSet;  key: string) : TDbCursor;
+function TDbCursor.Attach(rs : TRecordSet;  key: TStr) : TDbCursor;
   begin
     self.RecordSet := rs; self.KeyField := key; self.Mark := rs[key];
     result := self;
@@ -60,7 +60,7 @@ procedure TDbCursor.SetMark(id : integer );
 
 procedure TDbCursor.ToMark;
   begin
-    _rs.locate(keyField, _mk, [])
+    _rs.locate(utf8encode(keyField), _mk, [])
   end;
 
 procedure TDbCursor.ToTop;
@@ -108,18 +108,19 @@ function TDbCursor.AtMark : boolean;
   end;
 
 procedure TDbCursor.Toggle;
-  var olid, nid : integer; sql : string;
+  var olid, nid : integer; sql : TStr;
   begin
     ToMark;
     olid := _rs['olid'];
     nid  := _rs['nid'];
-    sql := _rs.sql.text;
+    sql := utf8decode(_rs.sql.text);
     if _rs['collapsed'] then
-      _rs.sql.text := 'delete from outline_collapse where olid=' + n2s(olid)
-        +  ' and collapse=' + n2s(nid)
+      _rs.sql.text := utf8encode(
+			'delete from outline_collapse where olid='
+			+ n2s(olid) + ' and collapse=' + n2s(nid))
     else
-      _rs.sql.text := 'insert into outline_collapse values (' + n2s(olid)
-        +   ' , ' + n2s(nid) + ')';
+      _rs.sql.text := utf8encode('insert into outline_collapse values ('
+				 + n2s(olid) +   ' , ' + n2s(nid) + ')');
     _rs.ExecSQL;
     // ! not sure why i have to cast this:
     TSQLTransaction(_rs.Transaction).Commit;
@@ -127,12 +128,12 @@ procedure TDbCursor.Toggle;
     SetMark(_mk); // MarkChanged;
   end;
 
-procedure TDbCursor.SetItem(key : string; value: variant);
+procedure TDbCursor.SetItem(key : TStr; value: variant);
   begin
     ToMark; _rs.Edit; _rs[key] := value; _rs.Post;
   end;
 
-function TDbCursor.GetItem(key : string): variant;
+function TDbCursor.GetItem(key : TStr): variant;
   begin
     ToMark; result := _rs[key];
   end;

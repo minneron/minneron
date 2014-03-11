@@ -41,7 +41,7 @@ type
     end;
 
   TB4TermView  = class( TView )
-    public
+    published
       vm : TB4VM;
       procedure Render(term : ITerm); override;
     end;
