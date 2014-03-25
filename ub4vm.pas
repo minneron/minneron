@@ -3,17 +3,13 @@ unit ub4vm;
 interface uses classes, arrays, umin, kvm;
 
 type
-
-  TInt32Array = GArray<Int32>;
-  TByteArray  = GArray<Byte>;
-
-  TStack = class
-    slots : TInt32Array;
-    count : byte;
-    procedure Push( val : longint );
-    function  Pop : longint;
-    function  TOS : longint;
-    function  NOS : longint;
+  TStack<T> = class
+    slots : GArray<T>;
+    count : uint32;
+    procedure Push( val : T );
+    function  Pop : T;
+    function  TOS : T;
+    function  NOS : T;
     procedure Swap;
     procedure Dup;
     procedure Over;
@@ -34,8 +30,8 @@ type
     public
       ibuf, obuf : string; { input/output buffers (255 chars) }
       ip, rp, wp : byte;
-      data, addr : TStack;
-      memory     : TByteArray;
+      data, addr : TStack<variant>;
+      memory     : GArray<variant>;
       procedure RunOp( op:OpCode );
       procedure Step;
     end;
@@ -49,32 +45,32 @@ type
 implementation
 
 { -- TStack -- }
-procedure TStack.Push( val : longint );
+procedure TStack<T>.Push( val : T );
   begin
     slots[count] := val; inc(count)
   end;
 
-function TStack.Pop : longint;
+function TStack<T>.Pop : T;
   begin
     Dec(count); Pop := slots[count];
   end;
 
-function TStack.TOS : longint; inline;
+function TStack<T>.TOS : T; inline;
   begin
     tos := slots[count-1]
   end;
 
-function TStack.NOS : longint; inline;
+function TStack<T>.NOS : T; inline;
   begin
     nos := slots[count-2]
   end;
 
-procedure TStack.Dup;
+procedure TStack<T>.Dup;
   begin
     Push(tos)
   end;
 
-procedure TStack.Swap;
+procedure TStack<T>.Swap;
   var tmp : longint;
   begin
     tmp := tos;
@@ -82,12 +78,12 @@ procedure TStack.Swap;
     slots[ count-2 ] := tmp;
   end;
 
-procedure TStack.Over;
+procedure TStack<T>.Over;
   begin
     Push(tos)
   end;
 
-procedure TStack.Rot;
+procedure TStack<T>.Rot;
   var tmp : longint;
   begin
     tmp := slots[count-3];
@@ -123,8 +119,8 @@ procedure TB4VM.RunOp( op:OpCode );
           push( pop div pop );
           push( addr.pop );
         end;
-      opInc : push(succ(pop));
-      opDec : push(pred(pop));
+      opInc : push(succ(uint32(pop)));
+      opDec : push(pred(int32(pop)));
       opShl : push(pop shl pop);
       opShr : push(pop shr pop);
       opCmp : begin
