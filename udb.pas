@@ -11,36 +11,45 @@ uses xpc, db, sqldb, sqlite3conn,
   classes; // for TStringList
 
 type
+  IDatabase = interface;
   TRecordSet = class (TSqlQuery)
-    constructor Create(dbc : TSqlConnection;  query : TStr); reintroduce;
-    function Execute(q : TStr) : TRecordSet;
-    function Open: TRecordSet; reintroduce;
-    function First: TRecordSet; reintroduce;
-    function GetItem( key : TStr ) : variant;
-    procedure SetItem( key : TStr; value : variant);
-    property items[key : TStr] : variant read GetItem write SetItem; default;
+    public
+      dbc : IDatabase;
+    published
+      constructor Create(adbc : TSqlConnection;  query : TStr); reintroduce;
+      function Execute(q : TStr) : TRecordSet;
+      function Open: TRecordSet; reintroduce;
+      function First: TRecordSet; reintroduce;
+      function GetItem( key : TStr ) : variant;
+      procedure SetItem( key : TStr; value : variant);
+      property items[key : TStr] : variant read GetItem write SetItem; default;
+    end;
+  IDatabase = interface
+    function Query(sql : string; args : array of variant) : TRecordSet;
+    procedure RunSQL(sql : string; args : array of variant);
   end;
-  TDatabase = class (TSqlite3Connection)
-  private
-    _trace : boolean;
-    function PrepRs(sql : TStr; args : array of variant ) : TRecordSet;
-  public
-    function Query(sql : TStr) : TRecordSet; overload;
-    function Query(sql : TStr; args : array of variant) : TRecordSet; overload;
-    procedure RunSQL(sql : TStr); overload;
-    procedure RunSQL(sql : TStr; args : array of variant); overload;
-    property trace : boolean read _trace write _trace;
-  end;
+  TDatabase = class (TSqlite3Connection, IDatabase)
+    private
+      _trace : boolean;
+      function PrepRs(sql : TStr; args : array of variant ) : TRecordSet;
+    public
+      function Query(sql : TStr) : TRecordSet; overload;
+      function Query(sql : TStr; args : array of variant) : TRecordSet; overload;
+      procedure RunSQL(sql : TStr); overload;
+      procedure RunSQL(sql : TStr; args : array of variant); overload;
+      property trace : boolean read _trace write _trace;
+    end;
+
   function connect(const path : TStr) : TDatabase;
 
 implementation
 
 //- - [ TRecordSet ]  - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-constructor TRecordSet.Create(dbc : TSQLConnection; query : TStr);
+constructor TRecordSet.Create(adbc : TSQLConnection; query : TStr);
   begin
-    inherited Create(dbc);
-    self.database := dbc;
+    inherited Create(adbc);
+    self.database := adbc;
     self.sql.text := utf8encode( query );
   end;
 
@@ -77,6 +86,7 @@ function TDatabase.PrepRs(sql : TStr; args : array of variant ) : TRecordSet;
   var c, i : cardinal;
   begin
     result := TRecordSet.Create(self, sql);
+    result.dbc := self;
     result.Transaction := self.Transaction;
     result.ParseSQL := true;
     c := result.params.count;
