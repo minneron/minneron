@@ -14,14 +14,16 @@ type
       dbc      : udb.TDatabase;
       view     : udv.TDbTreeGrid;
       typeMenu : udv.TDBMenu;
+      pageMenu : udv.TDBMenu;
       rsOutln  : udb.TRecordSet;
     public
-      procedure init; override;
+      procedure Init; override;
       procedure keys(km : TKeyMap); override;
       procedure ChooseType;
+      procedure ChoosePage;
       procedure Redraw;
       procedure OnCursorChange( Sender : TObject );
-      procedure OnTypeMenuSave(val:variant);
+      procedure OnChooseType(val:variant);
     end;
 
 
@@ -37,10 +39,20 @@ procedure TDbOutlnApp.init;
     curs.canHideRows := true; curs.hideFlag := 'hidden';
     curs.OnMarkChanged := self.OnCursorChange;
 
+    // TODO: eventually i'll build a little lazarus-like RAD thing
+    // to manage these components as data rather than code.
+    //
     typeMenu := TDBMenu.Create(self);
     typeMenu.rs := dbc.query('SELECT * FROM kinds ORDER BY kind');
     typeMenu.key := 'knd';
-    typeMenu.OnSave := self.OnTypeMenuSave;
+    typeMenu.OnSave := self.OnChooseType;
+    //
+    pageMenu := TDBMenu.Create(self);
+    pageMenu.rs := dbc.query(
+      'select nid, val as page from node natural join kinds where kind=:k',
+		     ['Page']);
+    pageMenu.key := 'nid';
+    // pageMenu.OnSave := self.OnChoosePage;
 
     view := TDbTreeGrid.Create(dbc);
     with view do
@@ -48,7 +60,7 @@ procedure TDbOutlnApp.init;
       end;
     hidecursor; self.redraw;
   end;
-
+
 procedure TDbOutlnApp.keys(km : TKeyMap);
   begin
     km.cmd[ ^P ] := curs.Prev;
@@ -60,6 +72,7 @@ procedure TDbOutlnApp.keys(km : TKeyMap);
     km.cmd[ ^C ] := self.Quit;
     km.cmd[ ^I ] := curs.Toggle;
     km.cmd[ ^T ] := self.ChooseType;
+    km.cmd[ ^O ] := self.ChoosePage;
     km.cmd[ ^L ] := self.Redraw;
   end;
 
@@ -81,7 +94,13 @@ procedure TDBOutLnApp.ChooseType;
     Redraw;
   end;
 
-procedure TDbOutlnApp.OnTypeMenuSave(val:variant);
+procedure TDBOutLnApp.ChoosePage;
+  begin
+    pageMenu.Choose;
+    Redraw;
+  end;
+
+procedure TDbOutlnApp.OnChooseType(val:variant);
   begin dbc.RunSQL(
     'UPDATE node SET knd=:knd WHERE nid=:nid', [val, curs['nid']]);
   end;
