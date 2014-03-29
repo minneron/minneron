@@ -89,3 +89,4 @@ lib/xpl/Makefile:
 	@git submodule update
 
 always: .PHONY
+.PHONY:
