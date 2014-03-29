@@ -4,19 +4,27 @@ uses xpc, cli, udb, udc, uapp, classes, kvm, cw, umin,
      ustr, db, sqldb, fx, ukm, kbd, num, undk, fs;
 
 type
+  TDBMenu = class (umin.TTermView)
+    public
+      rs : TRecordSet;
+      key: string;
+      OnSave : procedure (val:variant) of object;
+      procedure Choose(nid:Integer);
+    end;
   TDbOutlnApp  = class(uapp.TCustomApp)
     protected
       dbc  : udb.TDatabase;
       curs : udc.TDbCursor;
       view : TDbTreeGrid;
-      rsOutln,
-      rsKinds  : TRecordSet;
+      rsOutln : TRecordSet;
+      typeMenu : TDBMenu;
     public
       procedure init; override;
       procedure keys(km : TKeyMap); override;
       procedure ChooseType;
       procedure Redraw;
       procedure OnCursorChange( Sender : TObject );
+      procedure OnTypeMenuSave(val:variant);
     end;
 
 
@@ -27,10 +35,14 @@ procedure TDbOutlnApp.init;
     rsOutln := dbc.query(
       'SELECT olid, nid, kind, node, depth, collapsed, hidden, leaf '+
         'FROM outline');
-    rsKinds := dbc.query('SELECT * FROM kinds ORDER BY kind');
     curs := udc.TDbCursor.Create(dbc).Attach(rsOutln, 'nid');
     curs.canHideRows := true; curs.hideFlag := 'hidden';
     curs.OnMarkChanged := self.OnCursorChange;
+
+    typeMenu := TDBMenu.Create(self);
+    typeMenu.rs := dbc.query('SELECT * FROM kinds ORDER BY kind');
+    typeMenu.key := 'knd';
+    typeMenu.OnSave := self.OnTypeMenuSave;
 
     view := TDbTreeGrid.Create(dbc);
     with view do
@@ -80,52 +92,64 @@ function bytes(data : array of byte):tbytes;
   begin
     setlength(result, length(data));
     for i := 0 to high(data) do result[i]:=data[i];
-  end;
+  end; { bytes }
+
 procedure TDBOutLnApp.ChooseType;
-  var
-    {@loop} done:boolean=false; cancel:boolean = false; ch : char;
-      {@loop} _cr : TDbCursor;
-      {@draw} _rs : TRecordSet;
-      {@draw} _ws : array of byte;
-      {@draw} i : integer; f : TField;
-    {@save} q : TSqlQuery;
   begin
-    {+init} _rs := rsKinds.Open.First;
-            _cr := TDbCursor.Create(self).Attach(_rs, 'knd');
-    {-init} _ws := bytes([0, 16]);
-    {+loop}
-    repeat
-      {+draw} cwrite('|@0000|!K|W|$'); i := 0;
-      {=head} for f in _rs.fields do
-	        write(rfit(f.DisplayName, _ws[vinc(i)]));
-      {+body}   _rs.First; while not _rs.EOF do begin
-      {+line}   i:=0; cwriteln('|k');
-                if _cr.AtMark then bg('B') else bg('w');
-      {=each}   for f in _rs.fields do
-                  write(rfit(f.DisplayText, _ws[vinc(i)]));
-      {-line}   _rs.Next;
-      {-body} end;
-      {-draw} _cr.ToMark;
-      repeat until keypressed;
+    typeMenu.Choose(curs['nid']);
+    Redraw;
+  end;
+
+procedure TDbOutlnApp.OnTypeMenuSave(val:variant);
+  begin dbc.RunSQL(
+    'UPDATE node SET knd=:knd WHERE nid=:nid', [val, curs['nid']]);
+  end;
+
+
+procedure TDBMenu.Choose(nid : integer);
+  var
+    _rs : TRecordSet;    // the data to choose from
+    _cr : TDbCursor;     //
+    _ws : array of byte; // column widths
+    done:boolean=false; cancel:boolean = false;
+  procedure SetUp;
+    begin
+      _rs := rs.Open.First;
+      _cr := TDbCursor.Create(self).Attach(_rs, key);
+      _ws := bytes([0, 16]);
+    end;
+  procedure DrawMenu;
+    var i : integer; f : TField;
+    begin
+      cwrite('|@0000|!K|W|$'); i := 0;
+      for f in _rs.fields do write(rfit(f.DisplayName, _ws[vinc(i)]));
+      _rs.First;
+      while not _rs.EOF do
+        begin
+          i:=0; cwriteln('|k');
+          if _cr.AtMark then bg('B') else bg('w');
+          for f in _rs.fields do write(rfit(f.DisplayText, _ws[vinc(i)]));
+          _rs.Next;
+        end;
+      _cr.ToMark;
+    end; { DrawMenu }
+  procedure interact;
+    var ch : char;
+    begin repeat until keypressed;
       case readkey(ch) of
 	'n', ^N : _cr.Next;    ^M : done := true;
 	'p', ^P : _cr.Prev;    ^C: cancel := true;
         else cwritexy(15, 0, '|Gch: |g' +ch)
       end
-    until cancel or done;
-    {-loop}
-    {=free} _cr.RecordSet:=nil; _cr.Free; _rs:=nil;
-    {+save}
-    if not cancel then begin
-      q := TSQLQuery.Create(nil);
-      q.Database := dbc; q.Transaction := dbc.Transaction;
-      q.sql.text := 'UPDATE node SET knd=:knd WHERE nid=:nid';
-      q.ParamByName('knd').AsInteger := rsKinds['knd'];
-      q.ParamByName('nid').AsInteger := curs['nid'];
-      q.ExecSQL; dbc.Transaction.Commit;
+    end; { interact }
+  procedure TearDown;
+    begin _cr.RecordSet:=nil; _cr.Free;
     end;
-    {-save}
-    Redraw;
+  begin { choosetype }
+    SetUp;
+    repeat DrawMenu; Interact until cancel or done;
+    if (not cancel) and assigned(OnSave) then OnSave(rs[key]);
+    TearDown;
   end;
 
 begin
