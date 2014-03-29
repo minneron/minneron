@@ -22,7 +22,6 @@ type
       function  AtMark : boolean;
       function  RowIsVisible : boolean;
       procedure ToMark;
-      procedure Toggle;
       procedure SetMark(id : integer);
       procedure SetItem(key : TStr; value: variant);
       function  GetItem(key : TStr): variant;
@@ -105,27 +104,6 @@ procedure TDbCursor.Prev;
 function TDbCursor.AtMark : boolean;
   begin
     result := _rs[keyField] = _mk;
-  end;
-
-procedure TDbCursor.Toggle;
-  var olid, nid : integer; sql : TStr;
-  begin
-    ToMark;
-    olid := _rs['olid'];
-    nid  := _rs['nid'];
-    sql := utf8decode(_rs.sql.text);
-    if _rs['collapsed'] then
-      _rs.sql.text := utf8encode(
-			'delete from outline_collapse where olid='
-			+ n2s(olid) + ' and collapse=' + n2s(nid))
-    else
-      _rs.sql.text := utf8encode('insert into outline_collapse values ('
-				 + n2s(olid) +   ' , ' + n2s(nid) + ')');
-    _rs.ExecSQL;
-    // ! not sure why i have to cast this:
-    TSQLTransaction(_rs.Transaction).Commit;
-    _rs.Execute(sql);
-    SetMark(_mk); // MarkChanged;
   end;
 
 procedure TDbCursor.SetItem(key : TStr; value: variant);

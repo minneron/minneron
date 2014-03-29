@@ -11,10 +11,14 @@ type
       OnSave : procedure (val:variant) of object;
       procedure Choose(nid:Integer);
     end;
-  TDbOutlnApp  = class(uapp.TCustomApp)
+  TDbOutCursor = class (udc.TDbCursor)
+    public
+      procedure Toggle;
+    end;
+  TDbOutlnApp  = class (uapp.TCustomApp)
     protected
       dbc  : udb.TDatabase;
-      curs : udc.TDbCursor;
+      curs : TDbOutCursor;
       view : TDbTreeGrid;
       rsOutln : TRecordSet;
       typeMenu : TDBMenu;
@@ -35,7 +39,8 @@ procedure TDbOutlnApp.init;
     rsOutln := dbc.query(
       'SELECT olid, nid, kind, node, depth, collapsed, hidden, leaf '+
         'FROM outline');
-    curs := udc.TDbCursor.Create(dbc).Attach(rsOutln, 'nid');
+    curs := TDbOutCursor.Create(dbc);
+    curs.Attach(rsOutln, 'nid');
     curs.canHideRows := true; curs.hideFlag := 'hidden';
     curs.OnMarkChanged := self.OnCursorChange;
 
@@ -103,6 +108,27 @@ procedure TDBOutLnApp.ChooseType;
 procedure TDbOutlnApp.OnTypeMenuSave(val:variant);
   begin dbc.RunSQL(
     'UPDATE node SET knd=:knd WHERE nid=:nid', [val, curs['nid']]);
+  end;
+
+procedure TDbOutCursor.Toggle;
+  var olid, nid : integer; sql : TStr;
+  begin
+    ToMark;
+    olid := _rs['olid'];
+    nid  := _rs['nid'];
+    sql := utf8decode(_rs.sql.text);
+    if _rs['collapsed'] then
+      _rs.sql.text := utf8encode(
+			'delete from outline_collapse where olid='
+			+ n2s(olid) + ' and collapse=' + n2s(nid))
+    else
+      _rs.sql.text := utf8encode('insert into outline_collapse values ('
+				 + n2s(olid) +   ' , ' + n2s(nid) + ')');
+    _rs.ExecSQL;
+    // ! not sure why i have to cast this:
+    TSQLTransaction(_rs.Transaction).Commit;
+    _rs.Execute(sql);
+    SetMark(_mk); // MarkChanged;
   end;
 
 
