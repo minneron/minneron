@@ -1,27 +1,20 @@
 {$mode delphi}{$i xpc.inc}
 program dboutln;
-uses xpc, cli, udb, udc, uapp, classes, kvm, cw, utv,
-     ustr, db, sqldb, fx, ukm, kbd, num, undk, fs;
+uses xpc, cli, udb, udc, udv, uapp, classes, kvm, cw, utv,
+     num, fx, ukm, kbd, undk, fs;
 
 type
-  TDBMenu = class (utv.TTermView)
-    public
-      rs : TRecordSet;
-      key: string;
-      OnSave : procedure (val:variant) of object;
-      function Choose : variant;
-    end;
   TDbOutCursor = class (udc.TDbCursor)
     public
       procedure Toggle;
     end;
   TDbOutlnApp  = class (uapp.TCustomApp)
     protected
-      dbc  : udb.TDatabase;
-      curs : TDbOutCursor;
-      view : TDbTreeGrid;
-      rsOutln : TRecordSet;
-      typeMenu : TDBMenu;
+      curs     : TDbOutCursor;
+      dbc      : udb.TDatabase;
+      view     : udv.TDbTreeGrid;
+      typeMenu : udv.TDBMenu;
+      rsOutln  : udb.TRecordSet;
     public
       procedure init; override;
       procedure keys(km : TKeyMap); override;
@@ -80,24 +73,7 @@ procedure TDbOutlnApp.OnCursorChange( Sender : TObject );
   begin
     view.Redraw;
   end;
-
-function vinc(var i:integer):integer;
-  begin
-    result := i; i := i+1;
-  end;
-
-function incv(var i:integer):integer;
-  begin
-    i := i+1; result := i;
-  end;
 
-type tbytes = array of byte;
-function bytes(data : array of byte):tbytes;
-  var i :integer;
-  begin
-    setlength(result, length(data));
-    for i := 0 to high(data) do result[i]:=data[i];
-  end; { bytes }
 
 procedure TDBOutLnApp.ChooseType;
   begin
@@ -116,71 +92,14 @@ procedure TDbOutCursor.Toggle;
     ToMark;
     olid := _rs['olid'];
     nid  := _rs['nid'];
-    sql := utf8decode(_rs.sql.text);
     if _rs['collapsed'] then
-      _rs.sql.text := utf8encode(
-			'delete from outline_collapse where olid='
-			+ n2s(olid) + ' and collapse=' + n2s(nid))
-    else
-      _rs.sql.text := utf8encode('insert into outline_collapse values ('
-				 + n2s(olid) +   ' , ' + n2s(nid) + ')');
-    _rs.ExecSQL;
-    // ! not sure why i have to cast this:
-    TSQLTransaction(_rs.Transaction).Commit;
-    _rs.Execute(sql);
-    SetMark(_mk); // MarkChanged;
+      sql := 'delete from outline_collapse where olid=olid:' +
+	     ' and collapse=nid:'
+    else sql := 'insert into outline_collapse values (olid:,nid:)';
+    _rs.dbc.RunSQL(sql, [olid, nid]);
+    SetMark(_mk);
   end;
 
-
-function TDBMenu.Choose : variant;
-  var
-    _rs : TRecordSet;    // the data to choose from
-    _cr : TDbCursor;     //
-    _ws : array of byte; // column widths
-    done:boolean=false; cancel:boolean = false;
-  procedure SetUp;
-    begin
-      _rs := rs.Open.First;
-      _cr := TDbCursor.Create(self).Attach(_rs, key);
-      _ws := bytes([0, 16]);
-    end;
-  procedure DrawMenu;
-    var i : integer; f : TField;
-    begin
-      cwrite('|@0000|!K|W|$'); i := 0;
-      for f in _rs.fields do write(rfit(f.DisplayName, _ws[vinc(i)]));
-      _rs.First;
-      while not _rs.EOF do
-        begin
-          i:=0; cwriteln('|k');
-          if _cr.AtMark then bg('B') else bg('w');
-          for f in _rs.fields do write(rfit(f.DisplayText, _ws[vinc(i)]));
-          _rs.Next;
-        end;
-      _cr.ToMark;
-    end; { DrawMenu }
-  procedure interact;
-    var ch : char;
-    begin repeat until keypressed;
-      case readkey(ch) of
-	'n', ^N : _cr.Next;    ^M : done := true;
-	'p', ^P : _cr.Prev;    ^C: cancel := true;
-        else cwritexy(15, 0, '|Gch: |g' +ch)
-      end
-    end; { interact }
-  procedure TearDown;
-    begin _cr.RecordSet:=nil; _cr.Free;
-    end;
-  begin { choosetype }
-    SetUp;
-    repeat DrawMenu; Interact until cancel or done;
-    if cancel then result := nil
-    else begin
-      result := rs[key];
-      if assigned(OnSave) then OnSave(result);
-    end;
-    TearDown;
-  end;
 
 begin
   uapp.run(TDbOutlnApp);
