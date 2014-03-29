@@ -9,7 +9,7 @@ type
       rs : TRecordSet;
       key: string;
       OnSave : procedure (val:variant) of object;
-      procedure Choose(nid:Integer);
+      function Choose : variant;
     end;
   TDbOutCursor = class (udc.TDbCursor)
     public
@@ -101,7 +101,7 @@ function bytes(data : array of byte):tbytes;
 
 procedure TDBOutLnApp.ChooseType;
   begin
-    typeMenu.Choose(curs['nid']);
+    typeMenu.Choose;
     Redraw;
   end;
 
@@ -132,7 +132,7 @@ procedure TDbOutCursor.Toggle;
   end;
 
 
-procedure TDBMenu.Choose(nid : integer);
+function TDBMenu.Choose : variant;
   var
     _rs : TRecordSet;    // the data to choose from
     _cr : TDbCursor;     //
@@ -174,7 +174,11 @@ procedure TDBMenu.Choose(nid : integer);
   begin { choosetype }
     SetUp;
     repeat DrawMenu; Interact until cancel or done;
-    if (not cancel) and assigned(OnSave) then OnSave(rs[key]);
+    if cancel then result := nil
+    else begin
+      result := rs[key];
+      if assigned(OnSave) then OnSave(result);
+    end;
     TearDown;
   end;
 
