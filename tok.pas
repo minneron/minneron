@@ -74,9 +74,6 @@ procedure TTokEd.onspace;
 procedure TTokEd.loadPage(key : string);
   var edges : TEdges; i : cardinal;
   begin
-    buf.clear; edges := ndk.w(key,'[wd]','~');
-    cwriteln('|B' + n2s(length(edges)) + ' |c words on page.');
-    hitakey;
     if length(edges) > 0 then begin
       for i := 0 to high(edges) do buf.addline(edges[i].obj.s)
     end;
