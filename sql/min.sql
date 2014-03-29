@@ -3,7 +3,7 @@
 ------------------------------------------------------------------
 create table if not exists node (
   nid integer primary key,
-  knd integer references kind,
+  knd integer  not null default 0,
   val, -- (can be any of the sqlite primitive types)
   foreign key(knd) references kind deferrable initially deferred );
 
@@ -14,7 +14,7 @@ create table if not exists edge (
   rel integer references node,
   obj integer references node,
   seq integer not null default 0,
-  began datetime default 'now',
+  began datetime default current_timestamp,
   ended datetime default null );
 --  unique (sub, rel, obj, seq) );
 
@@ -40,7 +40,7 @@ create table if not exists meta (
 create trigger if not exists del_triple
   instead of delete on trip
   begin
-    update edge set ended = 'now' where edge.eid = old.eid;
+    update edge set ended = datetime('now') where edge.eid = old.eid;
   end;
 
 --
@@ -48,11 +48,12 @@ create trigger if not exists new_triple
   instead of insert on trip
   begin
     insert or ignore into node (val) values (new.sub), (new.rel), (new.obj);
-    insert into edge (sub, rel, obj, began)
+    insert into edge (sub, rel, obj, seq, began)
     select (select nid from node where val=new.sub) as subID,
            (select nid from node where val=new.rel) as relID,
            (select nid from node where val=new.obj) as objID,
-	   'now' as began;
+           new.seq,
+	   datetime('now') as began;
     replace into meta ('k','v')
       values ('last_insert_rowid', last_insert_rowid());
   end;
@@ -61,7 +62,7 @@ create trigger if not exists new_triple
 -- -- type system. system nodes have keys <= 0
 create table if not exists kind (
   knd integer primary key,
-  foreign key (knd) references node (nid) );
+  foreign key (knd) references node (nid));
 --
 insert or ignore into node (nid, knd, val) values
    -- meta stuff --
