@@ -24,10 +24,12 @@ procedure TMinApp.init;
     ed := TEditor.Create(self);
     ed.x := 5; ed.y := 2; ed.h := ed.h div 2 + 1; ed.w := 75;
     b4 := TB4VM.Create(self);
-    if ParamCount = 0 then fail( 'usage : min <filename>' )
-    else if not ed.Load( ParamStr( 1 )) then
-      fail( utf8encode('unable to load file: ' + utf8decode(ansistring(paramstr( 1 )))))
-    else ed.status := 'welcome to minneron.';
+    if ParamCount = 1 then
+      if not ed.Load( ParamStr( 1 )) then
+	fail( utf8encode('unable to load file: ' +
+			 utf8decode(ansistring(paramstr( 1 )))))
+      else ed.status := 'welcome to minneron.'
+    else ok
   end;
 
 procedure TMinApp.keys(km : ukm.TKeyMap);
