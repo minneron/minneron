@@ -1,10 +1,10 @@
 {$mode delphi}{$i xpc.inc}
 program dboutln;
-uses xpc, cli, udb, udc, uapp, classes, kvm, cw, umin,
+uses xpc, cli, udb, udc, uapp, classes, kvm, cw, utv,
      ustr, db, sqldb, fx, ukm, kbd, num, undk, fs;
 
 type
-  TDBMenu = class (umin.TTermView)
+  TDBMenu = class (utv.TTermView)
     public
       rs : TRecordSet;
       key: string;

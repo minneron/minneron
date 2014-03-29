@@ -1,6 +1,6 @@
 {$mode delphi}{$i xpc.inc}
 program impforth;
-uses xpc, uapp, ukm, uimpforth, ui, umin, cw, kvm,cli;
+uses xpc, uapp, ukm, uimpforth, ui, cw, kvm,cli;
 
 type
   TForthApp = class (uapp.TCustomApp)

@@ -1,6 +1,6 @@
 {$mode delphi}
 unit ub4vm;
-interface uses classes, arrays, umin, kvm;
+interface uses classes, arrays, utv, kvm;
 
 type
   TStack<T> = class
@@ -69,7 +69,7 @@ procedure TStack<T>.Dup;
   begin
     Push(tos)
   end;
-
+
 procedure TStack<T>.Swap;
   var tmp : longint;
   begin
@@ -148,7 +148,7 @@ procedure TB4VM.RunOp( op:OpCode );
       opYld: begin end; {-- todo --}
     end
   end;
-
+
 procedure TB4VM.Step;
   begin
   end;

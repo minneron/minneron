@@ -6,7 +6,7 @@
 unit mned;
 interface uses xpc, classes, fs, ustr, num, cw, ui, kvm, kbd, fx,
   tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld, cli, ukm,
-  umin;
+  utv;
 
 type
   TEditor = class (TView)

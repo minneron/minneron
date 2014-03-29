@@ -5,7 +5,7 @@ Copyright (c) 2014 Michal J Wallace. All rights reserved.
 {$mode delphiunicode}{$i xpc.inc}
 program min;
 uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd,
-  impworld, umin, cli, ub4vm, ukm, uapp;
+  impworld, cli, ub4vm, ukm, uapp;
 
 type
   TMinApp  = class(uapp.TCustomApp)

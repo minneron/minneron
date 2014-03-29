@@ -2,7 +2,7 @@
 {$mode delphiunicode}{$i xpc.inc}
 program tok;
 uses xpc, uapp, mned, ukm, utok, ui, kvm, ug2d, uww, num,
-     dndk, undk, udb, udc, umin, mnbuf, classes, cw, cli;
+     dndk, undk, udb, udc, utv, mnbuf, classes, cw, cli;
 
 type TToken = record
 		x, y : cardinal; c : word;
@@ -94,7 +94,7 @@ procedure TTokEd.draw;
       tok : ug2d.IBounds2D;
   begin
     gotoxy(0,y); clrscr; wrap.reset;
-    tok := umin.TView.Create(Nil); tok.h := 1;
+    tok := utv.TView.Create(Nil); tok.h := 1;
     for word in buf.tostrings do begin
       tok.w := length(word); wrap.place(tok);
       if tok.y > y then begin y := tok.y; gotoxy(0,y) end
