@@ -94,6 +94,7 @@ procedure TMinApp.keys(km : ukm.TKeyMap);
     km_ed.cmd[ ^L ] := self.Draw;
     km_ed.cmd[ ^O ] := self.OtherWindow;
     km_ed.cmd[ ^G ] := self.ChoosePage;
+    self.focus := ed;
   end;
 
 procedure TMinApp.step;
@@ -116,11 +117,11 @@ procedure TMinApp.OtherWindow;
     // focus.defocus;
     if focus = ed then
       begin
-	focus := tg; keymap := km_tg;
+	focus := tg; keymap := km_tg; kvm.HideCursor;
       end
     else
       begin
-	focus := ed; keymap := km_ed;
+	focus := ed; keymap := km_ed; kvm.ShowCursor;
       end;
     // focus.focus;
   end;
