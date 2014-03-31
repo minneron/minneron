@@ -23,7 +23,8 @@ type
     public
       procedure LoadFromFile(path:TStr);
       procedure SaveToFile(path:TStr);
-      procedure LoadFromStrings( strings : TStrings );
+      procedure LoadFromStrings(strings : TStrings);
+      procedure LoadFromString(s : TStr);
       function ToStrings : TStrings;
       function ToString : TStr; reintroduce;
     public
@@ -38,6 +39,7 @@ type
       property lines[i:cardinal]:TStr
         read GetLine write SetLine; default;
       property strings : TStrings read ToStrings write LoadFromStrings;
+      property text : TStr read ToString write LoadFromString;
     end;
 
   { GSpan : a pair of virtual tokens used for spans/selections }
@@ -110,6 +112,16 @@ function TBuffer.ToStrings : TStrings;
       result.Add(utf8encode(self[i]));
   end;
 
+procedure TBuffer.LoadFromString( s : TStr );
+  var ts : TStringList; i : integer;
+  begin
+    ts := TStringList.Create; ts.text := s;
+    self.clear;
+    if ts.count > 0 then for i := 0 to ts.count-1 do self.AddLine(ts[i]);
+    ts.Free;
+  end;
+
+
 function TBuffer.ToString : TStr;
   var i, len : cardinal;
   begin
