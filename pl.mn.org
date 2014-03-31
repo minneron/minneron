@@ -2,6 +2,76 @@
 #+tags: pl min
 #+date: <2013-01-11 11:43AM>
 
+* TODO edit node
+  :PROPERTIES:
+  :TS:       <2014-03-30 11:55PM>
+  :ID:       cpn5vgc1sfg0
+  :END:
+- [ ] Show existing minneron editor widget.
+- [ ] Load node content from the database.
+- [ ] Save content to the database.
+- [ ] Link to previous version of content.
+
+* TODO create edge
+  :PROPERTIES:
+  :TS:       <2014-03-30 11:56PM>
+  :ID:       gwrfrhc1sfg0
+  :END:
+- Maybe three input boxes and a button.
+- Shortcut to populate a box with the current node.
+
+* TODO incoming links
+  :PROPERTIES:
+  :TS:       <2014-03-30 11:56PM>
+  :ID:       8ead4ic1sfg0
+  :END:
+This is just another list widget (dbmenu)
+The OnChoice callback should trigger loading a new page.
+You should also be able to delete items.
+
+* TODO outgoing links
+  :PROPERTIES:
+  :TS:       <2014-03-30 11:56PM>
+  :ID:       wai5aic1sfg0
+  :END:
+Exactly the same as incoming links.
+
+* TODO delete edge
+  :PROPERTIES:
+  :TS:       <2014-03-30 11:56PM>
+  :ID:       4bogzhc1sfg0
+  :END:
+This would just be another item you could use.
+
+* TODO tab between links
+  :PROPERTIES:
+  :TS:       <2014-03-30 11:56PM>
+  :ID:       04zgeic1sfg0
+  :END:
+The links on the screen should be kept in a list or array, and you should be able to cycle through them with some kind of shortcut (tab, probably). Really this is no different from any other menu except for the way it's laid out.
+
+Links embedded in the page itself will come later, but follow the same principle.
+
+Impworld should already have a concept of focus.
+
+* TODO export to org
+  :PROPERTIES:
+  :TS:       <2014-03-30 11:57PM>
+  :ID:       kpe6zic1sfg0
+  :END:
+For this iteration, the pages are unstructured, so it's just a matter of saving them with headlines, types and timestamps.
+
+* TODO search nodes
+  :PROPERTIES:
+  :TS:       <2014-03-30 11:57PM>
+  :ID:       ctq8ric1sfg0
+  :END:
+This just means a basic ransacker-like search engine.
+Alternatively, enable full text indexing in sqlite.
+
+
+
+* -------------
 * TODO [2/4] block-based display plan (single column)           :ed007:
 :PROPERTIES:
 :TS: <2013-01-01 10:35PM>
@@ -272,7 +342,7 @@ blocks are rectangles with a 2-dimensional bounding box
     cwrite( stri.trunc( line, cw.scr.w - cw.cur.x ));
     cwrite( '|%' ); // clreol
   end;
-  
+
   procedure show_node;
   {test against li.strnode to distinguish from anchors, which will no longer use }
   if cur.value.inheritsfrom( li.strnode ) then
@@ -426,4 +496,3 @@ TModName : string[32];
 :END:
 TMessage : record end;
 TQueue   : record end;
-
