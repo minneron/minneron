@@ -4,7 +4,7 @@ Copyright (c) 2014 Michal J Wallace. All rights reserved.
 ---------------------------------------------------------------}
 {$mode delphiunicode}{$i xpc.inc}
 program min;
-uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd,
+uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd, dndk,
   impworld, cli, ub4vm, udb, udc, udv, ukm, utv, uapp, undk, fs;
 
 type
@@ -15,6 +15,7 @@ type
       b4 : TB4VM;
       cur : TDbCursor;
       dbc : udb.TDatabase;
+      ndk : dndk.IBase;
       typeMenu : udv.TDBMenu;
       pageMenu : udv.TDBMenu;
       rsOutln  : udb.TRecordSet;
@@ -35,8 +36,7 @@ type
 
 procedure TMinApp.Init;
   begin
-
-    if not fs.exists('minneron.sdb') then undk.open('minneron.sdb');
+    ndk := undk.open('minneron.sdb');
     dbc := udb.connect('minneron.sdb');
     rsOutln := dbc.query('SELECT olid,nid,kind,node,depth,collapsed,hidden,leaf '+
         'FROM outline');

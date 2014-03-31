@@ -1,6 +1,6 @@
 {$i xpc.inc}{$mode delphi}{$H+}
 unit undk;
-interface uses xpc, dndk, classes, udb, sysutils;
+interface uses xpc, dndk, classes, udb, sysutils, fs;
 
   function open(path : string) : dndk.IBase;
 
@@ -10,7 +10,7 @@ type
     protected
       _dbc : udb.TDatabase;
     public
-      constructor New(ndkPath : string);
+      constructor Open(ndkPath : string);
       function e(sub, rel, obj : string; seq:integer=0) : IEdge;   // store edge
       function f(eid : integer) : IEdge;            // fetch edge
       function q(sub,rel,obj : string) : TEdges;    // query edges
@@ -18,6 +18,8 @@ type
       function n(key : string) : INode;             // node name -> nid
       function a(key, val : string) : IEdge;        // assign = e(key,':=',val)
       function v(key : string) : ICell;             // v(key) = n(key).val
+    published
+      property dbc : udb.TDatabase read _dbc;
     end;
 
 
@@ -167,11 +169,15 @@ function TNode.q1(s : string) : ICell;
 
 {-- TNodakRepo --}
 
-constructor TNodakRepo.New(ndkPath : string);
+constructor TNodakRepo.Open(ndkPath : string);
+  var isnew : boolean;
   begin
     inherited Create(Nil);
+    isnew := not fs.exists(ndkPath);
     _dbc := udb.connect(ndkPath); //  todo: error handling
-    {$i min-sql2pas.inc}
+    if isnew then begin
+      {$i min-sql2pas.inc}
+    end;
   end;
 
 function TNodakRepo.e(sub, rel, obj : string; seq : integer=0) : IEdge;
@@ -252,9 +258,9 @@ function TNodakRepo.v(key : string) : ICell;
 
 {-- unit interface --}
 
-function open(path : string) : dndk.IBase;
+function Open(path : string) : dndk.IBase;
   begin
-    result := TNodakRepo.New(path);
+    result := TNodakRepo.Open(path);
   end;
 
 begin
