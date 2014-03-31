@@ -2,15 +2,15 @@
 #+tags: pl min
 #+date: <2013-01-11 11:43AM>
 
-* TODO edit node
+* DONE edit node
   :PROPERTIES:
   :TS:       <2014-03-30 11:55PM>
   :ID:       cpn5vgc1sfg0
   :END:
-- [ ] Show existing minneron editor widget.
-- [ ] Load node content from the database.
-- [ ] Save content to the database.
-- [ ] Link to previous version of content.
+- [X] Show existing minneron editor widget.
+- [X] Load node content from the database.
+- [X] Save content to the database.
+- [X] Preserve version history.
 
 * TODO create edge
   :PROPERTIES:

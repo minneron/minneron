@@ -4,8 +4,9 @@ Copyright (c) 2014 Michal J Wallace. All rights reserved.
 ---------------------------------------------------------------}
 {$mode delphiunicode}{$i xpc.inc}
 program min;
-uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd, dndk,
-  impworld, cli, ub4vm, udb, udc, udv, ukm, utv, uapp, undk, fs;
+uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd, dndk, ustr,
+  impworld, cli, ub4vm, udb, udc, udv, ukm, utv, uapp, undk, fs,
+  strutils;
 
 type
   TMinApp  = class(uapp.TCustomApp)
@@ -29,15 +30,17 @@ type
       procedure ChooseType;
       procedure OtherWindow;
       procedure ChoosePage;
-      procedure OnCursorChange( Sender : TObject );
+      procedure SavePage;
+      procedure OnCursorChange(Sender : TObject);
       procedure OnChooseType(val:variant);
+      procedure LoadPage(pg:TStr);
       procedure OnToggle;
     end;
 
 procedure TMinApp.Init;
   begin
     ndk := undk.open('minneron.sdb');
-    dbc := udb.connect('minneron.sdb');
+    dbc := (ndk as TNodakRepo).dbc;
     rsOutln := dbc.query('SELECT olid,nid,kind,node,depth,collapsed,hidden,leaf '+
         'FROM outline');
     cur := TDbCursor.Create(dbc);
@@ -94,6 +97,7 @@ procedure TMinApp.keys(km : ukm.TKeyMap);
     km_ed.cmd[ ^L ] := self.Draw;
     km_ed.cmd[ ^O ] := self.OtherWindow;
     km_ed.cmd[ ^G ] := self.ChoosePage;
+    km_ed.cmd[ ^S ] := self.SavePage;
     self.focus := ed;
   end;
 
@@ -131,16 +135,38 @@ procedure TMinApp.OnCursorChange( Sender : TObject );
   begin
     tg.Redraw;
   end;
-
-procedure TMinApp.ChooseType;
+
+procedure TMinApp.ChoosePage;
   begin
-    typeMenu.Choose;
+    if pageMenu.Choose <> null then self.LoadPage(pageMenu.rs['page']);
     self.draw;
   end;
 
-procedure TMinApp.ChoosePage;
+procedure TMinApp.SavePage;
+  var p : string;
   begin
-    pageMenu.Choose;
+    p := ed.path;  // encapsulate this!
+    if ustr.startswith(p, 'ndk://') then
+      begin
+	p := midstr(p, 7, length(p)-6);
+	cwriteln('|g(|w' + p + '|g)'); hitakey;
+	ndk.a(p, ed.buffer.text);
+      end
+    else ed.save;
+  end;
+
+procedure TMinApp.LoadPage(pg:TStr);
+  begin
+    // TODO: encapsulate all this
+    ed.path := 'ndk://' + pg;
+    ed.buffer.loadfromstring(ndk.v(pg).s);
+    ed.led.work := ed.buffer[ 0 ];
+    ed.dirty := true;
+  end;
+
+procedure TMinApp.ChooseType;
+  begin
+    typeMenu.Choose;
     self.draw;
   end;
 
