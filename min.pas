@@ -93,6 +93,7 @@ procedure TMinApp.keys(km : ukm.TKeyMap);
     km_ed.cmd[ ^C ] := self.Quit;
     km_ed.cmd[ ^L ] := self.Draw;
     km_ed.cmd[ ^O ] := self.OtherWindow;
+    km_ed.cmd[ ^G ] := self.ChoosePage;
   end;
 
 procedure TMinApp.step;
