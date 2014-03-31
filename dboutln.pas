@@ -4,15 +4,11 @@ uses xpc, cli, udb, udc, udv, uapp, classes, kvm, cw, utv,
      num, fx, ukm, kbd, undk, fs;
 
 type
-  TDbOutCursor = class (udc.TDbCursor)
-    public
-      procedure Toggle;
-    end;
   TDbOutlnApp  = class (uapp.TCustomApp)
     protected
-      curs     : TDbOutCursor;
+      cur      : TDbCursor;
       dbc      : udb.TDatabase;
-      view     : udv.TDbTreeGrid;
+      treegrid     : udv.TDbTreeGrid;
       typeMenu : udv.TDBMenu;
       pageMenu : udv.TDBMenu;
       rsOutln  : udb.TRecordSet;
@@ -24,6 +20,7 @@ type
       procedure Redraw;
       procedure OnCursorChange( Sender : TObject );
       procedure OnChooseType(val:variant);
+      procedure OnToggle;
     end;
 
 
@@ -34,10 +31,10 @@ procedure TDbOutlnApp.init;
     rsOutln := dbc.query(
       'SELECT olid, nid, kind, node, depth, collapsed, hidden, leaf '+
         'FROM outline');
-    curs := TDbOutCursor.Create(dbc);
-    curs.Attach(rsOutln, 'nid');
-    curs.canHideRows := true; curs.hideFlag := 'hidden';
-    curs.OnMarkChanged := self.OnCursorChange;
+    cur := TDbCursor.Create(dbc);
+    cur.Attach(rsOutln, 'nid');
+    cur.canHideRows := true; cur.hideFlag := 'hidden';
+    cur.OnMarkChanged := self.OnCursorChange;
 
     // TODO: eventually i'll build a little lazarus-like RAD thing
     // to manage these components as data rather than code.
@@ -54,23 +51,23 @@ procedure TDbOutlnApp.init;
     pageMenu.key := 'nid';
     // pageMenu.OnSave := self.OnChoosePage;
 
-    view := TDbTreeGrid.Create(dbc);
-    with view do
-      begin x := 5; y := 2; h := 32; datacursor := curs
+    treegrid := TDbTreeGrid.Create(dbc);
+    with treegrid do
+      begin x := 5; y := 2; h := 32; datacursor := cur
       end;
     hidecursor; self.redraw;
   end;
 
 procedure TDbOutlnApp.keys(km : TKeyMap);
   begin
-    km.cmd[ ^P ] := curs.Prev;
-    km.cmd[ ^N ] := curs.Next;
-    km.cmd['p'] := curs.Prev;
-    km.cmd['n'] := curs.Next;
-    km.cmd['['] := curs.ToTop;
-    km.cmd[']'] := curs.ToEnd;
+    km.cmd[ ^P ] := cur.Prev;
+    km.cmd[ ^N ] := cur.Next;
+    km.cmd['p'] := cur.Prev;
+    km.cmd['n'] := cur.Next;
+    km.cmd['['] := cur.ToTop;
+    km.cmd[']'] := cur.ToEnd;
     km.cmd[ ^C ] := self.Quit;
-    km.cmd[ ^I ] := curs.Toggle;
+    km.cmd[ ^I ] := self.OnToggle;
     km.cmd[ ^T ] := self.ChooseType;
     km.cmd[ ^O ] := self.ChoosePage;
     km.cmd[ ^L ] := self.Redraw;
@@ -79,12 +76,12 @@ procedure TDbOutlnApp.keys(km : TKeyMap);
 procedure TDbOutlnApp.Redraw;
   begin
     bg('k'); fg('K'); fillscreen('!@#$%^&*(){}][/=+?-_;:');
-    view.Redraw;
+    treegrid.Redraw;
   end;
 
 procedure TDbOutlnApp.OnCursorChange( Sender : TObject );
   begin
-    view.Redraw;
+    treegrid.Redraw;
   end;
 
 
@@ -102,21 +99,18 @@ procedure TDBOutLnApp.ChoosePage;
 
 procedure TDbOutlnApp.OnChooseType(val:variant);
   begin dbc.RunSQL(
-    'UPDATE node SET knd=:knd WHERE nid=:nid', [val, curs['nid']]);
+    'UPDATE node SET knd=:knd WHERE nid=:nid', [val, cur['nid']]);
   end;
 
-procedure TDbOutCursor.Toggle;
+procedure TDbOutLnApp.OnToggle;
   var olid, nid : integer; sql : TStr;
   begin
-    ToMark;
-    olid := _rs['olid'];
-    nid  := _rs['nid'];
-    if _rs['collapsed'] then
-      sql := 'delete from outline_collapse where olid= :olid ' +
-	     'and collapse = :nid '
+    olid := cur['olid']; nid  := cur['nid'];
+    if cur['collapsed'] then sql :=
+      'delete from outline_collapse where olid= :olid and collapse = :nid'
     else sql := 'insert into outline_collapse values (:olid, :nid)';
-    _rs.dbc.RunSQL(sql, [olid, nid]);
-    SetMark(_mk);
+    dbc.RunSQL(sql, [olid, nid]);
+    rsOutln.Open; treegrid.redraw; // refresh the data and display
   end;
 
 
