@@ -43,10 +43,11 @@ type
       procedure updateCamera;
       procedure keepInput;
       procedure CursorMoved;
-      procedure TellUser(msg : string);
+      procedure TellUser(msg : TStr);
     public
-      property status : string read _status write TellUser;
+      property status : TStr read _status write TellUser;
       property buffer : mnbuf.TBuffer read buf write buf;
+      property path : TStr read filename write filename;
     end;
 
 implementation
@@ -104,9 +105,10 @@ procedure TEditor.Save;
 procedure TEditor.SaveAs( path : string );
   var oldname : string;
   begin
-    oldname := self.filename;
-    self.filename := path;
-    self.filename := oldname
+//  TODO : SaveAs
+//    oldname := self.filename;
+//    self.filename := path;
+//    self.filename := oldname
   end;
 
  { drawing routine }
