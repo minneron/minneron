@@ -46,6 +46,7 @@ type
       procedure TellUser(msg : string);
     public
       property status : string read _status write TellUser;
+      property buffer : mnbuf.TBuffer read buf write buf;
     end;
 
 implementation
