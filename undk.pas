@@ -163,7 +163,7 @@ function TNode.q1(s : string) : ICell;
   var edges : TEdges;
   begin
     edges := self.qe(s);
-    if length(edges) > 0 then result := edges[0].obj
+    if length(edges) > 0 then result := edges[length(edges)-1].obj
     else result := TCell.New('');
     //raise Exception.Create('No match for ('+_key+')['+s+']');
   end;

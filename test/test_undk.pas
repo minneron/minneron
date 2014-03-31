@@ -45,11 +45,17 @@ procedure test_query;
 
 procedure test_node_io;
   begin
-    chk.equal(0, length(ndk.q('n0', ':=', '')));
+    chk.equal(0, length(ndk.q('n0', ':=', '~')));
     chk.equal('', ndk.v('n0').s);
     ndk.a('n0','v0');
-    chk.equal(1, length(ndk.q('n0', ':=', 'v0')));
+    chk.equal(1, length(ndk.q('n0', ':=', '~')),
+	      'should be 1 entry now.');
     chk.equal('v0', ndk.v('n0').s);
+    ndk.a('n0','v1');
+    chk.equal(2, length(ndk.q('n0', ':=', '~')),
+	      'should be 2 entries now.');
+    chk.equal('v1', ndk.v('n0').s,
+	      'the value returned should be the latest one.');
   end;
 
 procedure test_build_node;
