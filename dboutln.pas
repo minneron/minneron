@@ -112,9 +112,9 @@ procedure TDbOutCursor.Toggle;
     olid := _rs['olid'];
     nid  := _rs['nid'];
     if _rs['collapsed'] then
-      sql := 'delete from outline_collapse where olid=olid:' +
-	     ' and collapse=nid:'
-    else sql := 'insert into outline_collapse values (olid:,nid:)';
+      sql := 'delete from outline_collapse where olid= :olid ' +
+	     'and collapse = :nid '
+    else sql := 'insert into outline_collapse values (:olid, :nid)';
     _rs.dbc.RunSQL(sql, [olid, nid]);
     SetMark(_mk);
   end;
