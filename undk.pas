@@ -8,7 +8,7 @@ type
 
   TNodakRepo = class (TComponent, IBase)
     protected
-      _dbc : udb.TDatabase;
+      _dbc  : udb.TDatabase;
     public
       constructor Open(ndkPath : string);
       function e(sub, rel, obj : string; seq:integer=0) : IEdge;   // store edge
@@ -20,6 +20,7 @@ type
       function v(key : string) : ICell;             // v(key) = n(key).val
     published
       property dbc : udb.TDatabase read _dbc;
+      property nodes[s : string] : INode read n; default;
     end;
 
 
@@ -123,9 +124,9 @@ function TEdge.eid : integer;
     result := _eid
   end;
 
-function TEdge.sub : ICell; begin result := _base.v(_sub) end;
-function TEdge.rel : ICell; begin result := _base.v(_rel) end;
-function TEdge.obj : ICell; begin result := _base.v(_obj) end;
+function TEdge.sub : ICell; begin result := TCell.New(_sub) end;
+function TEdge.rel : ICell; begin result := TCell.New(_rel) end;
+function TEdge.obj : ICell; begin result := TCell.New(_obj) end;
 
 function TEdge.GetSeq : integer;
   begin
@@ -253,7 +254,7 @@ function TNodakRepo.a(key, val : string) : IEdge;
 
 function TNodakRepo.v(key : string) : ICell;
   begin
-    result := TCell.New(key)
+    result := self[key].val
   end;
 
 {-- unit interface --}

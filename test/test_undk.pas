@@ -43,10 +43,13 @@ procedure test_query;
 {   begin }
 {   end; }
 
-procedure test_put_node;
+procedure test_node_io;
   begin
+    chk.equal(0, length(ndk.q('n0', ':=', '')));
+    chk.equal('', ndk.v('n0').s);
     ndk.a('n0','v0');
     chk.equal(1, length(ndk.q('n0', ':=', 'v0')));
+    chk.equal('v0', ndk.v('n0').s);
   end;
 
 procedure test_build_node;
