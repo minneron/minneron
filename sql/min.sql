@@ -350,24 +350,8 @@ insert or ignore into tree_data (tree, parent, child, seq) values
 -- pages
 -----------------------------------------------------------
 --
-insert or ignore into node (nid, knd, val)
-  values (-1001, -3, 'hello'), (-1002, -3, 'world');
---
-create view if not exists init as select '' as step;
---
-create trigger if not exists init0 instead of insert on init
- when new.step=0
-   and not exists(select * from trip where sub='home' and rel='[wd]')
- begin
-   insert into trip (sub, rel, obj, seq)
-     select 'home', '[wd]', obj, seq
-     from (select  0 as seq, 'hello' as obj
-     union select  1,        'world');
- end;
---
-insert into init(step) values (0);
---
-drop view init;
+insert into trip(sub, rel, obj, seq) values
+  ('home', ':=', 'hello, world.'||x'0a'||'welcome to minneron!'||x'0a', 0);
 
 ------------------------------------------------------
 -- support for arbitrary data structures
