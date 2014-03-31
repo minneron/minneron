@@ -40,7 +40,7 @@ clean:
 	delp $(GEN)
 	rm -f min .tangled
 
-min: *.pas
+min: *.pas minsql
 	$(FPC) min.pas
 	mv $(GEN)/min .$
 
@@ -50,10 +50,6 @@ run: min
 tok: tok.pas minsql
 	$(FPC) tok.pas
 	$(GEN)/tok
-
-dboutln: minsql
-	$(FPC) dboutln.pas
-	$(GEN)/dboutln
 
 build : init
 
