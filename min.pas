@@ -6,12 +6,13 @@ Copyright (c) 2014 Michal J Wallace. All rights reserved.
 program min;
 uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd, dndk, ustr,
   impworld, cli, ub4vm, udb, udc, udv, ukm, utv, uapp, undk, fs,
-  strutils;
+  strutils, ui;
 
 type
-  TMinApp  = class(uapp.TCustomApp)
+  TMinApp = class (uapp.TCustomApp)
     protected
       ed : mned.TEditor;
+      mb : ui.Zinput; // minibuffer (for entering commands)
       tg : udv.TDbTreeGrid;
       b4 : TB4VM;
       cur : TDbCursor;
@@ -21,7 +22,7 @@ type
       pageMenu : udv.TDBMenu;
       rsOutln  : udb.TRecordSet;
       focus : utv.TView;
-      km_ed, km_tg : ukm.TKeyMap;
+      km_ed, km_tg, km_mb : ukm.TKeyMap;
     public
       procedure Init; override;
       procedure Step; override;
@@ -35,9 +36,11 @@ type
       procedure OnChooseType(val:variant);
       procedure LoadPage(pg:TStr);
       procedure OnToggle;
+      procedure REPL;
     end;
 
 procedure TMinApp.Init;
+  var vsplit : integer = 0;
   begin
     ndk := undk.open('minneron.sdb');
     dbc := (ndk as TNodakRepo).dbc;
@@ -59,14 +62,14 @@ procedure TMinApp.Init;
       'select nid, val as page from node natural join kinds where kind=:k',
 		     ['Page']);
     pageMenu.key := 'nid';
-
+    vsplit := kvm.ymax - 1;
     tg := TDbTreeGrid.Create(dbc);
-    with tg do begin x := 1; y := 2; h := 32; w := 18;datacursor := cur end;
-
+    with tg do begin x := 1; y := 2; h := vsplit-y; w := 18;datacursor := cur end;
     ed := TEditor.Create(self);
-    ed.x := 20; ed.y := 2; ed.h := kvm.height-4; ed.w := kvm.width - 21;
+    ed.x := 20; ed.y := 2; ed.w := kvm.width - 21;
+    ed.h := vsplit-ed.y-1;  //  why is this different than tg?
     b4 := TB4VM.Create(self);
-
+    mb := ZInput.default(1, kvm.ymax - 1, kvm.xmax-2, kvm.xmax-2 );
     if ParamCount = 1 then
       if not ed.Load( ParamStr( 1 )) then
 	fail( utf8encode('unable to load file: ' +
@@ -78,29 +81,39 @@ procedure TMinApp.Init;
 procedure TMinApp.keys(km : ukm.TKeyMap);
   begin
     km_tg := ukm.TKeyMap.Create(self);
-    km_tg.cmd[ ^P ] := cur.Prev;
-    km_tg.cmd[ ^N ] := cur.Next;
-    km_tg.cmd['p'] := cur.Prev;
-    km_tg.cmd['n'] := cur.Next;
-    km_tg.cmd['['] := cur.ToTop;
-    km_tg.cmd[']'] := cur.ToEnd;
-    km_tg.cmd[ ^C ] := self.Quit;
-    km_tg.cmd[ ^I ] := self.OnToggle;
-    km_tg.cmd[ ^T ] := self.ChooseType;
-    km_tg.cmd[ ^O ] := self.OtherWindow;
-    km_tg.cmd[ ^G ] := self.ChoosePage;
-    km_tg.cmd[ ^L ] := self.Draw;
+    with km_tg do begin
+      cmd[ ^P ] := cur.Prev;
+      cmd[ ^N ] := cur.Next;
+      cmd['p'] := cur.Prev;
+      cmd['n'] := cur.Next;
+      cmd['['] := cur.ToTop;
+      cmd[']'] := cur.ToEnd;
+      cmd[ ^C ] := self.Quit;
+      cmd[ ^I ] := self.OnToggle;
+      cmd[ ^T ] := self.ChooseType;
+      cmd[ ^O ] := self.OtherWindow;
+      cmd[ ^G ] := self.ChoosePage;
+      cmd[ ^L ] := self.Draw;
+      cmd[ ^X ] := self.REPL;
+    end;
+    km_mb := ukm.TKeyMap.Create(self);
+    with km_mb do begin
+      cmd[ ^C ] := self.Quit;
+      cmd[ ^O ] := self.OtherWindow;
+    end;
     //  clean up keyboard focus handling!!
-    km_ed := km;
-    ed.AddDefaultKeys( km_ed );
-    km_ed.cmd[ ^C ] := self.Quit;
-    km_ed.cmd[ ^L ] := self.Draw;
-    km_ed.cmd[ ^O ] := self.OtherWindow;
-    km_ed.cmd[ ^G ] := self.ChoosePage;
-    km_ed.cmd[ ^S ] := self.SavePage;
+    km_ed := km; ed.AddDefaultKeys( km_ed );
+    with km_ed do begin
+      cmd[ ^C ] := self.Quit;
+      cmd[ ^L ] := self.Draw;
+      cmd[ ^O ] := self.OtherWindow;
+      cmd[ ^G ] := self.ChoosePage;
+      cmd[ ^S ] := self.SavePage;
+      cmd[ ^X ] := self.REPL;
+    end;
     self.focus := ed;
   end;
-
+
 procedure TMinApp.step;
   begin
     if ed.dirty then ed.Redraw;
@@ -114,6 +127,7 @@ procedure TMinApp.draw;
     //bg($e8); fg($13); fx.fillscreen('#!@#$%^&*(){}][/=+?-_;:');
     fx.txtline(0, 0, kvm.xMax, 0, $43);
     ed.dirty := true; tg.Redraw;
+    mb.show;
   end;
 
 procedure TMinApp.OtherWindow;
@@ -122,6 +136,10 @@ procedure TMinApp.OtherWindow;
     if focus = ed then
       begin
 	focus := tg; keymap := km_tg; kvm.HideCursor;
+      end
+    else if focus = tg then
+      begin
+	focus := mb; keymap := km_mb; kvm.ShowCursor;
       end
     else
       begin
@@ -185,6 +203,12 @@ procedure TMinApp.OnToggle;
     dbc.RunSQL(sql, [olid, nid]);
     rsOutln.Open; tg.redraw; // refresh the data and display
   end;
+
+procedure TMinApp.REPL;
+  begin
+
+  end;
+
 
 begin
   impworld.world.manageKeyboard := false;
