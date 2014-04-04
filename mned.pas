@@ -130,7 +130,9 @@ procedure TEditor.Render( term : ITerm );
     var color : char = 'c';
     begin
       if line = position then color := 'C';
-      cwritexy( 0, ypos, '|k|!' + color + flushrt( n2s( num ), gutw, ' ' ));
+      cwritexy( 0, ypos, '|k|!' + color +
+	       flushrt( n2s( num ), gutw, ' ' ));
+
     end;
 
   procedure PlaceEditor;
@@ -160,10 +162,10 @@ procedure TEditor.Render( term : ITerm );
 	    if line = position then PlaceEditor
 	    else draw_line(buf[line]);
 	    inc( ypos ); inc(line)
-	  until ( ypos >= self.h ) or ( line = buf.length )
+	  until ( ypos = self.h-1 ) or ( line = buf.length )
 	else ypos := 2;
         { fill in extra space if the file is too short }
-        while ypos < self.h do begin
+        while ypos < self.h-1 do begin
           cwritexy( 0, ypos, '|!k|%' );
           inc( ypos )
         end;
