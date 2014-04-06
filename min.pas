@@ -116,7 +116,7 @@ procedure TMinApp.keys(km : ukm.TKeyMap);
 
 procedure TMinApp.step;
   begin
-    if ed.dirty then ed.Redraw;
+    ed.update;
     mnml.step;
     if ed.done and mnml.done then quit;
   end;

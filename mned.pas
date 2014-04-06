@@ -24,10 +24,10 @@ type
       procedure Save;
       procedure Keys( km : TKeyMap );
       function value : string;
+      procedure Update; override;
       procedure Render( term : ITerm) ; override;
     public {  morph interface (removing this) }
       done              : boolean;
-      dirty             : boolean;
     public { cursor movement commands }
       procedure PrevLine;
       procedure NextLine;
@@ -65,7 +65,6 @@ constructor TEditor.Create( aOwner : TComponent );
     position := 0;
     filename := '';
     done := false;
-    dirty := true;
     self.led := ui.ZInput.Create(aOwner);
     self.ToTop;
   end;
@@ -80,6 +79,11 @@ function TEditor.value : string;
     result := self.buf.ToString;
   end;
 
+procedure TEditor.Update;
+  begin
+    if led.dirty then dirty := true;
+    inherited Update;
+  end;
 
 { file methods }
 
@@ -138,8 +142,7 @@ procedure TEditor.Render( term : ITerm );
     begin
       { This simply positions the input widget. }
       with self.led do begin
-	x := term.wherex - self.x;
-	y := term.wherey - self.y;
+	x := gutw; y := ypos;
 	tcol := $080f; acol := $0800; // text/arrows
 	dlen := self.w - gutw - 1; // 1 extra for the '»'
       end;
