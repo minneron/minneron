@@ -1,4 +1,5 @@
-{$mode delphi}
+
+{$mode delphiunicode}
 unit uimpforth;
 interface uses xpc, gqueue, classes, sysutils;
 
@@ -6,7 +7,7 @@ const
   kTokLen = 15;
   prim	 = 0;
   quit	 : integer = -1;
-  brand	 : string  = 'ImpForth';
+  brand	 = 'ImpForth';
   verMaj : byte  = 0;
   verMin : byte = 1;
 
@@ -36,7 +37,7 @@ type
       procedure Execute;
     end;
 
-  TTokStr   = string[kToklen];
+  TTokStr   = TStr;
 
   TWord	 = record
     // prev : address;
@@ -53,10 +54,10 @@ type
       // for now, we're just using a simple array for the dictionary
       words  : array[ 0 .. 1023 ] of TWord;
       numwds : cardinal;
-      src : string[255];
+      src : TStr;
     public
       NeedsInput, HasOutput : boolean;
-      msg : string[ 255 ]; // input and output buffers
+      msg : TStr; // input and output buffers
 
       constructor Create(aOwner : TComponent); override;
 
@@ -199,7 +200,7 @@ procedure TImpForth.AddOp( const iden : TTokStr; thunk : TThunk );
     inc(numwds);
   end;
 
-procedure TImpForth.Send( s : string );
+procedure TImpForth.Send( s : TStr );
   begin
     self.src += s;
     self.NeedsInput := false;
@@ -224,8 +225,9 @@ function TImpForth.NextToken : TTokStr;
         repeat
           self.tok += src[inp];
           inc(inp)
-        until OutsideToken;
-        self.src := RightStr(src, length(src) - inp);
+	until OutsideToken;
+	//  TODO: implement rightstr, etc for utf-8
+        self.src := a2u(RightStr(u2a(src), length(src) - inp));
       end
     else self.NeedsInput := true; // only saw whitespace
     result := tok;
