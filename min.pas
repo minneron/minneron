@@ -102,7 +102,7 @@ procedure TMinApp.keys(km : ukm.TKeyMap);
       cmd[ ^O ] := self.OtherWindow;
     end;
     //  clean up keyboard focus handling!!
-    km_ed := km; ed.AddDefaultKeys( km_ed );
+    km_ed := km; ed.keys( km_ed );
     with km_ed do begin
       cmd[ ^C ] := self.Quit;
       cmd[ ^L ] := self.Draw;

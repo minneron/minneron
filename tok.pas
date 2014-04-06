@@ -23,7 +23,6 @@ type TTokEd = class (uapp.TCustomApp)
     procedure draw; override;
     procedure keys(km : ukm.TKeyMap); override;
     procedure LoadPage(key : string);
-    procedure DelegateKey( ext : boolean; ch : char );
     procedure OnCmdAccept( s :  string );
     procedure OnSpace;
   end;
@@ -47,22 +46,15 @@ procedure TTokEd.done;
   end;
 
 procedure TTokEd.keys(km : ukm.TKeyMap);
-  var ch: char;
   begin
-    for ch := #0 to #225 do km.crt[ ch ] := DelegateKey;
+    cmd.keys(km);
     km.cmd[ ^C ] := self.quit;
     km.cmd[ #32 ] := self.OnSpace;
   end;
 
-//  !! copied directly from TEditor.DelegateKey :/
-procedure TTokEd.DelegateKey( ext : boolean; ch : char );
-  begin
-    if ext then cmd.handlestripped(ch) else cmd.handle(ch);
-  end;
-
 procedure TTokEd.OnCmdAccept( s : string );
   begin
-    buf.addline(s); cmd.reset; _dirty := true;
+    buf.addline(s); cmd.reset; cmd.work :=''; _dirty := true;
   end;
   
 procedure TTokEd.onspace;

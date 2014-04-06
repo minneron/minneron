@@ -22,8 +22,7 @@ type
       function Load( path : string ) : boolean;
       procedure SaveAs( path : string );
       procedure Save;
-      procedure AddDefaultKeys( km : TKeyMap );
-      procedure DelegateKey( ext : Boolean; ch : char);
+      procedure Keys( km : TKeyMap );
       function value : string;
       procedure Render( term : ITerm) ; override;
     public {  morph interface (removing this) }
@@ -103,7 +102,7 @@ procedure TEditor.Save;
   end;
 
 procedure TEditor.SaveAs( path : string );
-  var oldname : string;
+//  var oldname : string;
   begin
 //  TODO : SaveAs
 //    oldname := self.filename;
@@ -278,18 +277,9 @@ procedure TEditor.DeleteNextChar;
 
 { event stuff }
 
-procedure TEditor.DelegateKey( ext : boolean; ch : char );
+procedure TEditor.Keys( km : TKeyMap );
   begin
-    if ext then led.handlestripped(ch)
-    else led.handle(ch);
-    self.dirty := true;
-  end;
-
-procedure TEditor.AddDefaultKeys( km : TKeyMap );
-  var ch : widechar;
-  begin
-    for ch := #0 to #225 do km.crt[ ch ] := DelegateKey;
-    for ch := #$EE00  to #$EEFF do km.crt[ ch ] := DelegateKey;
+    led.keys(km);
     km.cmd[ ^N ] := NextLine;
     km.cmd[ ^P ] := PrevLine;
     km.cmd[ ^M ] := Newline;

@@ -13,7 +13,6 @@ type
     procedure hide;
     procedure keys(km : ukm.TKeyMap); override;
     procedure OnCmdAccept( s :  string );
-    procedure DelegateKey( ext : boolean; ch : char );
     procedure push;
     procedure pop;
   end;	       
@@ -68,9 +67,8 @@ procedure TApp.draw;
   end;
 
 procedure TApp.keys(km : ukm.TKeyMap);
-  var ch: char;
   begin
-    for ch := #0 to #225 do km.crt[ ch ] := DelegateKey;
+    cmd.keys(km);
     with km do begin
       cmd[ ^C ] := self.quit;
       cmd[ ^O ] := self.pop;
@@ -80,13 +78,6 @@ procedure TApp.keys(km : ukm.TKeyMap);
     end;
   end;
 
-//  !! copied directly from TEditor.DelegateKey :/
-procedure TApp.DelegateKey( ext : boolean; ch : char );
-  begin
-    if ext then cmd.handlestripped(ch) else cmd.handle(ch);
-    cmd.is_dirty := true;
-  end;
-
 procedure TApp.OnCmdAccept( s : string );
   begin
     data.push(s);
@@ -94,8 +85,7 @@ procedure TApp.OnCmdAccept( s : string );
     draw;
   end;
 
-
-procedure Tapp.hide;
+procedure TApp.hide;
   begin
     fx.fillscreen($e819, '░'); //#$2591); //'░'
   end;
