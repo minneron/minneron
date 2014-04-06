@@ -44,8 +44,9 @@ procedure TMinApp.Init;
   begin
     ndk := undk.open('minneron.sdb');
     dbc := (ndk as TNodakRepo).dbc;
-    rsOutln := dbc.query('SELECT olid,nid,kind,node,depth,collapsed,hidden,leaf '+
-        'FROM outline');
+    rsOutln := dbc.query(
+	 'SELECT olid,nid,kind,node,depth,collapsed,hidden,leaf '+
+	 'FROM outline');
     cur := TDbCursor.Create(dbc);
     cur.Attach(rsOutln, 'nid');
     cur.canHideRows := true; cur.hideFlag := 'hidden';
@@ -59,17 +60,24 @@ procedure TMinApp.Init;
     typeMenu.OnSave := self.OnChooseType;
     pageMenu := TDBMenu.Create(self);
     pageMenu.rs := dbc.query(
-      'select nid, val as page from node natural join kinds where kind=:k',
-		     ['Page']);
+	     'SELECT nid, val AS page FROM node NATURAL JOIN kinds '+
+	     'WHERE kind=:k', ['Page']);
     pageMenu.key := 'nid';
     vsplit := kvm.ymax - 1;
     tg := TDbTreeGrid.Create(dbc);
-    with tg do begin x := 1; y := 2; h := vsplit-y; w := 18;datacursor := cur end;
+    with tg do begin
+      x := 1; y := 2; h := vsplit-y; w := 18; datacursor := cur
+    end;
     ed := TEditor.Create(self);
     ed.x := 20; ed.y := 2; ed.w := kvm.width - 21;
     ed.h := vsplit-ed.y-1;  //  why is this different than tg?
     b4 := TB4VM.Create(self);
     mb := ZInput.default(1, kvm.ymax - 1, kvm.xmax-2, kvm.xmax-2 );
+
+    _views.append(ed);
+    _views.append(tg);
+    _views.append(mb);
+
     if ParamCount = 1 then
       if not ed.Load( ParamStr( 1 )) then
 	fail( utf8encode('unable to load file: ' +
@@ -116,18 +124,17 @@ procedure TMinApp.keys(km : ukm.TKeyMap);
 
 procedure TMinApp.step;
   begin
-    ed.update;
     mnml.step;
     if ed.done and mnml.done then quit;
   end;
 
 procedure TMinApp.draw;
+  var child : TView;
   begin
     fx.fillscreen($e819, '░'); //#$2591); //'░'
     //bg($e8); fg($13); fx.fillscreen('#!@#$%^&*(){}][/=+?-_;:');
     fx.txtline(0, 0, kvm.xMax, 0, $43);
-    ed.dirty := true; tg.Redraw;
-    mb.show;
+    for child in _views do child.smudge;
   end;
 
 procedure TMinApp.OtherWindow;
@@ -151,13 +158,13 @@ procedure TMinApp.OtherWindow;
 // TODO : OnCursorChange should be part of the gridview itself.
 procedure TMinApp.OnCursorChange( Sender : TObject );
   begin
-    tg.Redraw;
+    tg.smudge;
   end;
 
 procedure TMinApp.ChoosePage;
   begin
     if pageMenu.Choose <> null then self.LoadPage(pageMenu.rs['page']);
-    self.draw;
+    self.smudge;
   end;
 
 procedure TMinApp.SavePage;
@@ -179,13 +186,13 @@ procedure TMinApp.LoadPage(pg:TStr);
     ed.path := 'ndk://' + pg;
     ed.buffer.loadfromstring(ndk.v(pg).s);
     ed.led.work := ed.buffer[ 0 ];
-    ed.dirty := true;
+    ed.smudge;
   end;
 
 procedure TMinApp.ChooseType;
   begin
     typeMenu.Choose;
-    self.draw;
+    self.smudge;
   end;
 
 procedure TMinApp.OnChooseType(val:variant);
@@ -201,7 +208,7 @@ procedure TMinApp.OnToggle;
       'delete from outline_collapse where olid= :olid and collapse = :nid'
     else sql := 'insert into outline_collapse values (:olid, :nid)';
     dbc.RunSQL(sql, [olid, nid]);
-    rsOutln.Open; tg.redraw; // refresh the data and display
+    rsOutln.Open; tg.smudge; // refresh the data and display
   end;
 
 procedure TMinApp.REPL;

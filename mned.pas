@@ -24,8 +24,7 @@ type
       procedure Save;
       procedure Keys( km : TKeyMap );
       function value : string;
-      procedure Update; override;
-      procedure Render( term : ITerm) ; override;
+      procedure Render; override;
     public {  morph interface (removing this) }
       done              : boolean;
     public { cursor movement commands }
@@ -65,7 +64,9 @@ constructor TEditor.Create( aOwner : TComponent );
     position := 0;
     filename := '';
     done := false;
-    self.led := ui.ZInput.Create(aOwner);
+    self.led := ui.ZInput.Create(self);
+
+    _views.Append(self.led);
     self.ToTop;
   end;
 
@@ -77,12 +78,6 @@ procedure TEditor.TellUser(msg : string);
 function TEditor.value : string;
   begin
     result := self.buf.ToString;
-  end;
-
-procedure TEditor.Update;
-  begin
-    if led.dirty then dirty := true;
-    inherited Update;
   end;
 
 { file methods }
@@ -115,7 +110,7 @@ procedure TEditor.SaveAs( path : string );
   end;
 
  { drawing routine }
-procedure TEditor.Render( term : ITerm );
+procedure TEditor.Render;
   var ypos, line : cardinal;
   const gutw = 3;
   procedure draw_curpos;
@@ -135,7 +130,6 @@ procedure TEditor.Render( term : ITerm );
       if line = position then color := 'C';
       cwritexy( 0, ypos, '|k|!' + color +
 	       flushrt( n2s( num ), gutw, ' ' ));
-
     end;
 
   procedure PlaceEditor;
@@ -144,7 +138,7 @@ procedure TEditor.Render( term : ITerm );
       with self.led do begin
 	x := gutw; y := ypos;
 	tcol := $080f; acol := $0800; // text/arrows
-	dlen := self.w - gutw - 1; // 1 extra for the '»'
+	w := self.w - gutw; dirty := true;
       end;
     end;
 
@@ -171,7 +165,6 @@ procedure TEditor.Render( term : ITerm );
           cwritexy( 0, ypos, '|!k|%' );
           inc( ypos )
         end;
-	led.show;
         ShowCursor;
       end;
   end;
