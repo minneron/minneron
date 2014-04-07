@@ -39,7 +39,7 @@ type
   TB4TermView  = class( TView )
     published
       vm : TB4VM;
-      procedure Render(term : ITerm); override;
+      procedure Render; override;
     end;
 
 implementation
@@ -153,7 +153,7 @@ procedure TB4VM.Step;
   begin
   end;
 
-procedure TB4TermView.Render(term :  ITerm);
+procedure TB4TermView.Render;
   var i : integer;
   begin
     //  TODO : have output go to a cached virtual screen
