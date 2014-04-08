@@ -45,7 +45,7 @@ type
     data : cardinal
   end;
 
-  TImpForth = class (TComponent, uevt.IObservable)
+  TImpForth = class (TComponent)
     protected
       vm  : TInnerVM;
       io  : kvm.ITerm;
@@ -75,9 +75,6 @@ type
       function Lookup  : boolean;
       function IsNumber : boolean;
       procedure NotFound;
-    public
-      property asSubject: TModel
-	read _model implements IObservable;
     end;
 
 
@@ -245,13 +242,12 @@ function TImpForth.NextToken : TTokStr;
 
 
 procedure TImpForth.Eval(const token : TTokStr);
+  var i : integer;
   begin
     tok := token;
     if Lookup then Interpret
-    else if IsNumber then begin {TODO } end
-    else if tok <> '' then begin
-      data.push(tok); _model.notify(tok);
-    end;
+    else if TryStrToInt(tok, i) then begin data.push(i) end
+    else if tok <> '' then data.push(tok);
     if assigned(OnChange) then OnChange;
     if msg<>'' then begin io.emit(msg); msg := '' end;
   end;
