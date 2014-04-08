@@ -1,7 +1,6 @@
-
 {$mode delphiunicode}
 unit uimpforth;
-interface uses xpc, gqueue, classes, sysutils;
+interface uses xpc, classes, sysutils, variants, gqueue, stacks, uevt, kvm;
 
 const
   kTokLen = 15;
@@ -16,7 +15,7 @@ type
   cardinal  = address;
   integer   = int32;
   TThunk    = procedure of object;
-
+  TImpStack = GStack<variant>;
   TCmdQueue = TQueue<integer>;
 
   TInnerVM = class  (TComponent)
@@ -46,18 +45,22 @@ type
     data : cardinal
   end;
 
-  TImpForth = class (TComponent)
+  TImpForth = class (TComponent, uevt.IObservable)
     protected
       vm  : TInnerVM;
+      io  : kvm.ITerm;
       tok : TTokStr;
       which : cardinal;    // address of last looked-up word
       // for now, we're just using a simple array for the dictionary
       words  : array[ 0 .. 1023 ] of TWord;
       numwds : cardinal;
       src : TStr;
+      _model : uevt.TModel;
     public
+      data, side : TImpStack;
       NeedsInput, HasOutput : boolean;
       msg : TStr; // input and output buffers
+      OnChange : TThunk;
 
       constructor Create(aOwner : TComponent); override;
 
@@ -72,6 +75,9 @@ type
       function Lookup  : boolean;
       function IsNumber : boolean;
       procedure NotFound;
+    public
+      property asSubject: TModel
+	read _model implements IObservable;
     end;
 
 
@@ -87,13 +93,17 @@ constructor TInnerVM.Create(aOwner : TComponent);
     for i := high(ram) downto low(ram) do ram[i] := 0;
   end;
 
+
 constructor TImpForth.Create(aOwner : TComponent);
   begin
     inherited Create(aOwner);
     vm := TInnerVM.Create(self);
+    io := kvm.work;
+    _model := uevt.TModel.Create(self);
     numwds := 0;
+    data := GStack<variant>.Create(32);
+    side := GStack<variant>.Create(32);
   end;
-
 
 {-- direct stack access from pascal ---------------------------}
 
@@ -239,8 +249,11 @@ procedure TImpForth.Eval(const token : TTokStr);
     tok := token;
     if Lookup then Interpret
     else if IsNumber then begin {TODO } end
-    else if tok <> '' then NotFound;
-    if msg<>'' then begin writeln(msg); msg := '' end;
+    else if tok <> '' then begin
+      data.push(tok); _model.notify(tok);
+    end;
+    if assigned(OnChange) then OnChange;
+    if msg<>'' then begin io.emit(msg); msg := '' end;
   end;
 
 procedure TImpForth.EvalNextToken;
