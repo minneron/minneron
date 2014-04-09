@@ -41,11 +41,12 @@ constructor TImpShell.Create(aOwner : TComponent; aImp : TImpForth);
   begin
     inherited create(aOwner);
     imp := aImp;
+    resize( 16, 8 );
     cmd := ui.zinput.Create(self);
-    cmd.x := xMax div 2 - 16; cmd.y := yMax div 2;
-    cmd.w := 32; cmd.maxlen := 64;
+    cmd.x := 2; cmd.y := 2 * self.h div 3;
+    cmd.w := self.w-2; cmd.maxlen := 64;
     cmd.OnAccept := self.OnCmdAccept;
-    _views.extend([cmd]); resize( 64, 18 );
+    _views.extend([cmd]);
   end;
 
 procedure TImpShell.keys(km : ukm.TKeyMap);
@@ -59,30 +60,37 @@ procedure TImpShell.keys(km : ukm.TKeyMap);
   end;
 
 procedure TImpShell.Render;
-
   procedure drawLine(x, y : word; linno : byte; val : variant);
+    type TStrFn = function(s : TStr; len:cardinal; ch: TChr=' ') : TStr;
+    var gutfg, txtfg : byte; sfn : TStrFn = @ustr.rpad;
     begin
-      cxy($19e8, x, y, n2s(linno) + ':');
-      cxy($190f, x+2, y, rpad(cwesc(val), 32, ' '));
+      if val = null then begin gutfg := $20; val :='' end
+      else gutfg := $e8;
+      if varIsNumeric(val)
+	then begin txtfg := $0b; sfn := @ustr.lpad end
+        else begin txtfg := $0a; sfn := @ustr.rpad end;
+      cxy(($19 shl 8) + gutfg, x, y, n2s(linno) + ':');
+      cxy(($20 shl 8) + txtfg, x+2, y, sfn(cwesc(val), self.w-2, ' '));
     end;
 
-  procedure up(x, y : word; vals : GStack<variant>);
+  procedure up(n : word; vals : GStack<variant>);
     var i : integer;
     begin
-      for i := 9 downto 0 do drawLine(x, y+8-i, i, vals.GetItem( i, '' ))
+      for i := 0 to n-1 do drawLine(0, i, n-1-i, vals.GetItem(n-1-i, null))
     end;
 
-  procedure dn(x, y : word; vals : GStack<variant>);
+  procedure dn(y, n : word; vals : GStack<variant>);
     var i : integer;
     begin
-      for i := 0 to 4 do drawLine(x, y+i, i, vals.GetItem( i, '' ))
+      for i := 0 to n-1 do drawLine(0, y+i, i, vals.GetItem(i, null))
     end;
 
   begin { Render }
-    fx.rectangle( cmd.x-3, cmd.y-11, cmd.x+32, cmd.y+6, $19e8 );
-    up(cmd.x-2, cmd.y - 9, imp.data);
-    cxy($e819, cmd.x-2, cmd.y, '> ');
-    dn(cmd.x-2, cmd.y + 1, imp.side);
+    kvm.hidecursor;
+    up(cmd.y, imp.data);
+    cxy($e819, 0, cmd.y, '> ');
+    dn(cmd.y+1, h - cmd.y, imp.side);
+    kvm.showcursor;
   end;
 
 procedure TImpShell.OnCmdAccept( s : string );
