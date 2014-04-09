@@ -1,6 +1,7 @@
 {$mode delphiunicode}{$i xpc.inc}
 program impforth;
-uses xpc, uapp, ukm, uimpforth, uimpshell, ui, cw, kvm,cli;
+uses xpc, uapp, ukm, ui, cw, kvm, cli,
+  uimpforth, uimpwords, uimpshell;
 
 type
   TForthApp = class (uapp.TCustomApp)
@@ -15,13 +16,14 @@ type
 
 procedure TForthApp.init;
   begin
-    imp := TImpForth.Create(self);
+    imp := TImpForth.Create(self); TImpWords.Create(imp);
     imp.AddOp('bye', quit);
-    imp.AddOp('drop', imp.data.drop);
-    imp.AddOp('swap', imp.data.swap);
-    imp.AddOp('clear', kvm.work.ClrScr);
     imp.OnChange := self.OnImpChange;
-    cmd  := TImpShell.Create(self, imp);
+    cmd := TImpShell.Create(self, imp);
+    // --TODO : tview/zobj.center --------
+    cmd.x := self.w div 2 - cmd.w div 2;
+    cmd.y := self.h div 2 - cmd.h div 2;
+    // -----------------------------------
     _views.extend([cmd]);
     kvm.clrscr;
   end;
