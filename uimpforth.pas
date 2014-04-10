@@ -246,7 +246,7 @@ procedure TImpForth.Eval(const token : TTokStr);
   begin
     tok := token;
     if Lookup then Interpret
-    else if TryStrToInt(tok, i) then begin data.push(i) end
+    else if TryStrToInt(u2a(tok), i) then begin data.push(i) end
     else if tok <> '' then data.push(tok);
     if assigned(OnChange) then OnChange;
     if msg<>'' then begin io.emit(msg); msg := '' end;
