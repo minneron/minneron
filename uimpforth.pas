@@ -17,6 +17,13 @@ type
   TThunk    = procedure of object;
   TImpStack = GStack<variant>;
   TCmdQueue = TQueue<integer>;
+  TTokStr   = TStr;
+  TWord	 = record
+    // prev : address;
+    word : TTokStr;
+    code : address;
+    data : cardinal
+  end;
 
   TInnerVM = class  (TComponent)
     protected
@@ -30,32 +37,29 @@ type
       function AddOp( thunk : TThunk ): integer;
       procedure PushDat( x:integer );
       procedure PushRet( x:integer );
-      procedure Pass;
-      procedure GoSub;
-      procedure Step;
-      procedure Execute;
-    end;
-
-  TTokStr   = TStr;
-
-  TWord	 = record
-    // prev : address;
-    word : TTokStr;
-    code : address;
-    data : cardinal
+      procedure Pass; procedure GoSub; procedure Step; procedure Execute;
   end;
+
+  TImpForth = class; // forward declaration
+  TImpModule = class (TComponent)
+    protected
+      _imp : TImpForth; data, side : TimpStack;
+      procedure SetImp( aImp : TImpForth );
+    public
+      property imp : TImpForth read _imp write SetImp;
+      procedure Attach; virtual; abstract;
+    end;
+  CImpModule = class of TImpModule;
+
 
   TImpForth = class (TComponent)
     protected
-      vm  : TInnerVM;
-      io  : kvm.ITerm;
-      tok : TTokStr;
+      vm  : TInnerVM; io : kvm.ITerm; tok : TTokStr;
       which : cardinal;    // address of last looked-up word
       // for now, we're just using a simple array for the dictionary
-      words  : array[ 0 .. 1023 ] of TWord;
-      numwds : cardinal;
-      src : TStr;
-      _model : uevt.TModel;
+      words  : array[ 0 .. 1023 ] of TWord; numwds : cardinal;
+      src : TStr; _model : uevt.TModel;
+      root : TComponent;
     public
       data, side : TImpStack;
       NeedsInput, HasOutput : boolean;
@@ -75,6 +79,11 @@ type
       function Lookup  : boolean;
       function IsNumber : boolean;
       procedure NotFound;
+
+      function GetModule( iden : TStr ) : TImpModule;
+      procedure Mount( iden : TStr; imod : TImpModule ); overload;
+      procedure Mount( iden : TStr; cimod : CImpModule ); overload;
+      property modules[ iden : TStr ] : TImpModule read GetModule; default;
     end;
 
 
@@ -94,6 +103,7 @@ constructor TInnerVM.Create(aOwner : TComponent);
 constructor TImpForth.Create(aOwner : TComponent);
   begin
     inherited Create(aOwner);
+    root := TComponent.Create(self); root.name := 'root';
     vm := TInnerVM.Create(self);
     io := kvm.work;
     _model := uevt.TModel.Create(self);
@@ -205,6 +215,22 @@ procedure TImpForth.AddOp( const iden : TTokStr; thunk : TThunk );
       data := id;
     end;
     inc(numwds);
+  end;
+
+procedure TImpForth.Mount( iden : TStr; imod : TImpModule );
+  begin imod.name := u2a(iden); imod.imp := self; root.insertComponent(imod);
+  end;
+
+procedure TImpForth.Mount( iden : TStr; cimod : CImpModule );
+  begin Mount(iden, cimod.Create(nil));
+  end;
+
+procedure TImpModule.SetImp( aImp : TImpForth );
+  begin _imp := aImp; data := _imp.data; side := _imp.side; attach;
+  end;
+
+function TImpForth.GetModule( iden : TStr ) : TImpModule;
+  begin result := TImpModule(root.FindComponent(u2a(iden)))
   end;
 
 procedure TImpForth.Send( s : TStr );
