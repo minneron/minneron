@@ -11,7 +11,6 @@ type
       ish : TImpShell; // active, visible
       procedure Init; override;
       procedure Keys(km : ukm.TKeyMap); override;
-      procedure Step; override;
     end;
 
 procedure TForthApp.init;
@@ -40,11 +39,6 @@ procedure TForthApp.keys(km : ukm.TKeyMap);
     ish.keys(km);
     km.cmd[ ^C ] := quit;
     km.cmd[ ^L ] := trm.smudge;
-  end;
-
-procedure TForthApp.step;
-  begin
-    if not imp.NeedsInput then imp.EvalNextToken;
   end;
 
 begin

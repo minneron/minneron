@@ -30,6 +30,7 @@ type
       procedure Smudge;
       procedure OnCmdAccept( s :  string );
     published
+      procedure Update; override;
       procedure Render; override;
     end;
 
@@ -59,6 +60,12 @@ procedure TImpShell.keys(km : ukm.TKeyMap);
     end
   end;
 
+procedure TImpShell.Update;
+  begin
+    if not imp.NeedsInput then imp.EvalNextToken;
+    inherited Update;
+  end;
+
 procedure TImpShell.Render;
   procedure drawLine(x, y : word; linno : byte; val : variant);
     type TStrFn = function(s : TStr; len:cardinal; ch: TChr=' ') : TStr;
