@@ -6,45 +6,40 @@ uses xpc, classes, uapp, ukm, ui, utv, cw, kvm, cli,cx,
 type
   TForthApp = class (uapp.TCustomApp)
     public
-      imp : TImpForth;
-      cmd : TImpShell;
-      scr : utv.TTermView;
+      imp : TImpForth; // active
+      trm : TTermView; // active, visible
+      ish : TImpShell; // active, visible
       procedure Init; override;
       procedure Keys(km : ukm.TKeyMap); override;
       procedure Step; override;
-      procedure OnImpChange;
     end;
 
 procedure TForthApp.init;
-  var term : TImpTerm;
   begin
     imp := TImpForth.Create(self);
-    term := TImpTerm.Create(imp); term.view.resize(64, 16);
-    scr := term.view;
+    trm := TTermView.Create(self);
+
+    ish := TImpShell.Create(self, imp);
+    // --TODO : tview/zobj.center --------
+    ish.x := self.w div 2 - ish.w div 2;
+    ish.y := self.h div 2 - ish.h div 2;
+    // -----------------------------------
     with imp do begin
       addOp('bye', quit);
-      mount('term', term);
       mount('forth', TForthWords);
-      OnChange := OnImpChange;
+      mount('term', TTermWords);
+      TTermWords(modules['term']).term := trm;
+      OnChange := ish.smudge;
     end;
-    cmd := TImpShell.Create(self, imp);
-    // --TODO : tview/zobj.center --------
-    cmd.x := self.w div 2 - cmd.w div 2;
-    cmd.y := self.h div 2 - cmd.h div 2;
-    // -----------------------------------
-    _views.extend([cmd, scr]);
+    _views.extend([ish, trm]);
     kvm.clrscr;
-  end;
-
-procedure TForthApp.OnImpChange;
-  begin cmd.smudge;
   end;
 
 procedure TForthApp.keys(km : ukm.TKeyMap);
   begin
-    cmd.keys(km);
+    ish.keys(km);
     km.cmd[ ^C ] := quit;
-    km.cmd[ ^L ] := scr.smudge;
+    km.cmd[ ^L ] := trm.smudge;
   end;
 
 procedure TForthApp.step;
