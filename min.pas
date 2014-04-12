@@ -6,23 +6,26 @@ Copyright (c) 2014 Michal J Wallace. All rights reserved.
 program min;
 uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd, dndk, ustr,
   impworld, cli, ub4vm, udb, udc, udv, ukm, utv, uapp, undk, fs,
-  strutils, ui;
+  strutils, ui, uimpforth, uimpshell, uimpwords;
 
+
 type
   TMinApp = class (uapp.TCustomApp)
     protected
       ed : mned.TEditor;
-      mb : ui.Zinput; // minibuffer (for entering commands)
       tg : udv.TDbTreeGrid;
       b4 : TB4VM;
       cur : TDbCursor;
       dbc : udb.TDatabase;
       ndk : dndk.IBase;
+      imp : TImpForth;
+      ish : TImpShell;
+      itv : utv.TTermView; // itrm.view
       typeMenu : udv.TDBMenu;
       pageMenu : udv.TDBMenu;
       rsOutln  : udb.TRecordSet;
-      focus : utv.TView;
-      km_ed, km_tg, km_mb : ukm.TKeyMap;
+      focus, oldfocus : utv.TView;
+      km_ed, km_tg, km_sh : ukm.TKeyMap;
     public
       procedure Init; override;
       procedure Step; override;
@@ -36,14 +39,28 @@ type
       procedure OnChooseType(val:variant);
       procedure LoadPage(pg:TStr);
       procedure OnToggle;
-      procedure REPL;
+      procedure ShellOn;  procedure ShellOff;
     end;
 
-procedure TMinApp.Init;
+procedure TMinApp.Init; { 1/2 }
   var vsplit : integer = 0;
   begin
+    // TODO: eventually i'll build a little lazarus-like RAD thing
+    // to manage these components as data rather than code.
+
+    { sqlite / nodak database connection }
     ndk := undk.open('minneron.sdb');
     dbc := (ndk as TNodakRepo).dbc;
+
+    { split between outline and editor }
+    vsplit := kvm.ymax - 1;
+
+    { the editor widget }
+    ed := TEditor.Create(self);
+    ed.x := 20; ed.y := 2; ed.w := kvm.width - 21;
+    ed.h := vsplit-ed.y-1;  //  why is this different than tg?
+
+    { the outliner widget }
     rsOutln := dbc.query(
 	 'SELECT olid,nid,kind,node,depth,collapsed,hidden,leaf '+
 	 'FROM outline');
@@ -51,37 +68,50 @@ procedure TMinApp.Init;
     cur.Attach(rsOutln, 'nid');
     cur.canHideRows := true; cur.hideFlag := 'hidden';
     cur.OnMarkChanged := self.OnCursorChange;
-
-    // TODO: eventually i'll build a little lazarus-like RAD thing
-    // to manage these components as data rather than code.
-    typeMenu := TDBMenu.Create(self);
-    typeMenu.rs := dbc.query('SELECT * FROM kinds ORDER BY kind');
-    typeMenu.key := 'knd';
-    typeMenu.OnSave := self.OnChooseType;
-    pageMenu := TDBMenu.Create(self);
-    pageMenu.rs := dbc.query(
-	     'SELECT nid, val AS page FROM node NATURAL JOIN kinds '+
-	     'WHERE kind=:k', ['Page']);
-    pageMenu.key := 'nid';
-    vsplit := kvm.ymax - 1;
     tg := TDbTreeGrid.Create(dbc);
     with tg do begin
       x := 1; y := 2; h := vsplit-y; w := 18; datacursor := cur
     end;
-    ed := TEditor.Create(self);
-    ed.x := 20; ed.y := 2; ed.w := kvm.width - 21;
-    ed.h := vsplit-ed.y-1;  //  why is this different than tg?
+
+    { the type menu that pops up on ^T from the outliner }
+    typeMenu := TDBMenu.Create(self);
+    typeMenu.rs := dbc.query('SELECT * FROM kinds ORDER BY kind');
+    typeMenu.key := 'knd';
+    typeMenu.OnSave := self.OnChooseType;
+{ procedure TMinApp.Init  2/2 }
+
+    { a menu for selecting pages (on ^G }
+    pageMenu := TDBMenu.Create(self);
+    pageMenu.rs := dbc.query(
+       'SELECT nid, val AS page FROM node NATURAL JOIN kinds '+
+       'WHERE kind=:k', ['Page']);
+    pageMenu.key := 'nid';
+
+    { a virtual machine  - not actually used yet! }
     b4 := TB4VM.Create(self);
-    mb := ZInput.default(1, kvm.ymax - 1, kvm.xmax-2, kvm.xmax-2 );
 
-    _views.append(ed);
-    _views.append(tg);
-    _views.append(mb);
+    { impshell (the stack based ui widget) }
+    imp := TImpForth.Create(self);
+    imp.mount('term', TTermWords);
+    imp.mount('forth', TForthWords);
+    ish := TImpShell.Create(self, imp);
+    ish.resize(16,8); ish.center(kvm.width div 2, kvm.height div 2);
+    imp.OnChange := ish.smudge; // so it updates the stack view
 
+    { impterm (for showing results/text/etc) }
+    itv := utv.TTermView.Create(self);
+    itv.resize(xpc.min(kvm.width, 64), xpc.min(kvm.height, 16));
+    itv.x := 0; itv.y := kvm.height - itv.h;
+    TTermWords(imp.modules['term']).term := itv;
+
+    { set up component rendering  }
+    ish.visible := false; itv.visible := false;
+    _views.extend([ ed, tg, ish, itv ]);
+
+    { handle command line arguments }
     if ParamCount = 1 then
       if not ed.Load( ParamStr( 1 )) then
-	fail( utf8encode('unable to load file: ' +
-			 utf8decode(ansistring(paramstr( 1 )))))
+	fail( u2a('unable to load file: ' + paramstr( 1 )))
       else ed.status := 'welcome to minneron.'
     else ok
   end;
@@ -102,12 +132,12 @@ procedure TMinApp.keys(km : ukm.TKeyMap);
       cmd[ ^O ] := self.OtherWindow;
       cmd[ ^G ] := self.ChoosePage;
       cmd[ ^L ] := self.Draw;
-      cmd[ ^X ] := self.REPL;
+      cmd[ ^U ] := self.ShellOn;
     end;
-    km_mb := ukm.TKeyMap.Create(self);
-    with km_mb do begin
-      cmd[ ^C ] := self.Quit;
-      cmd[ ^O ] := self.OtherWindow;
+    km_sh := ukm.TKeyMap.Create(self);
+    ish.keys( km_sh );
+    with km_sh do begin
+      cmd[ ^U ] := ShellOff;
     end;
     //  clean up keyboard focus handling!!
     km_ed := km; ed.keys( km_ed );
@@ -117,7 +147,7 @@ procedure TMinApp.keys(km : ukm.TKeyMap);
       cmd[ ^O ] := self.OtherWindow;
       cmd[ ^G ] := self.ChoosePage;
       cmd[ ^S ] := self.SavePage;
-      cmd[ ^X ] := self.REPL;
+      cmd[ ^U ] := self.ShellOn;
     end;
     self.focus := ed;
   end;
@@ -139,26 +169,20 @@ procedure TMinApp.draw;
 
 procedure TMinApp.OtherWindow;
   begin
+    // so horrible! get a real 'focus' concept!
     // focus.defocus;
     if focus = ed then
-      begin
-	focus := tg; keymap := km_tg; kvm.HideCursor;
+      begin focus := tg; keymap := km_tg; kvm.HideCursor;
       end
-    else if focus = tg then
-      begin
-	focus := mb; keymap := km_mb; kvm.ShowCursor;
-      end
-    else
-      begin
-	focus := ed; keymap := km_ed; kvm.ShowCursor;
+    else //if focus = tg then
+      begin focus := ed; keymap := km_ed; kvm.ShowCursor;
       end;
     // focus.focus;
   end;
 
 // TODO : OnCursorChange should be part of the gridview itself.
 procedure TMinApp.OnCursorChange( Sender : TObject );
-  begin
-    tg.smudge;
+  begin tg.smudge;
   end;
 
 procedure TMinApp.ChoosePage;
@@ -190,9 +214,7 @@ procedure TMinApp.LoadPage(pg:TStr);
   end;
 
 procedure TMinApp.ChooseType;
-  begin
-    typeMenu.Choose;
-    self.smudge;
+  begin typeMenu.Choose; self.smudge;
   end;
 
 procedure TMinApp.OnChooseType(val:variant);
@@ -211,9 +233,14 @@ procedure TMinApp.OnToggle;
     rsOutln.Open; tg.smudge; // refresh the data and display
   end;
 
-procedure TMinApp.REPL;
-  begin
-
+{ show and hide the impforth shell with ^U }
+//  calling otherwindow in these two is just a hack so that ShellOff
+  // restores the keyboard handler.
+procedure TMinApp.ShellOn;
+  begin otherwindow; oldfocus := focus; itv.show; ish.show; keymap := km_sh;
+  end;
+procedure TMinApp.ShellOff;
+  begin focus := oldfocus; otherwindow; itv.hide; ish.hide; self.smudge;
   end;
 
 
