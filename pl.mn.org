@@ -12,13 +12,55 @@
 - [X] Save content to the database.
 - [X] Preserve version history.
 
-* TODO create edge
+* TODO [3/5] create edge
   :PROPERTIES:
   :TS:       <2014-03-30 11:56PM>
   :ID:       gwrfrhc1sfg0
   :END:
-- Maybe three input boxes and a button.
-- Shortcut to populate a box with the current node.
+** DONE (had to actually get the little stack repl working)
+:PROPERTIES:
+:TS:       <2014-04-11 05:49AM>
+:ID:       df8c3o317gg0
+:END:
+** DONE (had to fix a bunch of kvm/gridterm problems)
+:PROPERTIES:
+:TS:       <2014-04-11 05:46AM>
+:ID:       m4ze7i317gg0
+:END:
+
+** DONE [3/3] show the new stack-based ui (TImpShell and TImpTerm)
+:PROPERTIES:
+:TS:       <2014-04-06 08:24AM>
+:ID:       vimfxvg01gg0
+:END:
+*** DONE smudge the terminal on write
+:PROPERTIES:
+:TS:       <2014-04-11 06:00AM>
+:ID:       615fd5417gg0
+:END:
+*** DONE move tforthapp.step into an (.update) method
+:PROPERTIES:
+:TS:       <2014-04-11 05:59AM>
+:ID:       g2qeq3417gg0
+:END:
+*** DONE it would be nice to treat timpterm as an ITerm directly.
+:PROPERTIES:
+:TS:       <2014-04-11 06:06AM>
+:ID:       rlkbhf417gg0
+:END:
+
+** TODO allow pushing node names (strings) to the stack
+:PROPERTIES:
+:TS:       <2014-04-06 08:24AM>
+:ID:       1g10owg01gg0
+:END:
+
+** TODO invoke 'create edge' behavior from the repl.
+:PROPERTIES:
+:TS:       <2014-04-06 08:25AM>
+:ID:       fcij8xg01gg0
+:END:
+
 
 * TODO incoming links
   :PROPERTIES:
@@ -72,6 +114,26 @@ Alternatively, enable full text indexing in sqlite.
 
 
 * -------------
+
+* TODO tag components so they register themselves
+:PROPERTIES:
+:TS:       <2014-04-11 06:32AM>
+:ID:       48t9qn517gg0
+:END:
+I'm talking about .updatable, .drawable, .focusable, .haskeymap, .scriptable, etc. This could be done with QueryInterface, or just simple tags.
+
+The idea is that these components would then be automatically registered in the appropriate lists of things to draw, or to create keymaps for, or whatever..
+
+* TODO load component layouts from external resource description
+:PROPERTIES:
+:TS:       <2014-04-11 06:27AM>
+:ID:       i4x0le517gg0
+:END:
+* TODO have each row in the termview store a set of dirty columns
+:PROPERTIES:
+:TS:       <2014-04-11 06:02AM>
+:ID:       nrx5s9417gg0
+:END:
 * TODO [2/4] block-based display plan (single column)           :ed007:
 :PROPERTIES:
 :TS: <2013-01-01 10:35PM>
@@ -242,8 +304,6 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-10-01 02:41AM>
 :ID:       3qk0olo069g0
 :END:
-
-
 * TODO [0/2] create outlines and store them in a database
 :PROPERTIES:
 :TS:       <2013-10-06 12:44AM>
@@ -259,8 +319,6 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :TS:       <2013-10-06 12:45AM>
 :ID:       qjz9j6d1c9g0
 :END:
-
-
 * TODO [0/10] create a simple interactive grammar builder
 :PROPERTIES:
 :TS:       <2013-09-30 12:22AM>
@@ -324,7 +382,6 @@ The problem is that several parts of the editor use the object's =cursor= direct
 :END:
 elements are sequences/strings with a 1-dimensional length
 blocks are rectangles with a 2-dimensional bounding box
-
 * TODO [5/9] word wrap implementation                           :ed004:
 :PROPERTIES:
 :TS: <2013-01-11 11:45AM>
@@ -454,7 +511,6 @@ new =show_node= version: id:51l0hns0mzf0
 :ID: xob8dhg0kzf0
 :END:
 
-
 * TODO planned enhancements for =mnml=
 :PROPERTIES:
 :TS:       <2013-05-15 12:14PM>
@@ -496,3 +552,25 @@ TModName : string[32];
 :END:
 TMessage : record end;
 TQueue   : record end;
+* TODO scrolling repl
+:PROPERTIES:
+:TS:       <2014-04-01 12:52AM>
+:ID:       qx2b9mg0ufg0
+:END:
+- [ ] array of (colored?) lines for the backlog
+- [ ] merge in scrolling support from ngaro
+(maybe I can use the existing buffer/scrolling features from mned?)
+
+* TODO allow chaining keymaps together
+:PROPERTIES:
+:TS:       <2014-04-01 01:22AM>
+:ID:       gwz8izh0ufg0
+:END:
+This is fairly easy. Simply assign a default that passes the buck to the next item in the chain.
+
+
+* TODO consider porting https://github.com/gabriel-comeau/tbuikit
+:PROPERTIES:
+:TS:       <2014-04-01 01:25AM>
+:ID:       0zs0m4i0ufg0
+:END:
