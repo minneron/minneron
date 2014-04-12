@@ -105,7 +105,7 @@ constructor TImpForth.Create(aOwner : TComponent);
     inherited Create(aOwner);
     root := TComponent.Create(self); root.name := 'root';
     vm := TInnerVM.Create(self);
-    io := kvm.work;
+    io := kvm.asterm;
     _model := uevt.TModel.Create(self);
     numwds := 0;
     data := GStack<variant>.Create(32);

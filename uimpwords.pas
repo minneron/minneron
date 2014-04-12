@@ -62,7 +62,7 @@ procedure TForthWords.opDIV;
   end;
 
 constructor TTermWords.Create(aOwner : TComponent);
-  begin inherited Create(aOwner); term := kvm.work
+  begin inherited Create(aOwner); term := kvm.asterm
   end;
 procedure TTermWords.Attach;
   procedure ao(s:TStr;meth:TThunk);
