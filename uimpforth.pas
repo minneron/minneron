@@ -67,6 +67,7 @@ type
       OnChange : TThunk;
 
       constructor Create(aOwner : TComponent); override;
+      destructor Destroy; override;
 
       {-- main public inteface --}
       procedure AddOp( const iden : TTokStr; thunk : TThunk );
@@ -111,6 +112,11 @@ constructor TImpForth.Create(aOwner : TComponent);
     data := GStack<variant>.Create(32);
     side := GStack<variant>.Create(32);
   end;
+
+destructor TImpForth.Destroy;
+  begin data.free; side.free; inherited
+  end;
+
 
 {-- direct stack access from pascal ---------------------------}
 
