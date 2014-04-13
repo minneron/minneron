@@ -9,7 +9,7 @@ type
     public
       imp : TImpForth;
       procedure Initialize; override;
-      procedure AddOp( const iden : TTokStr; thunk : TThunk );
+      procedure AddOp( const iden : TStr; thunk : TThunk );
       procedure DoRun; override;
       procedure Welcome; virtual;
       procedure Refill; virtual;
@@ -130,7 +130,7 @@ procedure TImpShellApp.Initialize;
     imp := TImpForth.Create(self);
   end;
 
-procedure TImpShellApp.AddOp( const iden : TTokStr; thunk : TThunk );
+procedure TImpShellApp.AddOp( const iden : TStr; thunk : TThunk );
   begin
     imp.AddOp(iden, thunk);
   end;

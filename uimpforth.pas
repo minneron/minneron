@@ -17,10 +17,9 @@ type
   TThunk    = procedure of object;
   TImpStack = GStack<variant>;
   TCmdQueue = TQueue<integer>;
-  TTokStr   = TStr;
   TWord	 = record
     // prev : address;
-    word : TTokStr;
+    word : TStr;
     code : address;
     data : cardinal
   end;
@@ -54,11 +53,12 @@ type
 
   TImpForth = class (TComponent)
     protected
-      vm  : TInnerVM; io : kvm.ITerm; tok : TTokStr;
+      vm  : TInnerVM; io : kvm.ITerm; tok : TStr;
       which : cardinal;    // address of last looked-up word
       // for now, we're just using a simple array for the dictionary
       words  : array[ 0 .. 1023 ] of TWord; numwds : cardinal;
-      src : TStr; _model : uevt.TModel;
+      _src, _frag : Tstr; // input buffer and partially-built next token
+      _model : uevt.TModel;
       root : TComponent;
     public
       data, side : TImpStack;
@@ -70,13 +70,13 @@ type
       destructor Destroy; override;
 
       {-- main public inteface --}
-      procedure AddOp( const iden : TTokStr; thunk : TThunk );
+      procedure AddOp( const iden : TStr; thunk : TThunk );
       procedure Send( s : string );
-      procedure Eval( const token : TTokStr );
+      procedure Eval( const token : TStr );
       procedure EvalNextToken;
       procedure Interpret;
 
-      function NextToken : TTokStr; virtual;
+      function NextToken : TStr; virtual;
       function Lookup  : boolean;
       function IsNumber : boolean;
       procedure NotFound;
@@ -211,7 +211,7 @@ function TImpForth.IsNumber : boolean;
 
 {-- dictionary-handlers ---------------------------------------}
 
-procedure TImpForth.AddOp( const iden : TTokStr; thunk : TThunk );
+procedure TImpForth.AddOp( const iden : TStr; thunk : TThunk );
   var id : integer;
   begin
     id := vm.AddOp(thunk);
@@ -238,22 +238,22 @@ procedure TImpModule.SetImp( aImp : TImpForth );
 function TImpForth.GetModule( iden : TStr ) : TImpModule;
   begin result := TImpModule(root.FindComponent(u2a(iden)))
   end;
-
+
 procedure TImpForth.Send( s : TStr );
   begin
-    self.src += s;
-    self.NeedsInput := false;
+    if length(s) > 0 then begin
+      _src += s;
+      self.NeedsInput := false;
+    end
   end;
-
-function TImpForth.NextToken : TTokStr;
+
+function TImpForth.NextToken : TStr;
   var inp : cardinal = 1; // input pointer
   function OutsideToken : boolean;
-    begin
-      result := (inp > length(src)) or (src[inp] <= ' ')
+    begin result := (inp > length(_src)) or (_src[inp] <= ' ')
     end;
   function InsideString : boolean;
-    begin
-      result := (inp <= length(src))
+    begin result := (inp <= length(_src))
     end;
   begin
     self.tok := '';
@@ -262,18 +262,18 @@ function TImpForth.NextToken : TTokStr;
     if InsideString then
       begin // consume the next token
         repeat
-          self.tok += src[inp];
+          self.tok += _src[inp];
           inc(inp)
 	until OutsideToken;
 	//  TODO: implement rightstr, etc for utf-8
-        self.src := a2u(RightStr(u2a(src), length(src) - inp));
+        _src := a2u(RightStr(u2a(_src), length(_src) - inp));
       end
     else self.NeedsInput := true; // only saw whitespace
     result := tok;
   end;
 
 
-procedure TImpForth.Eval(const token : TTokStr);
+procedure TImpForth.Eval(const token : TStr);
   var i : integer;
   begin
     tok := token;
