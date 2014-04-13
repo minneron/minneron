@@ -17,6 +17,7 @@ type
   TThunk    = procedure of object;
   TImpStack = GStack<variant>;
   TCmdQueue = TQueue<integer>;
+  EImpError = class (Exception) end;
   TWord	 = record
     // prev : address;
     word : TStr;
@@ -65,6 +66,7 @@ type
       NeedsInput, HasOutput : boolean;
       msg : TStr; // input and output buffers
       OnChange : TThunk;
+      OnError  : TStrEvent;
 
       constructor Create(aOwner : TComponent); override;
       destructor Destroy; override;
@@ -80,6 +82,7 @@ type
       function Lookup  : boolean;
       function IsNumber : boolean;
       procedure NotFound;
+      procedure Error( s : TStr);
 
       function GetModule( iden : TStr ) : TImpModule;
       procedure Mount( iden : TStr; imod : TImpModule ); overload;
@@ -194,8 +197,11 @@ function TImpForth.LookUp : boolean;
   end;
 
 procedure TImpForth.NotFound;
-  begin
-    msg := tok + '?';
+  begin Error(tok + '?')
+  end;
+
+procedure TImpForth.Error( s : TStr );
+  begin if assigned(OnError) then OnError(s)
   end;
 
 
@@ -277,17 +283,20 @@ procedure TImpForth.Eval(const token : TStr);
   var i : integer;
   begin
     tok := token;
-    if Lookup then Interpret
-    else if TryStrToInt(u2a(tok), i) then begin data.push(i) end
-    else if tok <> '' then data.push(tok);
-    if assigned(OnChange) then OnChange;
-    if msg<>'' then begin io.emit(msg); msg := '' end;
+    try
+      if Lookup then Interpret
+      else if TryStrToInt(u2a(tok), i) then begin data.push(i) end
+      else if tok <> '' then data.push(tok);
+      if assigned(OnChange) then OnChange;
+      if msg<>'' then begin io.emit(msg); msg := '' end;
+    except
+      on e:EImpError do Error(e.message);
+      on e:Exception do Error('exception: ' + e.message);
+    end
   end;
 
 procedure TImpForth.EvalNextToken;
-  begin
-    NextToken;
-    Eval(tok);
+  begin NextToken; Eval(tok)
   end;
 
 begin
