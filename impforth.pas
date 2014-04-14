@@ -17,12 +17,8 @@ procedure TForthApp.init;
   begin
     imp := TImpForth.Create(self);
     trm := TTermView.Create(self);
-
     ish := TImpShell.Create(self, imp);
-    // --TODO : tview/zobj.center --------
-    ish.x := self.w div 2 - ish.w div 2;
-    ish.y := self.h div 2 - ish.h div 2;
-    // -----------------------------------
+    ish.center(self.w div 2, self.h div 2);
     with imp do begin
       addOp('bye', quit);
       mount('forth', TForthWords);
