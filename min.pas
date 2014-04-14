@@ -12,7 +12,7 @@ uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd, dndk, ustr,
 type
   TEdgeDirection = (edIncoming, edOutgoing);
   TEdgeMenu = class (utv.TView)
-    protected _base : IBase; _node : INode;
+    protected _base : IBase; _node : INode; _index : cardinal;
     public
       edgedir: TEdgeDirection;
       constructor Create( aOwner : TComponent ); override;
@@ -23,24 +23,28 @@ type
     end;
 
 constructor TEdgeMenu.Create( aOwner : TComponent );
-  begin inherited; _w := 32; _h := 8; edgedir := edIncoming;
+  begin inherited; _w := 32; _h := 8; edgedir := edIncoming; _index := 0;
   end;
-
+
 procedure TEdgeMenu.Render;
-  var edge : IEdge; edges : TEdges; i : integer = 1;
+  var edge : IEdge; edges : TEdges; count : integer = 0; bar : byte;
+  procedure drawline;
+    begin
+      if count = _index then bg(bar) else bg(0);
+      if edgedir = edincoming
+        then write(edge.sub.s, ' ', edge.rel.s)
+        else write(edge.rel.s, ' ', edge.obj.s);
+      clreol;
+    end;
   begin bg(0); fg(w); clrscr;
+    if _focused then bar := udv.hibar else bar := udv.lobar;
     if assigned( node ) then begin
       if edgedir = edIncoming then edges := _node.ie else edges := _node.oe;
-      for edge in edges do begin
-        gotoxy(0,i); inc(i);
-        if edgedir = edincoming
-          then write(edge.sub.s, ' ', edge.rel.s)
-          else write(edge.rel.s, ' ', edge.obj.s);
-        clreol;
-      end;
+      _index := xpc.min(_index, length(edges)-1);
+      for edge in edges do begin gotoxy(0,count); drawline; inc(count) end;
       edges := nil;
-    end else cwriteln('|!r|$|Y|@0101 not connected');
-    if _focused then fx.rectangle(0,0,xmax,ymax,$0003);
+      if count = 0 then begin bg(bar); clreol; end;
+    end else begin bg(bar); cwriteln('|k(not connected)|%') end;
   end;
 
 type
