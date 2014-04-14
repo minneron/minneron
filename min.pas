@@ -6,7 +6,7 @@ Copyright (c) 2014 Michal J Wallace. All rights reserved.
 program min;
 uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd, dndk, ustr,
   impworld, cli, ub4vm, udb, udc, udv, ukm, utv, uapp, undk, fs,
-  strutils, ui, uimpforth, uimpshell, uimpwords;
+  strutils, ui, uimpforth, uimpshell, uimpwords, uimpndk;
 
 
 type
@@ -92,8 +92,11 @@ procedure TMinApp.Init; { 1/2 }
 
     { impshell (the stack based ui widget) }
     imp := TImpForth.Create(self);
+    imp.addOp('bye', self.quit);
     imp.mount('term', TTermWords);
     imp.mount('forth', TForthWords);
+    imp.mount('ndk', TNdkWords);
+    TNdkWords(imp.modules['ndk']).ndk := ndk;
     ish := TImpShell.Create(self, imp);
     ish.resize(16,8); ish.center(kvm.width div 2, kvm.height div 2);
     imp.OnChange := ish.smudge; // so it updates the stack view
