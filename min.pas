@@ -157,7 +157,8 @@ procedure TMinApp.Init; { 1/3 }
 
     { set up component rendering  }
     ish.visible := false; itv.visible := false;
-    _views.extend([ ed, tg, ish, itv, _ies, _oes ]);
+    _views.extend([ ed, tg, itv, _ies, _oes ]);
+    _views.append(ish); // make sure shell is on top
 
     { focus ring }
     _focusables.extend([ ed, tg, _ies, _oes ]);
@@ -292,11 +293,17 @@ procedure TMinApp.OnToggle;
 { show and hide the impforth shell with ^U }
 //  calling otherwindow in these two is just a hack so that ShellOff
   // restores the keyboard handler.
+var _oldKeyMap : ukm.TKeyMap;
 procedure TMinApp.ShellOn;
-  begin otherwindow; itv.show; ish.show; keymap := km_sh;
+  begin
+    _oldKeyMap := keymap; keymap := km_sh;
+    itv.show; ish.show; ish.GainFocus;
   end;
+
 procedure TMinApp.ShellOff;
-  begin otherwindow; itv.hide; ish.hide; self.smudge;
+  begin
+    itv.hide; ish.hide; self.smudge;
+    keymap := _oldKeyMap;
   end;
 
 
