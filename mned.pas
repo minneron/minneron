@@ -138,7 +138,8 @@ procedure TEditor.Render;
       { This simply positions the input widget. }
       with self.led do begin
 	x := gutw; y := ypos;
-	tcol := $080f; acol := $0800; // text/arrows
+	if self._focused then tcol := $080f else tcol := $ea0f;
+	acol := $0800; // arrow color
 	w := self.w - gutw; smudge;
       end;
     end;

@@ -157,7 +157,7 @@ procedure TMinApp.Init; { 1/3 }
 
     { focus ring }
     _focusables.extend([ ed, tg, _ies, _oes ]);
-    _focus.ToTop;
+    _focus.ToTop; _focus.value.gainfocus;
 
     { handle command line arguments }
     if ParamCount = 1 then
