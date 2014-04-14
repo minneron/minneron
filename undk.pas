@@ -2,7 +2,7 @@
 unit undk;
 interface uses xpc, dndk, classes, udb, sysutils, fs;
 
-  function open(path : string) : dndk.IBase;
+  function open(path : TStr) : dndk.IBase;
 
 type
 
@@ -10,17 +10,17 @@ type
     protected
       _dbc  : udb.TDatabase;
     public
-      constructor Open(ndkPath : string);
-      function e(sub, rel, obj : string; seq:integer=0) : IEdge;   // store edge
+      constructor Open(ndkPath : TStr);
+      function e(sub, rel, obj : TStr; seq:integer=0) : IEdge;   // store edge
       function f(eid : integer) : IEdge;            // fetch edge
-      function q(sub,rel,obj : string) : TEdges;    // query edges
-      function w(sub,rel,obj : string) : TEdges;    // write edges (to debug)
-      function n(key : string) : INode;             // node name -> nid
-      function a(key, val : string) : IEdge;        // assign = e(key,':=',val)
-      function v(key : string) : ICell;             // v(key) = n(key).val
+      function q(sub,rel,obj : TStr) : TEdges;    // query edges
+      function w(sub,rel,obj : TStr) : TEdges;    // write edges (to debug)
+      function n(key : TStr) : INode;             // node name -> nid
+      function a(key, val : TStr) : IEdge;        // assign = e(key,':=',val)
+      function v(key : TStr) : ICell;             // v(key) = n(key).val
     published
       property dbc : udb.TDatabase read _dbc;
-      property nodes[s : string] : INode read n; default;
+      property nodes[s : TStr] : INode read n; default;
     end;
 
 
@@ -38,7 +38,7 @@ type
       _value : variant;
     public
       constructor New(aValue : variant);
-      function s : string;
+      function s : TStr;
       function i : integer;
       function b : boolean;
       function n : INode;
@@ -47,9 +47,9 @@ type
   TEdge = class (TBase, IEdge)
     protected
       _eid, _seq : integer;
-      _sub, _rel, _obj : string;
+      _sub, _rel, _obj : TStr;
     public
-      constructor New(aBase: IBase; aEid,aSeq : integer; aSub, aRel, aObj : string);
+      constructor New(aBase: IBase; aEid,aSeq : integer; aSub, aRel, aObj : TStr);
       function eid : integer;
       function sub : ICell;
       function rel : ICell;
@@ -60,17 +60,17 @@ type
 
   TNode = class (TBase, INode)
     protected
-      _nid : integer; _key : string;
+      _nid : integer; _key : TStr;
     public
-      constructor New(aBase: IBase; aKey : string);
+      constructor New(aBase: IBase; aKey : TStr);
       function nid : integer;
       function key : ICell;
       function val : ICell;
       function ie : TEdges;
       function oe : TEdges;
-      function qe(s : string) : TEdges;
-      function q1(s : string) : ICell;
-      property any[s : string] : ICell  read q1; default;
+      function qe(s : TStr) : TEdges;
+      function q1(s : TStr) : ICell;
+      property any[s : TStr] : ICell  read q1; default;
     end;
 
 implementation
@@ -82,9 +82,9 @@ constructor TCell.New(aValue : variant);
     _value := aValue
   end;
 
-function TCell.s : string;
+function TCell.s : TStr;
   begin
-    result := string(_value)
+    result := TStr(_value)
   end;
 
 function TCell.i : integer;
@@ -113,7 +113,7 @@ constructor TBase.New(aBase: IBase);
 
 {-- TEdge --}
 
-constructor TEdge.New(aBase: IBase; aEid, aSeq : integer; aSub, aRel, aObj : string);
+constructor TEdge.New(aBase: IBase; aEid, aSeq : integer; aSub, aRel, aObj : TStr);
   begin
     _eid := aEid; _seq := aSeq; _sub := aSub; _rel := aRel; _obj := aObj;
     inherited New(aBase)
@@ -142,7 +142,7 @@ procedure TEdge.SetSeq( val : integer );
 
 {-- TNode --}
 
-constructor TNode.New(aBase: IBase; aKey : string);
+constructor TNode.New(aBase: IBase; aKey : TStr);
   begin
     _base := aBase; _key := aKey;
   end;
@@ -154,12 +154,12 @@ function TNode.val : ICell; begin result := self[':='] end;
 function TNode.ie : TEdges; begin result := _base.q('~', '~', _key); end;
 function TNode.oe : TEdges; begin result := _base.q(_key, '~', '~'); end;
 
-function TNode.qe(s : string) : TEdges;
+function TNode.qe(s : TStr) : TEdges;
   begin
     result := _base.q(_key, s, '~');
   end;
 
-function TNode.q1(s : string) : ICell;
+function TNode.q1(s : TStr) : ICell;
   var edges : TEdges;
   begin
     edges := self.qe(s);
@@ -170,7 +170,7 @@ function TNode.q1(s : string) : ICell;
 
 {-- TNodakRepo --}
 
-constructor TNodakRepo.Open(ndkPath : string);
+constructor TNodakRepo.Open(ndkPath : TStr);
   var isnew : boolean;
   begin
     inherited Create(Nil);
@@ -181,7 +181,7 @@ constructor TNodakRepo.Open(ndkPath : string);
     end;
   end;
 
-function TNodakRepo.e(sub, rel, obj : string; seq : integer=0) : IEdge;
+function TNodakRepo.e(sub, rel, obj : TStr; seq : integer=0) : IEdge;
   var rs : udb.TRecordset;
   begin
     _dbc.RunSQL('insert into trip (sub, rel, obj, seq) '
@@ -202,13 +202,13 @@ function TNodakRepo.f(eid : integer) : IEdge;
     rs.Free;
   end;
 
-function sqlEsc(s : string) : string;
+function sqlEsc(s : TStr) : TStr;
   begin
     result:= ''''+sysutils.StringReplace(s,'''','''''',[rfReplaceAll])+'''';
   end;
 
-function TNodakRepo.q(sub,rel,obj : string) : TEdges;
-  var sql : string = ''; rs : udb.TRecordSet; i : cardinal = 0;
+function TNodakRepo.q(sub,rel,obj : TStr) : TEdges;
+  var sql : TStr = ''; rs : udb.TRecordSet; i : cardinal = 0;
   begin
     sql := 'select eid, sub, rel, obj, seq from trip';
     if (sub <> '~') or (rel <> '~') or (obj <> '~') then sql += ' where (1=1)';
@@ -227,7 +227,7 @@ function TNodakRepo.q(sub,rel,obj : string) : TEdges;
     rs.Free;
   end;
   
-function TNodakRepo.w(sub,rel,obj : string) : TEdges;
+function TNodakRepo.w(sub,rel,obj : TStr) : TEdges;
   var i : cardinal = 0;
   begin
     result := self.q(sub,rel,obj);
@@ -242,24 +242,24 @@ function TNodakRepo.w(sub,rel,obj : string) : TEdges;
     writeln('-- end of results.');
   end;
 
-function TNodakRepo.n(key : string) : INode;
+function TNodakRepo.n(key : TStr) : INode;
   begin
     result := TNode.New(self, key)
   end;
 
-function TNodakRepo.a(key, val : string) : IEdge;
+function TNodakRepo.a(key, val : TStr) : IEdge;
   begin
     result := self.e(key, ':=', val)
   end;
 
-function TNodakRepo.v(key : string) : ICell;
+function TNodakRepo.v(key : TStr) : ICell;
   begin
     result := self[key].val
   end;
 
 {-- unit interface --}
 
-function Open(path : string) : dndk.IBase;
+function Open(path : TStr) : dndk.IBase;
   begin
     result := TNodakRepo.Open(path);
   end;
