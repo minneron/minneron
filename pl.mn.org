@@ -12,7 +12,7 @@
 - [X] Save content to the database.
 - [X] Preserve version history.
 
-* TODO [3/5] create edge
+* DONE [4/4] create edge
   :PROPERTIES:
   :TS:       <2014-03-30 11:56PM>
   :ID:       gwrfrhc1sfg0
@@ -48,21 +48,21 @@
 :TS:       <2014-04-11 06:06AM>
 :ID:       rlkbhf417gg0
 :END:
-
-** TODO allow pushing node names (strings) to the stack
-:PROPERTIES:
-:TS:       <2014-04-06 08:24AM>
-:ID:       1g10owg01gg0
-:END:
-
-** TODO invoke 'create edge' behavior from the repl.
+** DONE invoke 'create edge' behavior from the repl.
 :PROPERTIES:
 :TS:       <2014-04-06 08:25AM>
 :ID:       fcij8xg01gg0
 :END:
+*** DONE create an impforth module for undk (uimpndk)
+:PROPERTIES:
+:TS:       <2014-04-13 01:37PM>
+:ID:       jzua8x61agg0
+:END:
+- create a TImpModule
+- implement 'attach' with imp.addop(name, self.xyz)
 
 
-* TODO incoming links
+* TODO (show) incoming links
   :PROPERTIES:
   :TS:       <2014-03-30 11:56PM>
   :ID:       8ead4ic1sfg0
@@ -71,7 +71,7 @@ This is just another list widget (dbmenu)
 The OnChoice callback should trigger loading a new page.
 You should also be able to delete items.
 
-* TODO outgoing links
+* TODO (show) outgoing links
   :PROPERTIES:
   :TS:       <2014-03-30 11:56PM>
   :ID:       wai5aic1sfg0
@@ -114,6 +114,29 @@ Alternatively, enable full text indexing in sqlite.
 
 
 * -------------
+* TODO [0/1] allow pushing node strings with spaces, etc to the stack
+:PROPERTIES:
+:TS:       <2014-04-06 08:24AM>
+:ID:       1g10owg01gg0
+:END:
+
+** TODO clean up the parser so it's state driven
+:PROPERTIES:
+:TS:       <2014-04-12 11:55AM>
+:ID:       1tf584m09gg0
+:END:
+
+* TODO integrate with ptckvm to get a nice full screen console
+:PROPERTIES:
+:TS:       <2014-04-12 03:17PM>
+:ID:       cljcygv09gg0
+:END:
+
+* TODO timpmodule instances should register themselves with 'published'
+:PROPERTIES:
+:TS:       <2014-04-13 01:45PM>
+:ID:       b7hixb71agg0
+:END:
 
 * TODO tag components so they register themselves
 :PROPERTIES:
