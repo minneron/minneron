@@ -44,8 +44,6 @@ procedure TEdgeMenu.Render;
   end;
 
 type
-  TFocusRing = rings.GRing<TView>;
-  TFocusCursor = rings.IRingCursor<TView>;
   TMinApp = class (uapp.TCustomApp)
     protected
       ed : mned.TEditor;
@@ -61,10 +59,7 @@ type
       pageMenu : udv.TDBMenu;
       _ies, _oes : TEdgeMenu;
       rsOutln  : udb.TRecordSet;
-      focus, oldfocus : utv.TView;
       km_ed, km_tg, km_sh : ukm.TKeyMap;
-      _focusables : TFocusRing;
-      _focus : TFocusCursor;
     public
       procedure Init; override;
       procedure Step; override;
@@ -161,9 +156,7 @@ procedure TMinApp.Init; { 1/3 }
     _views.extend([ ed, tg, ish, itv, _ies, _oes ]);
 
     { focus ring }
-    _focusables := TFocusRing.Create;
     _focusables.extend([ ed, tg, _ies, _oes ]);
-    _focus := _focusables.MakeCursor;
     _focus.ToTop;
 
     { handle command line arguments }
@@ -207,7 +200,6 @@ procedure TMinApp.keys(km : ukm.TKeyMap);
       cmd[ ^S ] := self.SavePage;
       cmd[ ^U ] := self.ShellOn;
     end;
-    self.focus := ed;
   end;
 
 procedure TMinApp.step;
@@ -297,10 +289,10 @@ procedure TMinApp.OnToggle;
 //  calling otherwindow in these two is just a hack so that ShellOff
   // restores the keyboard handler.
 procedure TMinApp.ShellOn;
-  begin otherwindow; oldfocus := focus; itv.show; ish.show; keymap := km_sh;
+  begin otherwindow; itv.show; ish.show; keymap := km_sh;
   end;
 procedure TMinApp.ShellOff;
-  begin focus := oldfocus; otherwindow; itv.hide; ish.hide; self.smudge;
+  begin otherwindow; itv.hide; ish.hide; self.smudge;
   end;
 
 
