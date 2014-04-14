@@ -201,7 +201,7 @@ procedure TImpForth.NotFound;
   end;
 
 procedure TImpForth.Error( s : TStr );
-  begin if assigned(OnError) then OnError(s)
+  begin if assigned(OnError) then OnError(s) else raise EImpError.Create(s)
   end;
 
 
