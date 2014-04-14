@@ -6,8 +6,42 @@ Copyright (c) 2014 Michal J Wallace. All rights reserved.
 program min;
 uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd, dndk, ustr,
   impworld, cli, ub4vm, udb, udc, udv, ukm, utv, uapp, undk, fs,
-  strutils, ui, uimpforth, uimpshell, uimpwords, uimpndk, rings;
+  strutils, ui, uimpforth, uimpshell, uimpwords, uimpndk, rings,
+  classes;
+
+type
+  TEdgeDirection = (edIncoming, edOutgoing);
+  TEdgeMenu = class (utv.TView)
+    protected _base : IBase; _node : INode;
+    public
+      edgedir: TEdgeDirection;
+      constructor Create( aOwner : TComponent ); override;
+      procedure Render; override;
+    published
+      property base : IBase read _base write _base;
+      property node : INode read _node write _node;
+    end;
 
+constructor TEdgeMenu.Create( aOwner : TComponent );
+  begin inherited; _w := 32; _h := 8; edgedir := edIncoming;
+  end;
+
+procedure TEdgeMenu.Render;
+  var edge : IEdge; edges : TEdges; i : integer = 1;
+  begin bg(0); fg(w); clrscr;
+    if assigned( node ) then begin
+      if edgedir = edIncoming then edges := _node.ie else edges := _node.oe;
+      for edge in edges do begin
+        gotoxy(0,i); inc(i);
+        if edgedir = edincoming
+          then write(edge.sub.s, ' ', edge.rel.s)
+          else write(edge.rel.s, ' ', edge.obj.s);
+        clreol;
+      end;
+      edges := nil;
+    end else cwriteln('|!r|$|Y|@0101 not connected');
+    if _focused then fx.rectangle(0,0,xmax,ymax,$0003);
+  end;
 
 type
   TFocusRing = rings.GRing<TView>;
@@ -25,6 +59,7 @@ type
       itv : utv.TTermView; // itrm.view
       typeMenu : udv.TDBMenu;
       pageMenu : udv.TDBMenu;
+      _ies, _oes : TEdgeMenu;
       rsOutln  : udb.TRecordSet;
       focus, oldfocus : utv.TView;
       km_ed, km_tg, km_sh : ukm.TKeyMap;
@@ -62,7 +97,7 @@ procedure TMinApp.Init; { 1/3 }
     { the editor widget }
     ed := TEditor.Create(self);
     ed.x := 20; ed.y := 2; ed.w := kvm.width - 21;
-    ed.h := vsplit-ed.y-1;  //  why is this different than tg?
+    ed.h := 22; //  of by 1, even accounting for status line :(
 
     { the outliner widget }
     rsOutln := dbc.query(
@@ -111,18 +146,25 @@ procedure TMinApp.Init; { 1/3 }
     itv.x := 0; itv.y := kvm.height - itv.h;
     TTermWords(imp.modules['term']).term := itv;
 
-    { set up component rendering  }
-    ish.visible := false; itv.visible := false;
-    _views.extend([ ed, tg, ish, itv ]);
-
-    _focusables := TFocusRing.Create;
-    _focusables.extend([ ed, tg ]);
-    _focus := _focusables.MakeCursor;
-    _focus.ToTop;
 
 { procedure TMinApp.Init  3/3 }
 
+    { incoming and outgoing links }
+    _ies := TEdgeMenu.Create(self);
+    _ies.MoveTo(ed.x, ed.y + ed.h + 1);
+
+    _oes := TEdgeMenu.Create(self); _oes.edgedir := edOutgoing;
+    _oes.MoveTo(ed.x + _ies.w + 2, ed.y + ed.h + 1);
+
+    { set up component rendering  }
+    ish.visible := false; itv.visible := false;
+    _views.extend([ ed, tg, ish, itv, _ies, _oes ]);
+
     { focus ring }
+    _focusables := TFocusRing.Create;
+    _focusables.extend([ ed, tg, _ies, _oes ]);
+    _focus := _focusables.MakeCursor;
+    _focus.ToTop;
 
     { handle command line arguments }
     if ParamCount = 1 then
@@ -185,9 +227,9 @@ procedure TMinApp.draw;
 
 procedure TMinApp.OtherWindow;
   begin
-//    _focus.value.GetBlur;
+    _focus.value.LoseFocus;
     _focus.MoveNext; if _focus.AtClasp then _focus.MoveNext;
-//    _focus.value.GetFocus;
+    _focus.value.GainFocus;
 
     // so horrible! get a real 'focus' concept!
     if _focus.value.equals(ed)
@@ -220,12 +262,15 @@ procedure TMinApp.SavePage;
   end;
 
 procedure TMinApp.LoadPage(pg:TStr);
+  var node : INode;
   begin
     // TODO: encapsulate all this
     ed.path := 'ndk://' + pg;
     ed.buffer.loadfromstring(ndk.v(pg).s);
     ed.led.work := ed.buffer[ 0 ];
     ed.smudge;
+    node := ndk.n(pg);
+    _oes.node := node; _ies.node := node;
   end;
 
 procedure TMinApp.ChooseType;
