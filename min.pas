@@ -6,10 +6,12 @@ Copyright (c) 2014 Michal J Wallace. All rights reserved.
 program min;
 uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd, dndk, ustr,
   impworld, cli, ub4vm, udb, udc, udv, ukm, utv, uapp, undk, fs,
-  strutils, ui, uimpforth, uimpshell, uimpwords, uimpndk;
+  strutils, ui, uimpforth, uimpshell, uimpwords, uimpndk, rings;
 
 
 type
+  TFocusRing = rings.GRing<TView>;
+  TFocusCursor = rings.IRingCursor<TView>;
   TMinApp = class (uapp.TCustomApp)
     protected
       ed : mned.TEditor;
@@ -26,6 +28,8 @@ type
       rsOutln  : udb.TRecordSet;
       focus, oldfocus : utv.TView;
       km_ed, km_tg, km_sh : ukm.TKeyMap;
+      _focusables : TFocusRing;
+      _focus : TFocusCursor;
     public
       procedure Init; override;
       procedure Step; override;
@@ -42,7 +46,7 @@ type
       procedure ShellOn;  procedure ShellOff;
     end;
 
-procedure TMinApp.Init; { 1/2 }
+procedure TMinApp.Init; { 1/3 }
   var vsplit : integer = 0;
   begin
     // TODO: eventually i'll build a little lazarus-like RAD thing
@@ -78,7 +82,7 @@ procedure TMinApp.Init; { 1/2 }
     typeMenu.rs := dbc.query('SELECT * FROM kinds ORDER BY kind');
     typeMenu.key := 'knd';
     typeMenu.OnSave := self.OnChooseType;
-{ procedure TMinApp.Init  2/2 }
+{ procedure TMinApp.Init  2/3 }
 
     { a menu for selecting pages (on ^G }
     pageMenu := TDBMenu.Create(self);
@@ -110,6 +114,15 @@ procedure TMinApp.Init; { 1/2 }
     { set up component rendering  }
     ish.visible := false; itv.visible := false;
     _views.extend([ ed, tg, ish, itv ]);
+
+    _focusables := TFocusRing.Create;
+    _focusables.extend([ ed, tg ]);
+    _focus := _focusables.MakeCursor;
+    _focus.ToTop;
+
+{ procedure TMinApp.Init  3/3 }
+
+    { focus ring }
 
     { handle command line arguments }
     if ParamCount = 1 then
@@ -172,15 +185,14 @@ procedure TMinApp.draw;
 
 procedure TMinApp.OtherWindow;
   begin
+//    _focus.value.GetBlur;
+    _focus.MoveNext; if _focus.AtClasp then _focus.MoveNext;
+//    _focus.value.GetFocus;
+
     // so horrible! get a real 'focus' concept!
-    // focus.defocus;
-    if focus = ed then
-      begin focus := tg; keymap := km_tg; kvm.HideCursor;
-      end
-    else //if focus = tg then
-      begin focus := ed; keymap := km_ed; kvm.ShowCursor;
-      end;
-    // focus.focus;
+    if _focus.value.equals(ed)
+      then begin keymap := km_ed; kvm.ShowCursor end
+      else begin keymap := km_tg; kvm.HideCursor end
   end;
 
 // TODO : OnCursorChange should be part of the gridview itself.
