@@ -16,7 +16,7 @@ type
       _status           : string;
       topline, position : cardinal;
       state             : vor;
-    published { basic interface }
+    public { basic TView interface }
       led               : ui.zinput;  // led = (L)ine (ED)itor
       constructor Create(aOwner : TComponent); override;
       function Load( path : string ) : boolean;
@@ -138,35 +138,31 @@ procedure TEditor.Render;
       with self.led do begin
 	x := gutw; y := ypos;
 	tcol := $080f; acol := $0800; // text/arrows
-	w := self.w - gutw; dirty := true;
+	w := self.w - gutw; smudge;
       end;
     end;
 
   procedure draw_line(s:string);
-    begin
-      cwrite(cwpad('|!k|w' + s + '|!k', self.w));
+    begin cwrite(cwpad('|!k|w' + s + '|!k', self.w));
     end;
 
   begin { TEditor.Render }
-    if dirty then
-      begin
-        dirty := false; HideCursor; cwrite('|w|!b'); draw_curpos;
-	line := topline; ypos := 1; // line 0 is status bar
-	if buf.length > 0 then
-	  repeat
-	    draw_gutter( line );
-	    if line = position then PlaceEditor
-	    else draw_line(buf[line]);
-	    inc( ypos ); inc(line)
-	  until ( ypos = self.h-1 ) or ( line = buf.length )
-	else ypos := 2;
-        { fill in extra space if the file is too short }
-        while ypos < self.h-1 do begin
-          cwritexy( 0, ypos, '|!k|%' );
-          inc( ypos )
-        end;
-        ShowCursor;
-      end;
+    HideCursor; cwrite('|w|!b'); draw_curpos;
+    line := topline; ypos := 1; // line 0 is status bar
+    if buf.length > 0 then
+      repeat
+	draw_gutter( line );
+	if line = position then PlaceEditor
+	else draw_line(buf[line]);
+	inc( ypos ); inc(line)
+      until ( ypos = self.h-1 ) or ( line = buf.length )
+    else ypos := 2;
+    { fill in extra space if the file is too short }
+    while ypos < self.h-1 do begin
+      cwritexy( 0, ypos, '|!k|%' );
+      inc( ypos )
+    end;
+    ShowCursor;
   end;
 
 procedure TEditor.updatecamera;
@@ -182,12 +178,14 @@ procedure TEditor.updatecamera;
       end
     else if ( screenline > self.h - 5 )
       and ( self.topline < self.buf.length ) then
-    begin
-      inc( topline );
-      //  scrollup1(1,80,y1,y2,nil);
-      //  scrollup1(1,80,14,25,nil);
-    end
+      begin
+	inc( topline );
+	//  scrollup1(1,80,y1,y2,nil);
+	//  scrollup1(1,80,14,25,nil);
+      end;
+    smudge;
   end;
+
 
 {  cursor movement interface }
 procedure TEditor.ToTop;
@@ -228,28 +226,22 @@ procedure TEditor.NextLine;
 
 procedure TEditor.PrevPage;
   var c : byte;
-  begin
-    for c := 1 to h do PrevLine;
+  begin for c := 1 to h do PrevLine;
   end;
 
 procedure TEditor.NextPage;
   var c : byte;
-  begin
-    for c := 1 to h do NextLine;
+  begin for c := 1 to h do NextLine;
   end;
 
 { zinput integration }
 
 procedure TEditor.keepInput;
-  begin
-    buf[position] := led.value
+  begin buf[position] := led.value
   end;
 
 procedure TEditor.CursorMoved;
-  begin
-    self.dirty := true;
-    updateCamera;
-    self.led.work := self.buf[self.position]
+  begin smudge; updateCamera; self.led.work := self.buf[self.position]
   end;
 
 { multi-line editor commands }
