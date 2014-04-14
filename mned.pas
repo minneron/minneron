@@ -25,6 +25,7 @@ type
       procedure Keys( km : TKeyMap );
       function value : string;
       procedure Render; override;
+      procedure RestoreCursor; override;
     public {  morph interface (removing this) }
       done              : boolean;
     public { cursor movement commands }
@@ -162,8 +163,12 @@ procedure TEditor.Render;
       cwritexy( 0, ypos, '|!k|%' );
       inc( ypos )
     end;
-    ShowCursor;
   end;
+
+procedure TEditor.RestoreCursor;
+  begin gotoxy(_x + led.x + led.cpos, _y+led.y);
+  end;
+
 
 procedure TEditor.updatecamera;
   var screenline : word;
