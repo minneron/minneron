@@ -10,41 +10,68 @@ uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd, dndk, ustr,
   classes;
 
 type
-  TEdgeDirection = (edIncoming, edOutgoing);
   TEdgeMenu = class (utv.TView)
     protected _base : IBase; _node : INode; _index : cardinal;
+      _edges : TEdges;
     public
-      edgedir: TEdgeDirection;
       constructor Create( aOwner : TComponent ); override;
       procedure Render; override;
+      procedure LoadData; virtual; abstract;
+      function RenderCell(gx,gy :integer) : TStr; virtual; abstract;
+      function count : word;
     published
       property base : IBase read _base write _base;
       property node : INode read _node write _node;
     end;
+  TEdgeMenuI = class (TEdgeMenu)
+    public
+      procedure LoadData; override;
+      function RenderCell(gx,gy :integer) : TStr; override;
+    end;
+  TEdgeMenuO = class (TEdgeMenu)
+    public
+      procedure LoadData; override;
+      function RenderCell(gx,gy :integer) : TStr; override;
+    end;
 
 constructor TEdgeMenu.Create( aOwner : TComponent );
-  begin inherited; _w := 32; _h := 8; edgedir := edIncoming; _index := 0;
+  begin inherited; _w := 32; _h := 8; _index := 0;
+  end;
+
+function TEdgeMenu.Count : word;
+  begin result := length(_edges)
   end;
 
+procedure TEdgeMenuI.LoadData; begin _edges := _node.ie end;
+procedure TEdgeMenuO.LoadData; begin _edges := _node.oe end;
+
+//  todo: simplify by just having per-column callbacks
+function TEdgeMenuI.RenderCell(gx,gy:integer) : TStr;
+  begin result := boolstr(gx=0, _edges[gy].sub.s, _edges[gy].rel.s)
+  end;
+
+function TEdgeMenuO.RenderCell(gx,gy:integer) : TStr;
+  begin result := boolstr(gx=0, _edges[gy].rel.s, _edges[gy].obj.s)
+  end;
+
+function prepstr(s : string; len : byte) : TStr;
+  begin result := rfit(replace(replace(s, ^M, ''), ^J, ''), len)
+  end;
+
 procedure TEdgeMenu.Render;
-  var edge : IEdge; edges : TEdges; count : integer = 0; bar : byte;
-  procedure drawline;
-    begin
-      if count = _index then bg(bar) else bg(0);
-      if edgedir = edincoming
-        then write(edge.sub.s, ' ', edge.rel.s)
-        else write(edge.rel.s, ' ', edge.obj.s);
-      clreol;
-    end;
-  begin bg(0); fg(w); clrscr;
+  var gx,gy : word; bar : byte; gh : word = 0;
+  begin bg(0); fg('w'); clrscr;
     if _focused then bar := udv.hibar else bar := udv.lobar;
     if assigned( node ) then begin
-      if edgedir = edIncoming then edges := _node.ie else edges := _node.oe;
-      _index := xpc.min(_index, length(edges)-1);
-      for edge in edges do begin gotoxy(0,count); drawline; inc(count) end;
-      edges := nil;
-      if count = 0 then begin bg(bar); clreol; end;
-    end else begin bg(bar); cwriteln('|k(not connected)|%') end;
+      LoadData; gh := self.count; _index := xpc.min(_index, gh-1);
+      if gh > 0 then for gy := 0 to gh-1 do begin
+	gotoxy(0,gy); if gy = _index then bg(bar) else bg(0);
+	write(prepstr(RenderCell(0,gy), 16));
+	fg('k'); emit('│'); fg('w');
+	write(prepstr(RenderCell(1,gy), 15));
+      end;
+    end;
+    if gh = 0 then begin bg(bar); clreol; end;
   end;
 
 type
@@ -149,10 +176,10 @@ procedure TMinApp.Init; { 1/3 }
 { procedure TMinApp.Init  3/3 }
 
     { incoming and outgoing links }
-    _ies := TEdgeMenu.Create(self);
+    _ies := TEdgeMenuI.Create(self);
     _ies.MoveTo(ed.x, ed.y + ed.h + 1);
 
-    _oes := TEdgeMenu.Create(self); _oes.edgedir := edOutgoing;
+    _oes := TEdgeMenuO.Create(self);
     _oes.MoveTo(ed.x + _ies.w + 2, ed.y + ed.h + 1);
 
     { set up component rendering  }
