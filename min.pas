@@ -11,11 +11,12 @@ uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd, dndk, ustr,
 
 type
   TEdgeMenu = class (utv.TView)
-    protected _base : IBase; _node : INode; _index : cardinal;
-      _edges : TEdges;
+    protected _base : IBase; _node : INode; _igx, _igy : cardinal;
+      _edges : TEdges; _cellw : TBytes; _gw, _gh : byte;
     public
       constructor Create( aOwner : TComponent ); override;
       procedure Render; override;
+      procedure RestoreCursor; override;
       procedure LoadData; virtual; abstract;
       function RenderCell(gx,gy :integer) : TStr; virtual; abstract;
       function count : word;
@@ -35,15 +36,21 @@ type
     end;
 
 constructor TEdgeMenu.Create( aOwner : TComponent );
-  begin inherited; _w := 32; _h := 8; _index := 0;
+  begin inherited; _w := 32; _h := 8; _igx := 0; _igy := 0;
+     _gw := 2;
   end;
 
 function TEdgeMenu.Count : word;
   begin result := length(_edges)
   end;
 
-procedure TEdgeMenuI.LoadData; begin _edges := _node.ie end;
-procedure TEdgeMenuO.LoadData; begin _edges := _node.oe end;
+procedure TEdgeMenuI.LoadData;
+  begin _edges := _node.ie;  _cellw := bytes([23,8]);
+  end;
+
+procedure TEdgeMenuO.LoadData;
+  begin _edges := _node.oe; _cellw := bytes([8,23]);
+  end;
 
 //  todo: simplify by just having per-column callbacks
 function TEdgeMenuI.RenderCell(gx,gy:integer) : TStr;
@@ -53,26 +60,36 @@ function TEdgeMenuI.RenderCell(gx,gy:integer) : TStr;
 function TEdgeMenuO.RenderCell(gx,gy:integer) : TStr;
   begin result := boolstr(gx=0, _edges[gy].rel.s, _edges[gy].obj.s)
   end;
-
+
 function prepstr(s : string; len : byte) : TStr;
   begin result := rfit(replace(replace(s, ^M, ''), ^J, ''), len)
   end;
 
 procedure TEdgeMenu.Render;
-  var gx,gy : word; bar : byte; gh : word = 0;
+  var gy : word; bar : byte; gh : word = 0;
   begin bg(0); fg('w'); clrscr;
     if _focused then bar := udv.hibar else bar := udv.lobar;
     if assigned( node ) then begin
-      LoadData; gh := self.count; _index := xpc.min(_index, gh-1);
+      LoadData; gh := self.count; _igy := xpc.min(_igy, gh-1);
       if gh > 0 then for gy := 0 to gh-1 do begin
-	gotoxy(0,gy); if gy = _index then bg(bar) else bg(0);
-	write(prepstr(RenderCell(0,gy), 16));
+	gotoxy(0,gy); if gy = _igy then bg(bar) else bg(0);
+	write(prepstr(RenderCell(0,gy), _cellw[0]));
 	fg('k'); emit('│'); fg('w');
-	write(prepstr(RenderCell(1,gy), 15));
+	write(prepstr(RenderCell(1,gy), _cellw[1]));
       end;
     end;
     if gh = 0 then begin bg(bar); clreol; end;
   end;
+
+procedure TEdgeMenu.RestoreCursor;
+  var i : word; cx : word = 0;
+  begin { show the cursor on the current cell }
+    if _igx > 0 then for i:= 0 to _igx-1 do inc(cx, _cellw[i]);
+    if assigned(node) and (count > 0) then begin
+      gotoxy(_x+cx, _y+_igy); ShowCursor;
+    end
+  end;
+
 
 type
   TMinApp = class (uapp.TCustomApp)
