@@ -21,17 +21,18 @@ type
     protected
       cmd : ui.ZInput;
     public
-      imp : TImpForth;
       constructor Create(AOwner : TComponent; aImp : TImpForth);
         reintroduce;
-      procedure Keys(km : ukm.TKeyMap);
-      procedure Push;
-      procedure Pop;
-      procedure Smudge;
-      procedure OnCmdAccept( s :  string );
-    published
       procedure Update; override;
       procedure Render; override;
+      procedure RestoreCursor; override;
+    public
+      imp : TImpForth;
+      procedure Keys(km : ukm.TKeyMap);
+      procedure Smudge;
+      procedure Push;
+      procedure Pop;
+      procedure OnCmdAccept( s :  string );
     end;
 
 implementation
@@ -59,13 +60,13 @@ procedure TImpShell.keys(km : ukm.TKeyMap);
       cmd[ ^L ] := self.smudge;
     end
   end;
-
+
 procedure TImpShell.Update;
   begin
     if not imp.NeedsInput then imp.EvalNextToken;
     inherited Update;
   end;
-
+
 procedure TImpShell.Render;
   procedure drawLine(x, y : word; linno : byte; val : variant);
     type TStrFn = function(s : TStr; len:cardinal; ch: TChr=' ') : TStr;
@@ -82,14 +83,12 @@ procedure TImpShell.Render;
 
   procedure up(n : word; vals : GStack<variant>);
     var i : integer;
-    begin
-      for i := 0 to n-1 do drawLine(0, i, n-1-i, vals.GetItem(n-1-i, null))
+    begin for i := 0 to n-1 do drawLine(0, i, n-1-i, vals.GetItem(n-1-i, null))
     end;
 
   procedure dn(y, n : word; vals : GStack<variant>);
     var i : integer;
-    begin
-      for i := 0 to n-1 do drawLine(0, y+i, i, vals.GetItem(i, null))
+    begin for i := 0 to n-1 do drawLine(0, y+i, i, vals.GetItem(i, null))
     end;
 
   begin { Render }
@@ -97,8 +96,14 @@ procedure TImpShell.Render;
     up(cmd.y, imp.data);
     cxy($e819, 0, cmd.y, '> ');
     dn(cmd.y+1, h - cmd.y, imp.side);
-    kvm.showcursor;
   end;
+
+
+
+procedure TImpShell.RestoreCursor;
+  begin gotoxy(_x + cmd.x + cmd.cpos, _y + cmd.y)
+  end;
+
 
 procedure TImpShell.OnCmdAccept( s : string );
   begin imp.Send(s); smudge; cmd.reset; cmd.work := '';

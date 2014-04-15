@@ -136,13 +136,13 @@ procedure TMinApp.Init; { 1/3 }
     imp.mount('ndk', TNdkWords);
     TNdkWords(imp.modules['ndk']).ndk := ndk;
     ish := TImpShell.Create(self, imp);
-    ish.resize(16,8); ish.center(kvm.width div 2, kvm.height div 2);
+    ish.resize(16,8); ish.center((kvm.width div 2) - 16, kvm.height div 2);
     imp.OnChange := ish.smudge; // so it updates the stack view
 
     { impterm (for showing results/text/etc) }
     itv := utv.TTermView.Create(self);
-    itv.resize(xpc.min(kvm.width, 64), xpc.min(kvm.height, 16));
-    itv.x := 0; itv.y := kvm.height - itv.h;
+    itv.resize(xpc.min(kvm.width, 32), xpc.min(kvm.height, 9));
+    itv.x := ish.x + ish.w; itv.y := ish.y;
     TTermWords(imp.modules['term']).term := itv;
 
 
@@ -290,19 +290,23 @@ procedure TMinApp.OnToggle;
     rsOutln.Open; tg.smudge; // refresh the data and display
   end;
 
+
 { show and hide the impforth shell with ^U }
-//  calling otherwindow in these two is just a hack so that ShellOff
-  // restores the keyboard handler.
-var _oldKeyMap : ukm.TKeyMap;
+
+var _oldKeyMap : ukm.TKeyMap; _oldfocus : cardinal;
 procedure TMinApp.ShellOn;
   begin
     _oldKeyMap := keymap; keymap := km_sh;
-    itv.show; ish.show; ish.GainFocus;
+    _oldfocus := _focus.index; _focus.value.LoseFocus;
+    _focusables.append(ish); _focus.ToEnd; ish.GainFocus;
+    itv.show; ish.show;
   end;
 
 procedure TMinApp.ShellOff;
   begin
     itv.hide; ish.hide; self.smudge;
+    ish.LoseFocus; _focusables.drop; _focus.ToEnd;
+    _focus.MoveTo(_oldfocus); _focus.value.GainFocus;
     keymap := _oldKeyMap;
   end;
 
