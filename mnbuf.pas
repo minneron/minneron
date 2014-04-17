@@ -126,9 +126,9 @@ function TBuffer.ToString : TStr;
   var i, len : cardinal;
   begin
     len := self.length;
-    if len > 0 then result := self[0] else result := '';
+    if len > 0 then result := self[0] + ^J else result := '';
     if len > 1 then
-      for i := 1 to self.length -1 do result += self[i];
+      for i := 1 to self.length -1 do result += self[i] + ^J;
   end;
 
 procedure TBuffer.Clear;
