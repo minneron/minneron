@@ -20,6 +20,7 @@ type
       led               : ui.zinput;  // led = (L)ine (ED)itor
       constructor Create(aOwner : TComponent); override;
       function Load( path : string ) : boolean;
+      procedure LoadFromStr( s : TStr );
       procedure SaveAs( path : string );
       procedure Save;
       procedure Keys( km : TKeyMap );
@@ -94,6 +95,15 @@ function TEditor.Load( path : string ) : boolean;
     except
       on e:EFileNotFound do TellUser('invalid path:' + path);
     end;
+  end;
+
+procedure TEditor.LoadFromStr( s : TStr );
+  begin
+    buffer.loadFromString(s);
+    topline := 0;
+    position := 0;
+    led.work := buffer[ 0 ];
+    smudge;
   end;
 
 procedure TEditor.Save;

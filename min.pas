@@ -347,9 +347,7 @@ procedure TMinApp.LoadPage(pg:TStr);
   begin
     // TODO: encapsulate all this
     ed.path := 'ndk://' + pg;
-    ed.buffer.loadfromstring(ndk.v(pg).s);
-    ed.led.work := ed.buffer[ 0 ];
-    ed.smudge;
+    ed.loadfromstr(ndk.v(pg).s);
     node := ndk.n(pg);
     _oes.node := node; _ies.node := node;
   end;
