@@ -27,7 +27,8 @@ create view if not exists trip as
   from edge, node as s, node as r, node as o
   where edge.sub = s.nid
     and edge.rel = r.nid
-    and edge.obj = o.nid ;
+    and edge.obj = o.nid
+    and ended is null ;
 
 
 -- -- management of the triplestore  ---
