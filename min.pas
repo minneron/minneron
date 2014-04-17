@@ -1,13 +1,14 @@
 { minneron
 ----------------------------------------------------------------
-Copyright (c) 2014 Michal J Wallace. All rights reserved.
+Copyright (c)x 2014 Michal J Wallace. All rights reserved.
 ---------------------------------------------------------------}
 {$mode delphiunicode}{$i xpc.inc}
 program min;
 uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd, dndk, ustr,
   impworld, cli, ub4vm, udb, udc, udv, ukm, utv, uapp, undk, fs,
   strutils, ui, uimpforth, uimpshell, uimpwords, uimpndk, rings,
-  classes;
+  classes, umsg, ug2d, num;
+
 
 type
   TEdgeMenu = class (utv.TView)
@@ -20,6 +21,7 @@ type
       procedure LoadData; virtual; abstract;
       function RenderCell(gx,gy :integer) : TStr; virtual; abstract;
       function count : word;
+      procedure Handle(msg : umsg.TMsg); override;
     published
       property base : IBase read _base write _base;
       property node : INode read _node write _node;
@@ -44,6 +46,22 @@ function TEdgeMenu.Count : word;
   begin result := length(_edges)
   end;
 
+procedure TEdgeMenu.Handle(msg : umsg.TMsg);
+  begin
+    if msg.code = msg_nav_up.code then
+      if _igy > 0 then dec(_igy) else ok
+    else if msg.code = msg_nav_dn.code then
+      if _igy < count-1 then inc(_igy) else ok
+    else if msg.code = msg_nav_top.code then
+      _igy := 0
+    else if msg.code = msg_nav_end.code then
+      if count > 0 then _igy := count - 1 else _igy := 0
+    else if msg.code = msg_cmd_toggle.code then
+      _igx := 1 - _igx
+    else ok;
+    smudge;
+  end;
+
 procedure TEdgeMenuI.LoadData;
   begin _edges := _node.ie;  _cellw := bytes([22,8]);
   end;
@@ -117,10 +135,11 @@ type
       procedure OtherWindow;
       procedure ChoosePage;
       procedure SavePage;
+      procedure OnNavMsg( m : TMsg );
       procedure OnCursorChange(Sender : TObject);
       procedure OnChooseType(val:variant);
       procedure LoadPage(pg:TStr);
-      procedure OnToggle;
+      procedure OnToggle( msg : TMsg );
       procedure ShellOn;  procedure ShellOff;
     end;
 
@@ -209,6 +228,11 @@ procedure TMinApp.Init; { 1/3 }
     _focusables.extend([ ed, tg, _ies, _oes ]);
     _focus.ToTop; _focus.value.gainfocus;
 
+    { message handler }
+    umsg.subscribe( chan_nav, self.OnNavMsg );
+    umsg.subscribe( chan_cmd, self.OnToggle );
+
+
     { handle command line arguments }
     if ParamCount = 1 then
       if not ed.Load( ParamStr( 1 )) then
@@ -218,38 +242,40 @@ procedure TMinApp.Init; { 1/3 }
   end;
 
 procedure TMinApp.keys(km : ukm.TKeyMap);
+
+  procedure globalkeys(km : ukm.TKeyMap);
+    begin
+      with km do begin
+	msg[ ^P ] := msg_nav_up;       msg[ ^N ] := msg_nav_dn;
+	cmd[ ^C ] := self.Quit;        cmd[ ^O ] := self.OtherWindow;
+	cmd[ ^G ] := self.ChoosePage;  cmd[ ^L ] := self.Draw;
+	cmd[ ^U ] := self.ShellOn;     msg[ ^I ] := msg_cmd_toggle;
+      end;
+    end;
+
   begin
+    //  clean up keyboard focus handling!!
+
     km_tg := ukm.TKeyMap.Create(self);
     with km_tg do begin
-      cmd[ ^P ] := cur.Prev;
-      cmd[ ^N ] := cur.Next;
-      cmd['p'] := cur.Prev;
-      cmd['n'] := cur.Next;
-      cmd['['] := cur.ToTop;
-      cmd[']'] := cur.ToEnd;
-      cmd[ ^C ] := self.Quit;
-      cmd[ ^I ] := self.OnToggle;
+      msg[ 'p' ] := msg_nav_up;       msg[ 'n' ] := msg_nav_dn;
+      msg[ '[' ] := msg_nav_top;      msg[ ']' ] := msg_nav_end;
       cmd[ ^T ] := self.ChooseType;
-      cmd[ ^O ] := self.OtherWindow;
-      cmd[ ^G ] := self.ChoosePage;
-      cmd[ ^L ] := self.Draw;
-      cmd[ ^U ] := self.ShellOn;
     end;
+
     km_sh := ukm.TKeyMap.Create(self);
     ish.keys( km_sh );
     with km_sh do begin
       cmd[ ^U ] := ShellOff;
     end;
-    //  clean up keyboard focus handling!!
+
     km_ed := km; ed.keys( km_ed );
     with km_ed do begin
-      cmd[ ^C ] := self.Quit;
-      cmd[ ^L ] := self.Draw;
-      cmd[ ^O ] := self.OtherWindow;
-      cmd[ ^G ] := self.ChoosePage;
       cmd[ ^S ] := self.SavePage;
-      cmd[ ^U ] := self.ShellOn;
     end;
+
+    globalkeys(km_tg);
+    globalkeys(km_ed);
   end;
 
 procedure TMinApp.step;
@@ -266,6 +292,11 @@ procedure TMinApp.draw;
     fx.txtline(0, 0, kvm.xMax, 0, $43);
     for child in _views do child.smudge;
   end;
+
+procedure TMinApp.OnNavMsg( m : TMsg );
+  begin _focus.value.handle(m)
+  end;
+
 
 procedure TMinApp.OtherWindow;
   begin
@@ -324,15 +355,19 @@ procedure TMinApp.OnChooseType(val:variant);
     'UPDATE node SET knd=:knd WHERE nid=:nid', [val, cur['nid']]);
   end;
 
-procedure TMinApp.OnToggle;
+procedure TMinApp.OnToggle( msg : TMsg );
   var olid, nid : integer; sql : TStr;
   begin
-    olid := cur['olid']; nid  := cur['nid'];
-    if cur['collapsed'] then sql :=
-      'delete from outline_collapse where olid= :olid and collapse = :nid'
-    else sql := 'insert into outline_collapse values (:olid, :nid)';
-    dbc.RunSQL(sql, [olid, nid]);
-    rsOutln.Open; tg.smudge; // refresh the data and display
+    if _focus.value.equals(self.tg) then begin
+      olid := cur['olid']; nid  := cur['nid'];
+      if cur['collapsed'] then sql :=
+	'delete from outline_collapse ' +
+	'where olid= :olid and collapse = :nid'
+      else sql := 'insert into outline_collapse values (:olid, :nid)';
+      dbc.RunSQL(sql, [olid, nid]);
+      rsOutln.Open; tg.smudge; // refresh the data and display
+    end
+    else _focus.value.handle(msg)
   end;
 
 
