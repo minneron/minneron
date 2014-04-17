@@ -38,6 +38,7 @@ type  { forward declarations since these refer to each other. }
     function obj : ICell;                         // object
     function GetSeq : integer;                    // sequence
     procedure SetSeq(val : integer);
+    procedure del;
     property seq : integer read GetSeq write SetSeq;
   end;
 implementation

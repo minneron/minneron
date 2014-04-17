@@ -54,6 +54,7 @@ type
       function sub : ICell;
       function rel : ICell;
       function obj : ICell;
+      procedure del;
       function GetSeq : integer;
       procedure SetSeq(val : integer);
     end;
@@ -131,6 +132,13 @@ function TEdge.obj : ICell; begin result := TCell.New(_obj) end;
 function TEdge.GetSeq : integer;
   begin
     result := _seq
+  end;
+
+procedure TEdge.del;
+  begin
+    with _base as TNodakRepo do
+      _dbc.RunSQL('update edge set ended=datetime(''now'') '+
+		  'where eid=:eid', [_eid]);
   end;
 
 procedure TEdge.SetSeq( val : integer );
@@ -248,7 +256,9 @@ function TNodakRepo.n(key : TStr) : INode;
   end;
 
 function TNodakRepo.a(key, val : TStr) : IEdge;
+  var edge : IEdge;
   begin
+    for edge in self.q(key, ':=', '~') do edge.del;
     result := self.e(key, ':=', val)
   end;
 
