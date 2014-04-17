@@ -101,7 +101,7 @@ procedure TImpShell.Render;
 
 
 procedure TImpShell.RestoreCursor;
-  begin gotoxy(_x + cmd.x + cmd.cpos, _y + cmd.y)
+  begin gotoxy(_x + cmd.x + cmd.cpos - cmd.d1st, _y + cmd.y)
   end;
 
 
