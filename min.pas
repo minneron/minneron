@@ -48,6 +48,8 @@ function TEdgeMenu.Count : word;
 
 procedure TEdgeMenu.Handle(msg : umsg.TMsg);
   begin
+    //--TODO: replace ugly Handle(msg) dispatch with
+    //-- case statements (requires making message id's static)
     if msg.code = msg_nav_up.code then
       if _igy > 0 then dec(_igy) else ok
     else if msg.code = msg_nav_dn.code then
