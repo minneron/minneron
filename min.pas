@@ -58,16 +58,20 @@ procedure TEdgeMenu.Handle(msg : umsg.TMsg);
       if count > 0 then _igy := count - 1 else _igy := 0
     else if msg.code = msg_cmd_toggle.code then
       _igx := 1 - _igx
+    else if msg.code = msg_cmd_delete.code then
+      if assigned(_edges) then begin
+	_edges[_igy].del; self.LoadData
+      end else ok
     else ok;
     smudge;
   end;
 
 procedure TEdgeMenuI.LoadData;
-  begin _edges := _node.ie;  _cellw := bytes([22,8]);
+  begin _edges := _node.ie;  _cellw := bytes([22,8]); smudge;
   end;
 
 procedure TEdgeMenuO.LoadData;
-  begin _edges := _node.oe; _cellw := bytes([8,22]);
+  begin _edges := _node.oe; _cellw := bytes([8,22]); smudge;
   end;
 
 //  todo: simplify by just having per-column callbacks
@@ -247,9 +251,11 @@ procedure TMinApp.keys(km : ukm.TKeyMap);
     begin
       with km do begin
 	msg[ ^P ] := msg_nav_up;       msg[ ^N ] := msg_nav_dn;
+	msg[ ^I ] := msg_cmd_toggle;   msg[ ^D ] := msg_cmd_delete;
+
 	cmd[ ^C ] := self.Quit;        cmd[ ^O ] := self.OtherWindow;
 	cmd[ ^G ] := self.ChoosePage;  cmd[ ^L ] := self.Draw;
-	cmd[ ^U ] := self.ShellOn;     msg[ ^I ] := msg_cmd_toggle;
+	cmd[ ^U ] := self.ShellOn;
       end;
     end;
 
