@@ -36,7 +36,7 @@ type
     end;
 
 constructor TEdgeMenu.Create( aOwner : TComponent );
-  begin inherited; _w := 32; _h := 8; _igx := 0; _igy := 0;
+  begin inherited; _w := 31; _h := 8; _igx := 0; _igy := 0;
      _gw := 2;
   end;
 
@@ -45,11 +45,11 @@ function TEdgeMenu.Count : word;
   end;
 
 procedure TEdgeMenuI.LoadData;
-  begin _edges := _node.ie;  _cellw := bytes([23,8]);
+  begin _edges := _node.ie;  _cellw := bytes([22,8]);
   end;
 
 procedure TEdgeMenuO.LoadData;
-  begin _edges := _node.oe; _cellw := bytes([8,23]);
+  begin _edges := _node.oe; _cellw := bytes([8,22]);
   end;
 
 //  todo: simplify by just having per-column callbacks
@@ -180,7 +180,8 @@ procedure TMinApp.Init; { 1/3 }
     imp.mount('ndk', TNdkWords);
     TNdkWords(imp.modules['ndk']).ndk := ndk;
     ish := TImpShell.Create(self, imp);
-    ish.resize(16,8); ish.center((kvm.width div 2) - 16, kvm.height div 2);
+    ish.resize(16,8); ish.center((kvm.width div 2) - 16,
+				 kvm.height div 2);
     imp.OnChange := ish.smudge; // so it updates the stack view
 
     { impterm (for showing results/text/etc) }
