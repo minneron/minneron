@@ -94,7 +94,8 @@ procedure TEdgeMenu.Render;
   begin bg(0); fg('w'); clrscr;
     if _focused then bar := udv.hibar else bar := udv.lobar;
     if assigned( node ) then begin
-      LoadData; gh := self.count; _igy := xpc.min(_igy, gh-1);
+      LoadData; gh := self.count;
+      if gh = 0 then _igy := 0 else _igy := xpc.min(_igy, gh-1);
       if gh > 0 then for gy := 0 to gh-1 do begin
 	gotoxy(0,gy); if gy = _igy then bg(bar) else bg(0);
 	write(prepstr(RenderCell(0,gy), _cellw[0]));
@@ -336,7 +337,6 @@ procedure TMinApp.SavePage;
     if ustr.startswith(p, 'ndk://') then
       begin
 	p := midstr(p, 7, length(p)-6);
-	cwriteln('|g(|w' + p + '|g)'); hitakey;
 	ndk.a(p, ed.buffer.text);
       end
     else ed.save;
