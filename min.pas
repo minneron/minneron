@@ -21,18 +21,20 @@ type
       procedure LoadData; virtual; abstract;
       function RenderCell(gx,gy :integer) : TStr; virtual; abstract;
       function count : word;
-      procedure Handle(msg : umsg.TMsg); override;
     published
+      procedure Handle(msg : umsg.TMsg); override;
       property base : IBase read _base write _base;
       property node : INode read _node write _node;
     end;
   TEdgeMenuI = class (TEdgeMenu)
     public
+      constructor Create( aOwner : TComponent ); override;
       procedure LoadData; override;
       function RenderCell(gx,gy :integer) : TStr; override;
     end;
   TEdgeMenuO = class (TEdgeMenu)
     public
+      constructor Create( aOwner : TComponent ); override;
       procedure LoadData; override;
       function RenderCell(gx,gy :integer) : TStr; override;
     end;
@@ -68,13 +70,23 @@ procedure TEdgeMenu.Handle(msg : umsg.TMsg);
     smudge;
   end;
 
+constructor TEdgeMenuI.Create( aOwner : TComponent );
+  begin inherited; _cellw := bytes([20,10]);
+  end;
+
+constructor TEdgeMenuO.Create( aOwner : TComponent );
+  begin inherited;  _cellw := bytes([10,20]);
+  end;
+
 procedure TEdgeMenuI.LoadData;
-  begin _edges := _node.ie;  _cellw := bytes([22,8]); smudge;
+  begin _edges := _node.ie; smudge;
   end;
 
 procedure TEdgeMenuO.LoadData;
-  begin _edges := _node.oe; _cellw := bytes([8,22]); smudge;
+  begin _edges := _node.oe; smudge;
   end;
+
+
 
 //  todo: simplify by just having per-column callbacks
 function TEdgeMenuI.RenderCell(gx,gy:integer) : TStr;
@@ -86,7 +98,7 @@ function TEdgeMenuO.RenderCell(gx,gy:integer) : TStr;
   end;
 
 function prepstr(s : string; len : byte) : TStr;
-  begin result := rfit(replace(replace(s, ^M, ''), ^J, ''), len)
+  begin result := rfit(replace(replace(cstrip(s), ^M, ''), ^J, ''), len)
   end;
 
 procedure TEdgeMenu.Render;
@@ -103,7 +115,10 @@ procedure TEdgeMenu.Render;
 	write(prepstr(RenderCell(1,gy), _cellw[1]));
       end;
     end;
-    if gh = 0 then begin bg(bar); clreol; end;
+    if gh = 0 then begin
+      bg(bar); clreol; fg('k');
+      write(chntimes(' ', _cellw[0]), '|');
+    end;
   end;
 
 procedure TEdgeMenu.RestoreCursor;
@@ -316,7 +331,9 @@ procedure TMinApp.OtherWindow;
     // so horrible! get a real 'focus' concept!
     if _focus.value.equals(ed)
       then begin keymap := km_ed; kvm.ShowCursor end
-      else begin keymap := km_tg; kvm.HideCursor end
+    else begin keymap := km_tg; kvm.HideCursor end;
+
+    _focus.value.restorecursor;
   end;
 
 // TODO : OnCursorChange should be part of the gridview itself.
