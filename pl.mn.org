@@ -2,7 +2,22 @@
 #+tags: pl min
 #+date: <2013-01-11 11:43AM>
 
-* DONE edit node
+* [7/7] Alpha Release Iteration
+:PROPERTIES:
+:TS:       <2014-04-17 02:37AM>
+:ID:       xq5gl8q0fgg0
+:END:
+** /changes to the plan this iteration/
+:PROPERTIES:
+:TS:       <2014-04-17 02:27AM>
+:ID:       rh2agqp0fgg0
+:END:
+- implemented simple shell/repl instead of form for node creation.
+- spent a bunch of time bugfixing in =kvm=, =TGrid2D= and =TTermView=
+- implemented =umsg= to simplify message dispatch
+- deferred [[*search%20nodes][search nodes]] for now
+- replaced it with
+** DONE edit node
   :PROPERTIES:
   :TS:       <2014-03-30 11:55PM>
   :ID:       cpn5vgc1sfg0
@@ -12,57 +27,82 @@
 - [X] Save content to the database.
 - [X] Preserve version history.
 
-* DONE [4/4] create edge
+** DONE [4/4] create edge
   :PROPERTIES:
   :TS:       <2014-03-30 11:56PM>
   :ID:       gwrfrhc1sfg0
   :END:
-** DONE (had to actually get the little stack repl working)
+*** DONE (had to actually get the little stack repl working)
 :PROPERTIES:
 :TS:       <2014-04-11 05:49AM>
 :ID:       df8c3o317gg0
 :END:
-** DONE (had to fix a bunch of kvm/gridterm problems)
+*** DONE (had to fix a bunch of kvm/gridterm problems)
 :PROPERTIES:
 :TS:       <2014-04-11 05:46AM>
 :ID:       m4ze7i317gg0
 :END:
-
-** DONE [3/3] show the new stack-based ui (TImpShell and TImpTerm)
+*** DONE [3/3] show the new stack-based ui (TImpShell and TImpTerm)
 :PROPERTIES:
 :TS:       <2014-04-06 08:24AM>
 :ID:       vimfxvg01gg0
 :END:
-*** DONE smudge the terminal on write
+**** DONE smudge the terminal on write
 :PROPERTIES:
 :TS:       <2014-04-11 06:00AM>
 :ID:       615fd5417gg0
 :END:
-*** DONE move tforthapp.step into an (.update) method
+**** DONE move tforthapp.step into an (.update) method
 :PROPERTIES:
 :TS:       <2014-04-11 05:59AM>
 :ID:       g2qeq3417gg0
 :END:
-*** DONE it would be nice to treat timpterm as an ITerm directly.
+**** DONE it would be nice to treat timpterm as an ITerm directly.
 :PROPERTIES:
 :TS:       <2014-04-11 06:06AM>
 :ID:       rlkbhf417gg0
 :END:
-** DONE invoke 'create edge' behavior from the repl.
+*** DONE invoke 'create edge' behavior from the repl.
 :PROPERTIES:
 :TS:       <2014-04-06 08:25AM>
 :ID:       fcij8xg01gg0
 :END:
-*** DONE create an impforth module for undk (uimpndk)
+**** DONE create an impforth module for undk (uimpndk)
 :PROPERTIES:
 :TS:       <2014-04-13 01:37PM>
 :ID:       jzua8x61agg0
 :END:
 - create a TImpModule
 - implement 'attach' with imp.addop(name, self.xyz)
+** DONE tab between controls
+  :PROPERTIES:
+  :TS:       <2014-03-30 11:56PM>
+  :ID:       04zgeic1sfg0
+  :END:
+*** NOTE .
+The links on the screen should be kept in a list or array, and you should be able to cycle through them with some kind of shortcut (tab, probably). Really this is no different from any other menu except for the way it's laid out.
 
+Links embedded in the page itself will come later, but follow the same principle.
 
-* TODO (show) incoming links
+Impworld should already have a concept of focus.
+
+*** DONE implement a ring for focus widgets
+:PROPERTIES:
+:TS:       <2014-04-13 10:34PM>
+:ID:       37ldm8h0bgg0
+:END:
+*** DONE add GainFocus/LoseFocus methods
+:PROPERTIES:
+:TS:       <2014-04-13 10:36PM>
+:ID:       jst73ch0bgg0
+:END:
+** DONE share the keyboard handler between the various menu widgets
+:PROPERTIES:
+:TS:       <2014-04-15 08:51AM>
+:ID:       lbw0pbb0dgg0
+:END:
+
+** DONE show incoming links
   :PROPERTIES:
   :TS:       <2014-03-30 11:56PM>
   :ID:       8ead4ic1sfg0
@@ -71,30 +111,20 @@ This is just another list widget (dbmenu)
 The OnChoice callback should trigger loading a new page.
 You should also be able to delete items.
 
-* TODO (show) outgoing links
+** DONE show outgoing links
   :PROPERTIES:
   :TS:       <2014-03-30 11:56PM>
   :ID:       wai5aic1sfg0
   :END:
 Exactly the same as incoming links.
 
-* TODO delete edge
+** DONE delete edge
   :PROPERTIES:
   :TS:       <2014-03-30 11:56PM>
   :ID:       4bogzhc1sfg0
   :END:
 This would just be another item you could use.
 
-* TODO tab between links
-  :PROPERTIES:
-  :TS:       <2014-03-30 11:56PM>
-  :ID:       04zgeic1sfg0
-  :END:
-The links on the screen should be kept in a list or array, and you should be able to cycle through them with some kind of shortcut (tab, probably). Really this is no different from any other menu except for the way it's laid out.
-
-Links embedded in the page itself will come later, but follow the same principle.
-
-Impworld should already have a concept of focus.
 
 * TODO export to org
   :PROPERTIES:
@@ -103,6 +133,8 @@ Impworld should already have a concept of focus.
   :END:
 For this iteration, the pages are unstructured, so it's just a matter of saving them with headlines, types and timestamps.
 
+
+* -------------
 * TODO search nodes
   :PROPERTIES:
   :TS:       <2014-03-30 11:57PM>
@@ -110,10 +142,6 @@ For this iteration, the pages are unstructured, so it's just a matter of saving 
   :END:
 This just means a basic ransacker-like search engine.
 Alternatively, enable full text indexing in sqlite.
-
-
-
-* -------------
 * TODO [0/1] allow pushing node strings with spaces, etc to the stack
 :PROPERTIES:
 :TS:       <2014-04-06 08:24AM>
@@ -132,10 +160,50 @@ Alternatively, enable full text indexing in sqlite.
 :ID:       cljcygv09gg0
 :END:
 
-* TODO timpmodule instances should register themselves with 'published'
+* TODO TImpModule instances should register themselves with 'published'
 :PROPERTIES:
 :TS:       <2014-04-13 01:45PM>
 :ID:       b7hixb71agg0
+:END:
+
+* TODO fix TEditor 'out of bounds error' after changing pages   :bug:
+:PROPERTIES:
+:TS:       <2014-04-14 08:49PM>
+:ID:       iv3fcgs0cgg0
+:END:
+Open minneron to the help page and move the cursor down several lines. Then use ^G to go to an empty page. The cursor maintains its old position, and attempting to move it will trigger an exception.
+
+* TODO fix display of the last line of mned.TEditor
+:PROPERTIES:
+:TS:       <2014-04-14 02:20PM>
+:ID:       cqk6pga0cgg0
+:END:
+The root problem here is that I need to truncate the colored text output, but =cw.cwpad()= doesn't correctly understand the length of the string.
+
+The fix would be to turn =cwlen= into a proper tokenizer, either by hand or using regular expressions.
+
+#+begin_src diff
+--- a/minneron/mned.pas
++++ b/minneron/mned.pas
+@@ -156,10 +156,10 @@ procedure TEditor.Render;
+        if line = position then PlaceEditor
+        else draw_line(buf[line]);
+        inc( ypos ); inc(line)
+-      until ( ypos = self.h-1 ) or ( line = buf.length )
++      until ( ypos = self.h ) or ( line = buf.length )
+     else ypos := 2;
+     { fill in extra space if the file is too short }
+-    while ypos < self.h-1 do begin
++    while ypos < self.h do begin
+       cwritexy( 0, ypos, '|!k|%' );
+       inc( ypos )
+     end;
+#+end_src
+
+* TODO fix keyboard ^A behavior (file:~/f/packages/rtl-console/src/unix)
+:PROPERTIES:
+:TS:       <2014-04-17 02:05PM>
+:ID:       xjoahh70ggg0
 :END:
 
 * TODO tag components so they register themselves
