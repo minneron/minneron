@@ -19,7 +19,6 @@ type TTokEd = class (uapp.TCustomApp)
   public
     procedure init; override;
     procedure done; override;
-    procedure step; override;
     procedure draw; override;
     procedure keys(km : ukm.TKeyMap); override;
     procedure LoadPage(key : string);
@@ -32,17 +31,17 @@ procedure TTokEd.init;
     ndk := undk.open('stuff.ndk');
     cmd := ui.ZInput.Create(self);
     cmd.x := xMax div 2 - 16; cmd.y := yMax div 2;
-    cmd.dlen := 32; cmd.maxlen := cmd.dlen;
+    cmd.w := 32; cmd.maxlen := cmd.w;
     cmd.tcol := $11f3; cmd.work := '';
     cmd.OnAccept := self.OnCmdAccept;
+    _views.append(cmd);
     wrap := uww.TWordWrap.Create(self); wrap.width := kvm.width;
     buf := TBuffer.Create(64, kvm.height);
     self.loadPage('home');
   end;
 
 procedure TTokEd.done;
-  begin
-    wrap.Free;
+  begin wrap.Free
   end;
 
 procedure TTokEd.keys(km : ukm.TKeyMap);
@@ -53,13 +52,11 @@ procedure TTokEd.keys(km : ukm.TKeyMap);
   end;
 
 procedure TTokEd.OnCmdAccept( s : string );
-  begin
-    buf.addline(s); cmd.reset; cmd.work :=''; _dirty := true;
+  begin buf.addline(s); cmd.reset; cmd.work :=''; smudge;
   end;
   
 procedure TTokEd.onspace;
-  begin
-    oncmdaccept(cmd.work);
+  begin oncmdaccept(cmd.work)
   end;
 
 
@@ -69,21 +66,14 @@ procedure TTokEd.loadPage(key : string);
     if length(edges) > 0 then begin
       for i := 0 to high(edges) do buf.addline(edges[i].obj.s)
     end;
-    _dirty := true;
   end;
 
-procedure TTokEd.step;
-  begin
-    if _dirty then begin cmd.is_dirty := true; draw end;
-    if cmd.is_dirty then cmd.Show;
-  end;
-
 procedure TTokEd.draw;
   var word : string; y : byte = 0;
       tok : ug2d.IBounds2D;
   begin
-    gotoxy(0,y); clrscr; wrap.reset;
-    tok := utv.TView.Create(Nil); tok.h := 1;
+    bg('k'); fg('w'); gotoxy(0,y); clrscr; wrap.reset;
+    tok := ug2d.bounds2d(0, 0, 1, 1);
     for word in buf.tostrings do begin
       tok.w := length(word); wrap.place(tok);
       if tok.y > y then begin y := tok.y; gotoxy(0,y) end
@@ -91,7 +81,6 @@ procedure TTokEd.draw;
       else write(' ');
       write(word)
     end; wrap.debugdraw;
-    _dirty := false;
   end;
   
 begin
