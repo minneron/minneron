@@ -5,21 +5,22 @@
 //
 {$mode delphiunicode}{$i xpc.inc}{$H+}
 unit mnbuf;
-interface uses xpc, rings, tiles, sysutils, fs, classes;
+interface uses xpc, rings, sysutils, fs, classes;
 type
   token = TStr;
   anchor = TObject;
   EFileNotFound = class(Exception)
   end;
   TMessageEvent = procedure (sender: TObject; s:TStr) of object;
-  TBuffer = class (TTextTile)
+  TBuffer = class (TComponent)
     private type
       TTextNodes = GRing<TStr>;
     private
       nodes  : TTextNodes;
     public
-      constructor Create( w, h : cardinal );
-      function  NewCursor:IRingCursor<TStr>;
+      constructor Create( aOwner : TComponent ); override;
+      function init( w, h : cardinal ) : TBuffer;
+      function NewCursor:IRingCursor<TStr>;
     public
       procedure LoadFromFile(path:TStr);
       procedure SaveToFile(path:TStr);
@@ -29,17 +30,20 @@ type
       function ToString : TStr; reintroduce;
     public
       procedure Clear;
-      function  GetLength : cardinal; override;
-      function  GetLine(i:cardinal) : TStr; override;
-      procedure SetLine(i:cardinal; s:TStr); override;
-      procedure InsLine(i:cardinal; s:TStr); override;
-      procedure AddLine(s:TStr); override;
-      procedure DelLine(i:cardinal); override;
+      function GetLength : cardinal;
+      function GetColorString( i : cardinal ) : TStr;
+      function GetLine(i:cardinal) : TStr;
+      procedure SetLine(i:cardinal; s:TStr);
+      procedure InsLine(i:cardinal; s:TStr);
+      procedure AddLine(s:TStr);
+      procedure DelLine(i:cardinal);
       property length : cardinal read GetLength;
       property lines[i:cardinal]:TStr
         read GetLine write SetLine; default;
       property strings : TStrings read ToStrings write LoadFromStrings;
       property text : TStr read ToString write LoadFromString;
+      property colorStrings[ i : cardinal ] : TStr
+        read GetColorString;
     end;
 
   { GSpan : a pair of virtual tokens used for spans/selections }
@@ -57,10 +61,13 @@ type
 
 implementation
 
-constructor TBuffer.Create( w, h : cardinal );
+constructor TBuffer.Create( aOwner : TComponent );
   begin
-    inherited Create( w, h );
-    nodes := TTextNodes.Create;
+    inherited; nodes := TTextNodes.Create;
+  end;
+
+function TBuffer.Init( w, h : cardinal ) : TBuffer;
+  begin nodes := TTextNodes.Create; result := self;
   end;
 
 function TBuffer.NewCursor:IRingCursor<TStr>;
@@ -68,6 +75,9 @@ function TBuffer.NewCursor:IRingCursor<TStr>;
     result := nodes.MakeCursor
   end;
 
+function TBuffer.GetColorString( i : cardinal ) : string;
+  begin result := GetLine(i)
+  end;
 
 
 procedure TBuffer.LoadFromFile( path : TStr );
@@ -76,13 +86,13 @@ procedure TBuffer.LoadFromFile( path : TStr );
     if fs.exists( path ) then
       begin
         //  need to check for io errors in here
-        assign( txt, path );
-        reset( txt );
+        AssignFile( txt, u2a( path ));
+        Reset( txt );
         while not eof( txt ) do begin
           readln( txt, line );
           self.AddLine( line );
         end;
-        close( txt );
+        CloseFile( txt );
       end
     else raise EFileNotFound.Create(utf8encode(path))
   end;
@@ -90,10 +100,10 @@ procedure TBuffer.LoadFromFile( path : TStr );
 procedure TBuffer.SaveToFile( path : TStr );
   var txt: text; i : cardinal;
   begin
-    assign( txt, path );
-    rewrite( txt );
+    AssignFile( txt, u2a( path ));
+    Rewrite( txt );
     for i := 0 to self.length -1 do writeln(txt, self[i]);
-    close( txt );
+    CloseFile( txt );
   end;
 
 { TStrings conversion routines (.strings property) }

@@ -61,7 +61,7 @@ constructor TEditor.Create( aOwner : TComponent );
     y := 0;
     w := kvm.width;
     h := kvm.height;
-    self.buf := TBuffer.create(w, h - 1);
+    self.buf := TBuffer.create(self);
     self.buf.addline('');
     topline := 0;
     position := 0;
