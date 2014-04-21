@@ -11,18 +11,14 @@ uses xpc, cx, mnml, mned, cw, fx, kvm, sysutils, kbd, dndk, ustr,
 
 
 type
-  TEdgeMenu = class (utv.TView)
-    protected _base : IBase; _node : INode; _igx, _igy : cardinal;
-      _edges : TEdges; _cellw : TBytes; _gw, _gh : byte;
+  TEdgeMenu = class (utv.TGridView)
+    protected _base : IBase; _node : INode;_edges : TEdges;
     public
       constructor Create( aOwner : TComponent ); override;
-      procedure Render; override;
-      procedure RestoreCursor; override;
-      procedure LoadData; virtual; abstract;
-      function RenderCell(gx,gy :integer) : TStr; virtual; abstract;
-      function count : word;
+      function EdgeCount : word;
+      procedure DeleteAt(gx,gy :word);
+      function RenderCell(gx,gy :word) : TStr; virtual; abstract;
     published
-      procedure Handle(msg : umsg.TMsg); override;
       property base : IBase read _base write _base;
       property node : INode read _node write _node;
     end;
@@ -30,44 +26,31 @@ type
     public
       constructor Create( aOwner : TComponent ); override;
       procedure LoadData; override;
-      function RenderCell(gx,gy :integer) : TStr; override;
+      function RenderCell(gx,gy :word) : TStr; override;
     end;
   TEdgeMenuO = class (TEdgeMenu)
     public
       constructor Create( aOwner : TComponent ); override;
       procedure LoadData; override;
-      function RenderCell(gx,gy :integer) : TStr; override;
+      function RenderCell(gx,gy :word) : TStr; override;
     end;
 
 constructor TEdgeMenu.Create( aOwner : TComponent );
-  begin inherited; _w := 31; _h := 8; _igx := 0; _igy := 0;
-     _gw := 2;
+  begin inherited;
+    _gw := 2; _deleteAt := self.DeleteAt;
+    _GetRowCount := EdgeCount;
+    _RenderCell := RenderCell;
   end;
 
-function TEdgeMenu.Count : word;
-  begin result := length(_edges)
+function TEdgeMenu.EdgeCount : word;
+  begin if assigned(node) then result := length(_edges) else result := 0
   end;
 
-procedure TEdgeMenu.Handle(msg : umsg.TMsg);
+procedure TEdgeMenu.DeleteAt(gx,gy : word );
   begin
-    //--TODO: replace ugly Handle(msg) dispatch with
-    //-- case statements (requires making message id's static)
-    if msg.code = msg_nav_up.code then
-      if _igy > 0 then dec(_igy) else ok
-    else if msg.code = msg_nav_dn.code then
-      if _igy < count-1 then inc(_igy) else ok
-    else if msg.code = msg_nav_top.code then
-      _igy := 0
-    else if msg.code = msg_nav_end.code then
-      if count > 0 then _igy := count - 1 else _igy := 0
-    else if msg.code = msg_cmd_toggle.code then
-      _igx := 1 - _igx
-    else if msg.code = msg_cmd_delete.code then
-      if assigned(_edges) then begin
-	_edges[_igy].del; self.LoadData
-      end else ok
-    else ok;
-    smudge;
+    if assigned(_edges) then begin
+      _edges[_igy].del; self.LoadData
+    end else ok
   end;
 
 constructor TEdgeMenuI.Create( aOwner : TComponent );
@@ -79,57 +62,21 @@ constructor TEdgeMenuO.Create( aOwner : TComponent );
   end;
 
 procedure TEdgeMenuI.LoadData;
-  begin _edges := _node.ie; smudge;
+  begin if assigned(_node) then _edges := _node.ie; smudge;
   end;
 
 procedure TEdgeMenuO.LoadData;
-  begin _edges := _node.oe; smudge;
+  begin if assigned(_node) then _edges := _node.oe; smudge;
   end;
 
-
-
 //  todo: simplify by just having per-column callbacks
-function TEdgeMenuI.RenderCell(gx,gy:integer) : TStr;
+function TEdgeMenuI.RenderCell(gx,gy:word) : TStr;
   begin result := boolstr(gx=0, _edges[gy].sub.s, _edges[gy].rel.s)
   end;
 
-function TEdgeMenuO.RenderCell(gx,gy:integer) : TStr;
+function TEdgeMenuO.RenderCell(gx,gy:word) : TStr;
   begin result := boolstr(gx=0, _edges[gy].rel.s, _edges[gy].obj.s)
   end;
-
-function prepstr(s : string; len : byte) : TStr;
-  begin result := rfit(replace(replace(cstrip(s), ^M, ''), ^J, ''), len)
-  end;
-
-procedure TEdgeMenu.Render;
-  var gy : word; bar : byte; gh : word = 0;
-  begin bg(0); fg('w'); clrscr;
-    if _focused then bar := udv.hibar else bar := udv.lobar;
-    if assigned( node ) then begin
-      LoadData; gh := self.count;
-      if gh = 0 then _igy := 0 else _igy := xpc.min(_igy, gh-1);
-      if gh > 0 then for gy := 0 to gh-1 do begin
-	gotoxy(0,gy); if gy = _igy then bg(bar) else bg(0);
-	write(prepstr(RenderCell(0,gy), _cellw[0]));
-	fg('k'); emit('│'); fg('w');
-	write(prepstr(RenderCell(1,gy), _cellw[1]));
-      end;
-    end;
-    if gh = 0 then begin
-      bg(bar); clreol; fg('k');
-      write(chntimes(' ', _cellw[0]), '|');
-    end;
-  end;
-
-procedure TEdgeMenu.RestoreCursor;
-  var i : word; cx : word = 0;
-  begin { show the cursor on the current cell }
-    if _igx > 0 then for i:= 0 to _igx-1 do inc(cx, _cellw[i]);
-    if assigned(node) and (count > 0) then begin
-      gotoxy(_x+cx, _y+_igy); ShowCursor;
-    end
-  end;
-
 
 type
   TMinApp = class (uapp.TCustomApp)
