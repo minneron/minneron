@@ -5,8 +5,7 @@
 {$mode delphi}{$i xpc.inc}{$H+}
 unit mned;
 interface uses xpc, classes, fs, ustr, num, cw, ui, kvm, kbd, fx,
-  tiles, vorunati, sysutils, mnml, mnbuf, mnrnd, impworld, cli, ukm,
-  utv, umsg, ug2d;
+  vorunati, sysutils, mnml, mnbuf, impworld, cli, utv, ukm, umsg, ug2d;
 
 type
   TEditor = class (utv.TGridView)
