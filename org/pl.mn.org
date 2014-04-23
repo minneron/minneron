@@ -2,7 +2,7 @@
 #+tags: pl min
 #+date: <2013-01-11 11:43AM>
 
-* [7/7] Alpha Release Iteration
+* [7/7] Iteration 0.01
 :PROPERTIES:
 :TS:       <2014-04-17 02:37AM>
 :ID:       xq5gl8q0fgg0
@@ -124,6 +124,191 @@ Exactly the same as incoming links.
   :ID:       4bogzhc1sfg0
   :END:
 This would just be another item you could use.
+
+* [0/4] Iteration 0.02
+:PROPERTIES:
+:TS:       <2014-04-23 01:23AM>
+:ID:       ie4dh9i0ngg0
+:END:
+** TODO jumptrees
+:PROPERTIES:
+:TS:       <2014-04-23 01:24AM>
+:ID:       k7y2kai0ngg0
+:END:
+*** NOTE How is the tree loaded for the current tree control?
+:PROPERTIES:
+:TS:       <2014-04-23 01:41AM>
+:ID:       xewe13j0ngg0
+:END:
+- in min.pas, =rsOutLn= is opened with a flat query.
+- toggling the visibility issues a db update
+- rendering is just like with the grid control, except for the +/- sigils.
+- but how it works now shouldn't matter, because the tree view should accept a tree cursor.
+
+*** NOTE How should I implement hyperlinked trees while they're in ram?
+:PROPERTIES:
+:TS:       <2014-04-23 01:47AM>
+:ID:       r5niscj0ngg0
+:END:
+- In ram, it should be a DOM or ringtree structure.
+- A generic tree walker / tree builder interface should handle the loading and saving.
+
+*** NOTE What about links between the trees?
+:PROPERTIES:
+:TS:       <2014-04-23 01:52AM>
+:ID:       ysyc8lj0ngg0
+:END:
+- In order to make hyperlinks, I probably need a smarter token editor.
+
+*** NOTE How should I manage the text editor when my nodes are hierarchies?
+:PROPERTIES:
+:TS:       <2014-04-23 02:32AM>
+:ID:       ype5cgl0ngg0
+:END:
+- Instead of a line editor, I'd have a node editor.
+- Text in the node would be converted to a list of tokens.
+- Each token should know its own width and color.
+- Inline markup can be done with begin/end tokens.
+- Can just redisplay the whole thing for now.
+- If size of the node changes due to lines being added or removed, then I need to notify the parent control so it redisplays.
+
+*** NOTE How should I store trees when they're in the database?
+:PROPERTIES:
+:TS:       <2014-04-23 01:56AM>
+:ID:       dn487rj0ngg0
+:END:
+several options:
+- I could store each node as an html string, as I did with gridliner.
+- I could store a tree of references to individual words/symbols/tokens.
+  - /kind of nice because the text would become its own index./
+  - dom-like tags would just be a different kind of node in the db
+  - how to distinguish elements, attributes, comments, text?
+    - each node in the tree could just have a type tag (all nodes do!)
+    - could add an extra column for namespace and attribute pairs
+    - link nodes could just be normal nodes. some might just happen to be of the "URL" type.
+
+*** NOTE Should each node cache its own display? (no)
+:PROPERTIES:
+:TS:       <2014-04-23 02:44AM>
+:ID:       th4j80m0ngg0
+:END:
+No, the blocks are quick to regenerate. /Maybe/ I could cache the whole 
+outliner control for scrolling, but that's probably best done by retroterm.
+
+*** TODO [0/8] implement the jumptree editor (outliner)
+:PROPERTIES:
+:TS:       <2014-04-23 03:41AM>
+:ID:       5ppddno0ngg0
+:END:
+
+**** TODO make mned.TEditor a subclass of the grid component
+:PROPERTIES:
+:TS:       <2014-04-23 05:25AM>
+:ID:       l2u0vft0ngg0
+:END:
+**** TODO move camera stuff from mned to grid control
+:PROPERTIES:
+:TS:       <2014-04-23 05:15AM>
+:ID:       eei0vys0ngg0
+:END:
+
+**** TODO use uoutdoc to load/save trees
+:PROPERTIES:
+:TS:       <2014-04-23 05:17AM>
+:ID:       tovhm3t0ngg0
+:END:
+
+**** TODO convert trees -> visible boxes
+:PROPERTIES:
+:TS:       <2014-04-23 03:42AM>
+:ID:       qjkb9po0ngg0
+:END:
+
+**** TODO visible boxes -> [tokens]
+:PROPERTIES:
+:TS:       <2014-04-23 03:41AM>
+:ID:       j3j1rno0ngg0
+:END:
+
+**** TODO wordwrap :: boxed [tokens] -> sized boxes
+:PROPERTIES:
+:TS:       <2014-04-23 03:44AM>
+:ID:       2di5mro0ngg0
+:END:
+
+**** TODO maintain a ring or gap buffer of tokens
+:PROPERTIES:
+:TS:       <2014-04-23 03:43AM>
+:ID:       7v8fgqo0ngg0
+:END:
+
+**** TODO some tokens should not be editable
+:PROPERTIES:
+:TS:       <2014-04-23 03:49AM>
+:ID:       hp7dw0p0ngg0
+:END:
+
+
+
+
+
+
+
+
+* Tokenizers
+:PROPERTIES:
+:TS:       <2014-04-23 03:57AM>
+:ID:       pco2sdp0ngg0
+:END:
+
+** converting regular expressions into state machines
+:PROPERTIES:
+:TS:       <2014-04-23 03:58AM>
+:ID:       ycyg9fp0ngg0
+:END:
+
+video reference: https://www.youtube.com/watch?v=GwsU2LPs85U
+
+| combinator  | graph                                |
+|-------------+--------------------------------------|
+| alt([x, y]) | { 0: { x: 1, y: 1 }, 1 : { } }       |
+| seq([x, y]) | { 0: { x: 1 }, 1: { y: 2 }, 2: { } } |
+| orp([x])    | { 0: { x: 1 } }                      |
+
+** converting nfa -> dfa
+:PROPERTIES:
+:TS:       <2014-04-23 04:57AM>
+:ID:       2oj105s0ngg0
+:END:
+video reference: https://www.youtube.com/watch?v=taClnxU-nao
+
+
+** implementation
+:PROPERTIES:
+:TS:       <2014-04-23 05:02AM>
+:ID:       10zckds0ngg0
+:END:
+
+
+
+
+
+** TODO universal inbox
+:PROPERTIES:
+:TS:       <2014-04-23 01:24AM>
+:ID:       tu8gtai0ngg0
+:END:
+** TODO goalstacks
+:PROPERTIES:
+:TS:       <2014-04-23 01:24AM>
+:ID:       2ns02bi0ngg0
+:END:
+** TODO implish source nodes
+:PROPERTIES:
+:TS:       <2014-04-23 01:24AM>
+:ID:       pjceebi0ngg0
+:END:
+
 
 
 * TODO export to org
@@ -658,7 +843,6 @@ TQueue   : record end;
 :ID:       gwz8izh0ufg0
 :END:
 This is fairly easy. Simply assign a default that passes the buck to the next item in the chain.
-
 
 * TODO consider porting https://github.com/gabriel-comeau/tbuikit
 :PROPERTIES:
