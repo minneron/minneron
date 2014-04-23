@@ -37,7 +37,7 @@ type
       procedure Newline;
       procedure DeleteNextChar;
     private { misc internal methods }
-      procedure updateCamera;
+      function LineCount : word;
       procedure keepInput;
       procedure CursorMoved;
       procedure TellUser(msg : TStr);
@@ -52,6 +52,7 @@ implementation
 
 constructor TEditor.Create( aOwner : TComponent );
   begin inherited;
+    _GetRowCount := LineCount;
     self.buf := TBuffer.create(self);
     self.buf.addline('');
     _vgy := 0; _igy := 0; filename := '';
@@ -66,6 +67,10 @@ procedure TEditor.TellUser(msg : string);
 
 function TEditor.value : string;
   begin result := self.buf.ToString;
+  end;
+
+function TEditor.LineCount : word;
+  begin result := self.buf.length
   end;
 
 { file methods }
@@ -174,28 +179,6 @@ procedure TEditor.Handle( msg : umsg.TMsg );
       k_nav_end : self.ToEnd;
       else ok
     end
-  end;
-
-
-procedure TEditor.updatecamera;
-  var screenline : word;
-  begin
-    while _vgy > _igy do dec(_vgy);
-    screenline := _igy - _vgy;
-    if ( screenline < 5 ) and ( _vgy > 1 ) then
-      begin
-        dec(_vgy)
-        //  scrolldown1(1,80,y1,y2,nil);
-        //  scrolldown1(1,80,14,25,nil);
-      end
-    else if ( screenline > self.h - 5 )
-      and ( self._vgy < self.buf.length ) then
-      begin
-	inc( _vgy );
-	//  scrollup1(1,80,y1,y2,nil);
-	//  scrollup1(1,80,14,25,nil);
-      end;
-    smudge;
   end;
 
 
