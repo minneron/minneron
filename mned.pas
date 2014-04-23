@@ -167,10 +167,14 @@ procedure TEditor.RestoreCursor;
   end;
 
 procedure TEditor.Handle( msg : umsg.TMsg );
-  begin if msg.code = msg_nav_up.code then self.PrevLine
-   else if msg.code = msg_nav_dn.code then self.NextLine
-   else if msg.code = msg_nav_top.code then self.ToTop
-   else if msg.code = msg_nav_end.code then self.ToEnd
+  begin
+    case msg.code of
+      k_nav_up  : self.PrevLine;
+      k_nav_dn  : self.NextLine;
+      k_nav_top : self.ToTop;
+      k_nav_end : self.ToEnd;
+      else ok
+    end
   end;
 
 
