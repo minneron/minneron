@@ -13,7 +13,6 @@ type
       buf               : TBuffer;
       filename          : string;
       _status           : string;
-      topline, position : cardinal;
       state             : vor;
     public { basic TView interface }
       led               : ui.zinput;  // led = (L)ine (ED)itor
@@ -55,7 +54,7 @@ constructor TEditor.Create( aOwner : TComponent );
   begin inherited;
     self.buf := TBuffer.create(self);
     self.buf.addline('');
-    topline := 0; position := 0; filename := '';
+    _vgy := 0; _igy := 0; filename := '';
     self.led := ui.ZInput.Create(self);
     _views.Append(self.led);
     self.ToTop;
@@ -86,7 +85,7 @@ function TEditor.Load( path : string ) : boolean;
 procedure TEditor.LoadFromStr( s : TStr );
   begin
     buffer.loadFromString(s);
-    topline := 0; position := 0;
+    _vgy := 0; _igy := 0;
     led.work := buffer[ 0 ];
     smudge;
   end;
@@ -114,7 +113,7 @@ procedure TEditor.Render;
     begin
       cwritexy( 0, 0,
                '|!b' +
-               '|B[|C' + flushrt( n2s( self.position ), 6, '.' ) +
+               '|B[|C' + flushrt( n2s( _igy ), 6, '.' ) +
                '|w/|c' + flushrt( n2s( self.buf.length ), 6, '.' ) +
 	       '|B]|Y ' + cwpad(self.status, self.w - 15, ' ') +
                '|%' );
@@ -124,7 +123,7 @@ procedure TEditor.Render;
   procedure draw_gutter( num : cardinal );
     var color : char = 'c';
     begin
-      if line = position then color := 'C';
+      if line = _igy then color := 'C';
       cwritexy( 0, ypos, '|k|!' + color +
 	       flushrt( n2s( num ), gutw, ' ' ));
     end;
@@ -146,11 +145,11 @@ procedure TEditor.Render;
 
   begin { TEditor.Render }
     HideCursor; cwrite('|w|!b'); draw_curpos;
-    line := topline; ypos := 1; // line 0 is status bar
+    line := _vgy; ypos := 1; // line 0 is status bar
     if buf.length > 0 then
       repeat
 	draw_gutter( line );
-	if line = position then PlaceEditor
+	if line = _igy then PlaceEditor
 	else draw_line(buf[line]);
 	inc( ypos ); inc(line)
       until ( ypos = self.h-1 ) or ( line = buf.length )
@@ -181,18 +180,18 @@ procedure TEditor.Handle( msg : umsg.TMsg );
 procedure TEditor.updatecamera;
   var screenline : word;
   begin
-    while topline > position do dec(topline);
-    screenline := position - topline;
-    if ( screenline < 5 ) and ( topline > 1 ) then
+    while _vgy > _igy do dec(_vgy);
+    screenline := _igy - _vgy;
+    if ( screenline < 5 ) and ( _vgy > 1 ) then
       begin
-        dec(topline)
+        dec(_vgy)
         //  scrolldown1(1,80,y1,y2,nil);
         //  scrolldown1(1,80,14,25,nil);
       end
     else if ( screenline > self.h - 5 )
-      and ( self.topline < self.buf.length ) then
+      and ( self._vgy < self.buf.length ) then
       begin
-	inc( topline );
+	inc( _vgy );
 	//  scrollup1(1,80,y1,y2,nil);
 	//  scrollup1(1,80,14,25,nil);
       end;
@@ -204,25 +203,25 @@ procedure TEditor.updatecamera;
 procedure TEditor.ToTop;
   begin
     if self.buf.length = 0 then exit;
-    position := 0;
-    topline := 0;
+    _igy := 0;
+    _vgy := 0;
     led.work := buf[ 0 ];
   end;
 
 procedure TEditor.ToEnd;
   var i : byte;
   begin
-    position := max(0, self.buf.length - 1);
-    topline := position;
-    for i := kvm.yMax div 2 downto 1 do dec(topline);
+    _igy := max(0, self.buf.length - 1);
+    _vgy := _igy;
+    for i := kvm.yMax div 2 downto 1 do dec(_vgy);
   end;
 
 procedure TEditor.PrevLine;
   begin
     keepInput;
-    if self.position > 0 then
+    if _igy > 0 then
       begin
-	dec(self.position);
+	dec(_igy);
 	CursorMoved;
       end;
   end;
@@ -230,9 +229,9 @@ procedure TEditor.PrevLine;
 procedure TEditor.NextLine;
   begin
     keepInput;
-    if self.position + 1 < self.buf.length then
+    if _igy + 1 < self.buf.length then
       begin
-	inc(self.position);
+	inc(_igy);
 	CursorMoved;
       end;
   end;
@@ -250,17 +249,17 @@ procedure TEditor.NextPage;
 { zinput integration }
 
 procedure TEditor.keepInput;
-  begin buf[position] := led.value
+  begin buf[_igy] := led.value
   end;
 
 procedure TEditor.CursorMoved;
-  begin smudge; updateCamera; self.led.work := self.buf[self.position]
+  begin smudge; updateCamera; self.led.work := self.buf[_igy]
   end;
 
 { multi-line editor commands }
 procedure TEditor.Newline;
   begin
-    buf.InsLine(position, led.str_to_end );
+    buf.InsLine(_igy, led.str_to_end );
     led.del_to_end;
     NextLine;
     led.to_start;
@@ -268,10 +267,10 @@ procedure TEditor.Newline;
 
 procedure TEditor.DeleteNextChar;
   begin
-    if led.at_end and (position + 1 < buf.length) then
+    if led.at_end and (_igy + 1 < buf.length) then
       begin
-	led.work += buf.GetLine(position+1);
-	buf.DelLine(position+1);
+	led.work += buf.GetLine(_igy+1);
+	buf.DelLine(_igy+1);
       end
     else led.del
   end;
