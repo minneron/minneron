@@ -195,13 +195,13 @@ several options:
 No, the blocks are quick to regenerate. /Maybe/ I could cache the whole 
 outliner control for scrolling, but that's probably best done by retroterm.
 
-*** TODO [0/8] implement the jumptree editor (outliner)
+*** TODO [1/9] implement the jumptree editor (outliner)
 :PROPERTIES:
 :TS:       <2014-04-23 03:41AM>
 :ID:       5ppddno0ngg0
 :END:
 
-**** TODO make mned.TEditor a subclass of the grid component
+**** DONE make mned.TEditor a subclass of the grid component
 :PROPERTIES:
 :TS:       <2014-04-23 05:25AM>
 :ID:       l2u0vft0ngg0
@@ -210,6 +210,12 @@ outliner control for scrolling, but that's probably best done by retroterm.
 :PROPERTIES:
 :TS:       <2014-04-23 05:15AM>
 :ID:       eei0vys0ngg0
+:END:
+
+**** TODO merge in older camera stuff from gridliner.
+:PROPERTIES:
+:TS:       <2014-04-23 05:49AM>
+:ID:       9sr0yju0ngg0
 :END:
 
 **** TODO use uoutdoc to load/save trees
@@ -247,12 +253,6 @@ outliner control for scrolling, but that's probably best done by retroterm.
 :TS:       <2014-04-23 03:49AM>
 :ID:       hp7dw0p0ngg0
 :END:
-
-
-
-
-
-
 
 
 * Tokenizers

@@ -9,7 +9,7 @@ interface uses xpc, classes, fs, ustr, num, cw, ui, kvm, kbd, fx,
   utv, umsg, ug2d;
 
 type
-  TEditor = class (TView)
+  TEditor = class (utv.TGridView)
     protected
       buf               : TBuffer;
       filename          : string;
