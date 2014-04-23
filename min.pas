@@ -250,9 +250,7 @@ procedure TMinApp.keys(km : ukm.TKeyMap);
   end;
 
 procedure TMinApp.step;
-  begin
-    mnml.step;
-    if ed.done and mnml.done then quit;
+  begin mnml.step
   end;
 
 procedure TMinApp.draw;

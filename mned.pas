@@ -28,8 +28,6 @@ type
       procedure Render; override;
       procedure RestoreCursor; override;
       procedure Handle( msg : umsg.TMsg ); override;
-    public {  morph interface (removing this) }
-      done              : boolean;
     public { cursor movement commands }
       procedure PrevLine;
       procedure NextLine;
@@ -55,32 +53,21 @@ implementation
 
 
 constructor TEditor.Create( aOwner : TComponent );
-  begin
-    inherited Create( aOwner );
-    x := 0;
-    y := 0;
-    w := kvm.width;
-    h := kvm.height;
+  begin inherited;
     self.buf := TBuffer.create(self);
     self.buf.addline('');
-    topline := 0;
-    position := 0;
-    filename := '';
-    done := false;
+    topline := 0; position := 0; filename := '';
     self.led := ui.ZInput.Create(self);
-
     _views.Append(self.led);
     self.ToTop;
   end;
 
 procedure TEditor.TellUser(msg : string);
-  begin
-    _status := msg;
+  begin _status := msg;
   end;
 
 function TEditor.value : string;
-  begin
-    result := self.buf.ToString;
+  begin result := self.buf.ToString;
   end;
 
 { file methods }
@@ -100,8 +87,7 @@ function TEditor.Load( path : string ) : boolean;
 procedure TEditor.LoadFromStr( s : TStr );
   begin
     buffer.loadFromString(s);
-    topline := 0;
-    position := 0;
+    topline := 0; position := 0;
     led.work := buffer[ 0 ];
     smudge;
   end;
