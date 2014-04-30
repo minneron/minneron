@@ -52,9 +52,9 @@ implementation
 
 constructor TEditor.Create( aOwner : TComponent );
   begin inherited;
-    _GetRowCount := LineCount;
     self.buf := TBuffer.create(self);
     self.buf.addline('');
+    _gh := LineCount;
     _vgy := 0; _igy := 0; filename := '';
     self.led := ui.ZInput.Create(self);
     _views.Append(self.led);

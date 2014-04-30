@@ -17,28 +17,30 @@ type
       constructor Create( aOwner : TComponent ); override;
       function EdgeCount : word;
       procedure DeleteAt(gx,gy :word);
-      function RenderCell(gx,gy :word) : TStr; virtual; abstract;
+      procedure RenderCell(gx,gy :word); virtual; abstract;
+      procedure LoadData; virtual; abstract;
+      procedure SetNode(n : INode);
     published
       property base : IBase read _base write _base;
-      property node : INode read _node write _node;
+      property node : INode read _node write SetNode;
     end;
   TEdgeMenuI = class (TEdgeMenu)
     public
       constructor Create( aOwner : TComponent ); override;
       procedure LoadData; override;
-      function RenderCell(gx,gy :word) : TStr; override;
+      procedure RenderCell(gx,gy :word); override;
     end;
   TEdgeMenuO = class (TEdgeMenu)
     public
       constructor Create( aOwner : TComponent ); override;
       procedure LoadData; override;
-      function RenderCell(gx,gy :word) : TStr; override;
+      procedure RenderCell(gx,gy :word); override;
     end;
 
 constructor TEdgeMenu.Create( aOwner : TComponent );
   begin inherited;
     _gw := 2; _deleteAt := self.DeleteAt;
-    _GetRowCount := EdgeCount;
+    _gh := EdgeCount;
     _RenderCell := RenderCell;
   end;
 
@@ -51,6 +53,10 @@ procedure TEdgeMenu.DeleteAt(gx,gy : word );
     if assigned(_edges) then begin
       _edges[_igy].del; self.LoadData
     end else ok
+  end;
+
+procedure TEdgeMenu.SetNode(n : INode);
+  begin _node := n; self.LoadData;
   end;
 
 constructor TEdgeMenuI.Create( aOwner : TComponent );
@@ -70,12 +76,12 @@ procedure TEdgeMenuO.LoadData;
   end;
 
 //  todo: simplify by just having per-column callbacks
-function TEdgeMenuI.RenderCell(gx,gy:word) : TStr;
-  begin result := boolstr(gx=0, _edges[gy].sub.s, _edges[gy].rel.s)
+procedure TEdgeMenuI.RenderCell(gx,gy:word);
+  begin write(boolstr(gx=0, _edges[gy].sub.s, _edges[gy].rel.s))
   end;
 
-function TEdgeMenuO.RenderCell(gx,gy:word) : TStr;
-  begin result := boolstr(gx=0, _edges[gy].rel.s, _edges[gy].obj.s)
+procedure TEdgeMenuO.RenderCell(gx,gy:word);
+  begin write(boolstr(gx=0, _edges[gy].rel.s, _edges[gy].obj.s))
   end;
 
 type
