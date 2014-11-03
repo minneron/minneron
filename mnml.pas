@@ -50,7 +50,7 @@ procedure launch( const cmd  : TToken );
           found := true;
         end;
     if not found then
-      raise Exception.Create('undefined: ' + cmd );
+      raise Exception.Create(Format('undefined: %s', [cmd]));
   end;
 
 procedure launch( task : IVorTask );

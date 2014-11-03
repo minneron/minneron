@@ -1,6 +1,6 @@
 {$i xpc.inc}{$mode delphi}{$H+}
 unit undk;
-interface uses xpc, dndk, classes, udb, sysutils, fs;
+interface uses xpc, dndk, classes, udb, sysutils, fs, num;
 
   function open(path : TStr) : dndk.IBase;
 
@@ -204,15 +204,14 @@ function TNodakRepo.f(eid : integer) : IEdge;
   begin
     rs := _dbc.Query('select eid,sub,rel,obj,seq from trip where eid=:eid',[eid]);
     if rs.recordcount = 0 then
-      raise Exception.Create('no edge with eid=' + IntToStr(eid));
+      raise Exception.Create('no edge with eid=' + n2s(eid));
     result := TEdge.New(self, rs['eid'], rs['seq'],
 			rs['sub'], rs['rel'], rs['obj']);
     rs.Free;
   end;
 
-function sqlEsc(s : TStr) : TStr;
-  begin
-    result:= ''''+sysutils.StringReplace(s,'''','''''',[rfReplaceAll])+'''';
+function sqlEsc(s : rawbytestring) : TStr;
+  begin result:= Format('''%s''', [StringReplace(s,'''','''''',[rfReplaceAll])]);
   end;
 
 function TNodakRepo.q(sub,rel,obj : TStr) : TEdges;
