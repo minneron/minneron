@@ -55,8 +55,8 @@ procedure TImpShell.keys(km : ukm.TKeyMap);
   begin
     cmd.keys(km);
     with km do begin
-      cmd[ ^O ] := self.pop;
-      cmd[ ^U ] := self.push;
+      cmd[ ^N ] := self.pop;
+      cmd[ ^P ] := self.push;
       cmd[ ^L ] := self.smudge;
     end
   end;
