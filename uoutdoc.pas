@@ -4,11 +4,11 @@
 // trees. Simple example: outline nodes can contain
 // html markup.
 {$mode delphi}{$i xpc.inc}
-unit uoutdoc;
-interface
+program  uoutdoc;
+//interface
 uses classes, xpc, rings, kvm, kbd, sax, sax_xml, dom, cw,
-     stri, stacks, xmlwrite, sysutils;
-
+     ustr, stacks, xmlwrite, sysutils;
+
 type
 
   TOutNode = class (GElement<TDomNode>)
@@ -37,22 +37,22 @@ type
       procedure CloseItem;
       procedure CloseList;
     public { sax-style content building. }
-      procedure StartTag(tag : string);
-      procedure SetAttr(key, val : widestring);
-      function  AddText(text : string) : TDomText;
-      procedure CloseTag(tag: string);
+      procedure StartTag(tag : TStr);
+      procedure SetAttr(key, val : TStr);
+      function  AddText(text : TStr) : TDomText;
+      procedure CloseTag(tag: TStr);
     property
       xmlDoc : TXmlDocument read _dom;
     end;
-
+
   TSaxLoader = class (TComponent)
     protected
       _doc    : TOutDoc;
-      _path   : string;
+      _path   : TStr;
     public
-      property path : string read _path write _path;
+      property path : TStr read _path write _path;
       function Load : TOutDoc; overload;
-      function Load( aPath : string ) : TOutDoc; overload;
+      function Load( aPath : TStr ) : TOutDoc; overload;
     public { sax events }
       procedure OnChars(Sender: TObject; const ch: PSAXChar; AStart, ALength: Integer);
       //procedure OnComment(Sender: TObject; const ch: PSAXChar; AStart, ALength: Integer);
@@ -73,7 +73,7 @@ type
       //procedure OnWarning(Sender: TObject; AException: ESAXParseException);
     end;
 
-implementation
+//implementation
 
 constructor TOutDoc.Create( aOwner : TComponent );
   begin
@@ -132,25 +132,25 @@ function TOutDoc.ThisElement : TDomElement; inline;
     else raise Exception.Create('error: outside element context');
   end;
 
-procedure TOutDoc.SetAttr(key, val : widestring);
+procedure TOutDoc.SetAttr(key, val : TStr);
   begin
     ThisElement.SetAttribute(key, val);
-    cwriteln(' |y' + utf8encode(key) + '|r=|y"|Y' + utf8encode(val) + '|y"' );
+    cwriteln(' |y' + key + '|r=|y"|Y' + val + '|y"' );
   end;
 
-procedure TOutDoc.StartTag(tag : string);
+procedure TOutDoc.StartTag(tag : TStr);
   begin
     pushChild(_dom.CreateElement(Utf8Decode(tag)));
     cwriteln('|r<|R' + tag + '|r>');
   end;
 
-procedure TOutDoc.CloseTag(tag : string);
+procedure TOutDoc.CloseTag(tag : TStr);
   begin
     pop;
     cwriteln('|r</' + tag + '>');
   end;
 
-function TOutDoc.AddText(text : string) : TDomText;
+function TOutDoc.AddText(text : TStr) : TDomText;
   begin
     result := _dom.CreateTextNode(text);
     ThisElement.AppendChild(result);
@@ -172,7 +172,7 @@ function TSaxLoader.Load : TOutDoc;
     result := _doc;
   end;
 
-function TSaxLoader.Load( aPath : string ) : TOutDoc;
+function TSaxLoader.Load( aPath : TStr ) : TOutDoc;
   begin
     _path := aPath;
     result := self.load;
@@ -180,7 +180,7 @@ function TSaxLoader.Load( aPath : string ) : TOutDoc;
 
 procedure TSaxLoader.OnChars
   (Sender: TObject; const ch: PSAXChar; AStart, ALength: Integer);
-  var s : string; i : integer;
+  var s : TStr; i : integer;
   begin
     SetLength(s, alength);
     for i := 1 to alength do s[i] := ch[i-1];
@@ -189,13 +189,7 @@ procedure TSaxLoader.OnChars
 
 procedure TSaxLoader.OnWhitespace
   (Sender: TObject; const ch: PSAXChar; AStart, ALength: Integer);
-  begin
-    pass
-  end;
-
-function w2s (s:widestring):string;
-  begin
-    result := utf8encode(s)
+  begin ok
   end;
 
 procedure TSaxLoader.OnStartElement
@@ -204,7 +198,7 @@ procedure TSaxLoader.OnStartElement
   begin
     if (localname = 'ul') then _doc.StartList
     else if (localname='li') then _doc.StartItem
-    else _doc.StartTag(w2s(localname));
+    else _doc.StartTag(u2a(localname));
     if assigned(attrs) then with attrs do
       if length > 0 then for i := 0 to pred(length) do
         begin
@@ -217,7 +211,7 @@ procedure TSaxLoader.OnEndElement(Sender: TObject;
   begin
     if (localname = 'ul') then _doc.CloseList
     else if(localname='li') then _doc.CloseItem
-    else _doc.CloseTag(w2s(localname));
+    else _doc.CloseTag(u2a(localname));
   end;
 
 procedure main;
@@ -229,5 +223,7 @@ procedure main;
     xmlwrite.WriteXmlFile(doc.xmlDoc, 'saved.xoxo');
   end;
 
-initialization
+//initialization
+begin
+  main
 end.
