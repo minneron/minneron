@@ -36,7 +36,7 @@ procedure TTokEd.init;
     cmd.OnAccept := self.OnCmdAccept;
     _views.append(cmd);
     wrap := uww.TWordWrap.Create(self); wrap.width := kvm.width;
-    buf := TBuffer.Create(64, kvm.height);
+    buf := TBuffer.Create(self);
     self.loadPage('home');
   end;
 
