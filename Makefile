@@ -84,5 +84,5 @@ lib/xpl/Makefile:
 	@git submodule init
 	@git submodule update
 
-always: .PHONY
-.PHONY:
+always:
+	mkdir -p .gen
