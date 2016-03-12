@@ -16,29 +16,29 @@ type
     public
       constructor Create( aOwner : TComponent ); override;
       function EdgeCount : word;
-      procedure DeleteAt(gx,gy :word);
-      function RenderCell(gx,gy :word) : TStr; virtual; abstract;
+      procedure DeleteAt(gx, gy: word);
+      procedure RenderCell(gx, gy: word); virtual; abstract;
+      procedure LoadData; virtual; abstract;
     published
       property base : IBase read _base write _base;
       property node : INode read _node write _node;
     end;
   TEdgeMenuI = class (TEdgeMenu)
     public
-      constructor Create( aOwner : TComponent ); override;
+      constructor Create( aOwner: TComponent ); override;
       procedure LoadData; override;
-      function RenderCell(gx,gy :word) : TStr; override;
+      procedure RenderCell(gx, gy: word); override;
     end;
   TEdgeMenuO = class (TEdgeMenu)
     public
       constructor Create( aOwner : TComponent ); override;
       procedure LoadData; override;
-      function RenderCell(gx,gy :word) : TStr; override;
+      procedure RenderCell(gx, gy: word); override;
     end;
 
 constructor TEdgeMenu.Create( aOwner : TComponent );
   begin inherited;
-    _gw := 2; _deleteAt := self.DeleteAt;
-    _GetRowCount := EdgeCount;
+    _gw := 2; _gh := 0; _deleteAt := self.DeleteAt;
     _RenderCell := RenderCell;
   end;
 
@@ -62,20 +62,19 @@ constructor TEdgeMenuO.Create( aOwner : TComponent );
   end;
 
 procedure TEdgeMenuI.LoadData;
-  begin if assigned(_node) then _edges := _node.ie; smudge;
+  begin if assigned(_node) then _edges := _node.ie; _gh := EdgeCount; smudge;
   end;
 
 procedure TEdgeMenuO.LoadData;
-  begin if assigned(_node) then _edges := _node.oe; smudge;
+  begin if assigned(_node) then _edges := _node.oe; _gh := EdgeCount; smudge;
   end;
 
-//  todo: simplify by just having per-column callbacks
-function TEdgeMenuI.RenderCell(gx,gy:word) : TStr;
-  begin result := boolstr(gx=0, _edges[gy].sub.s, _edges[gy].rel.s)
+procedure TEdgeMenuI.RenderCell(gx,gy:word);
+  begin emit(boolstr(gx=0, _edges[gy].sub.s, _edges[gy].rel.s))
   end;
 
-function TEdgeMenuO.RenderCell(gx,gy:word) : TStr;
-  begin result := boolstr(gx=0, _edges[gy].rel.s, _edges[gy].obj.s)
+procedure TEdgeMenuO.RenderCell(gx,gy:word);
+  begin emit(boolstr(gx=0, _edges[gy].rel.s, _edges[gy].obj.s))
   end;
 
 type
