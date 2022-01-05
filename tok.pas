@@ -2,14 +2,14 @@
 {$mode delphiunicode}{$i xpc.inc}
 program tok;
 uses xpc, uapp, mned, ukm, utok, ui, kvm, ug2d, uww, num,
-     dndk, undk, udb, udc, utv, mnbuf, classes, cw, cli;
+     /* dndk, undk, */ udb, udc, utv, mnbuf, classes, cw, cli;
 
 type TToken = record
 		x, y : cardinal; c : word;
 	      end;
 type TTokEd = class (uapp.TCustomApp)
   protected
-    ndk : dndk.IBase;
+    // ndk : dndk.IBase;
     cmd : ui.ZInput;
     here : string;
     hist : array of string;
@@ -28,7 +28,7 @@ type TTokEd = class (uapp.TCustomApp)
 
 procedure TTokEd.init;
   begin
-    ndk := undk.open('stuff.ndk');
+    // ndk := undk.open('minneron.sdb');
     cmd := ui.ZInput.Create(self);
     cmd.x := xMax div 2 - 16; cmd.y := yMax div 2;
     cmd.w := 32; cmd.maxlen := cmd.w;
