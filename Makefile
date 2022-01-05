@@ -57,6 +57,9 @@ test: always min minsql $(GEN)/run-tests.pas
 	@cd test; python $(XPL)/../test/gen-tests.py ../$(GEN)
 	$(FPC) -vn -B $(GEN)/run-tests.pas -Fu./test -otest-min
 	$(GEN)/test-min $(TRACE)
+
+imp: impforth.pas uimp*.pas
+	$(FPC) impforth.pas
 
 #-- helper rules --
 
